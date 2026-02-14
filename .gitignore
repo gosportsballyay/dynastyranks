@@ -40,3 +40,7 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
+
+# Data files
+*.xlsx
+*.rtf
