@@ -118,16 +118,16 @@ function calculateScarcityMultiplier(
     QB: 0.8, // Deep position
     RB: 1.1, // Medium scarcity, high attrition
     WR: 0.9, // Deepest skill position
-    TE: 1.3, // Very thin at top
+    TE: 1.05, // Thin at elite but shouldn't outrank WR/RB
     K: 0.5, // Replaceable
     // IDP
     LB: 0.9, // Deep
     DL: 1.0, // Medium
     DB: 0.9, // Deep
-    EDR: 1.2, // Thin elite tier
-    IL: 1.0,
-    CB: 0.95,
-    S: 0.95,
+    EDR: 1.1, // Thin elite tier
+    IL: 0.85,
+    CB: 0.9,
+    S: 0.9,
   };
 
   const depthFactor = depthFactors[position] || 1.0;

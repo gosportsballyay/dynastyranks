@@ -315,6 +315,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
         <RankingsTable
           values={valuesWithOwnership}
           positionFilter={searchParams.position}
+          sortMode={sortMode}
         />
       </div>
     </div>

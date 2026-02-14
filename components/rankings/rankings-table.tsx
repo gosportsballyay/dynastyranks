@@ -44,18 +44,27 @@ interface PlayerValue {
   teamName?: string | null;
 }
 
-interface RankingsTableProps {
-  values: PlayerValue[];
-  positionFilter?: string; // When set, show position rank instead of overall rank
-}
-
 type SortColumn = "rank" | "name" | "position" | "team" | "age" | "value" | "vorp" | "tier" | "owner" | "lastSeason";
 type SortDirection = "asc" | "desc";
 
-export function RankingsTable({ values, positionFilter }: RankingsTableProps) {
+/** Maps server-side sort modes to table columns. */
+const SORT_MODE_MAP: Record<string, { column: SortColumn; direction: SortDirection }> = {
+  value: { column: "value", direction: "desc" },
+  projected: { column: "rank", direction: "asc" }, // server pre-sorts by projected
+  last_season: { column: "lastSeason", direction: "desc" },
+};
+
+interface RankingsTableProps {
+  values: PlayerValue[];
+  positionFilter?: string;
+  sortMode?: string;
+}
+
+export function RankingsTable({ values, positionFilter, sortMode }: RankingsTableProps) {
+  const initial = SORT_MODE_MAP[sortMode ?? ""] ?? { column: "rank" as SortColumn, direction: "asc" as SortDirection };
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [sortColumn, setSortColumn] = useState<SortColumn>("rank");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortColumn, setSortColumn] = useState<SortColumn>(initial.column);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(initial.direction);
 
   // Handle column header click
   const handleSort = (column: SortColumn) => {

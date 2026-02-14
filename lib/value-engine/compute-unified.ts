@@ -37,9 +37,24 @@ import { normalizeIdpValues } from "./idp-normalization";
 import { hashString } from "@/lib/utils";
 import type { PositionGroup } from "@/types";
 
-const ENGINE_VERSION = "2.0.0";
+const ENGINE_VERSION = "2.1.0";
 const CONSENSUS_WEIGHT = 0.7;
 const LEAGUE_SIGNAL_WEIGHT = 0.3;
+
+/**
+ * IDP position-group discount applied to consensus values.
+ *
+ * Every major dynasty ranking site (KTC, FantasyCalc, DynastyProcess)
+ * ranks IDP players in a completely separate universe from offense.
+ * When we blend IDP consensus into the same value space as offense,
+ * raw IDP values would compete unfairly. This discount ensures IDP
+ * values land well below comparable offense values in the overall
+ * ranking (typically IDP starts around rank 30-50 in IDP leagues).
+ *
+ * The demand scalar (computed per-league) further adjusts within
+ * IDP positions based on roster construction.
+ */
+const IDP_CONSENSUS_DISCOUNT = 0.35;
 
 const IDP_POSITIONS = new Set([
   "LB", "DL", "DB", "EDR", "IL", "CB", "S", "DE", "DT",
@@ -385,10 +400,16 @@ export async function computeUnifiedValues(
       let consensusComponent = 0;
       let leagueSignalComponent = 0;
 
-      // Apply IDP demand scalar to consensus for IDP positions
+      // Apply IDP discounts to consensus values.
+      // 1. Position-group discount: IDP consensus comes from a
+      //    separate ranking universe and must not compete with offense.
+      // 2. Demand scalar: adjusts within IDP based on roster slots.
+      const isIdp = IDP_POSITIONS.has(player.position);
+      const groupDiscount = isIdp ? IDP_CONSENSUS_DISCOUNT : 1.0;
       const demandScalar =
         idpDemandScalars[player.position] ?? 1.0;
-      const adjustedConsensus = consensusBase * demandScalar;
+      const adjustedConsensus =
+        consensusBase * groupDiscount * demandScalar;
 
       if (adjustedConsensus > 0 && leagueSignalVal > 0) {
         // Both available — standard blend

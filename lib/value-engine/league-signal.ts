@@ -16,15 +16,15 @@ const DEPTH_FACTORS: Record<string, number> = {
   QB: 0.8,
   RB: 1.1,
   WR: 0.9,
-  TE: 1.3,
+  TE: 1.05, // Thin at elite but shouldn't outrank WR/RB
   K: 0.5,
   LB: 0.9,
   DL: 1.0,
   DB: 0.9,
-  EDR: 1.2,
-  IL: 1.0,
-  CB: 0.95,
-  S: 0.95,
+  EDR: 1.1,
+  IL: 0.85,
+  CB: 0.9,
+  S: 0.9,
 };
 
 /** Result from league signal computation. */
