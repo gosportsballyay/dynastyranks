@@ -44,8 +44,6 @@ export function Sidebar({ leagueId, collapsed, onToggle }: SidebarProps) {
       href: `/league/${leagueId}/trade-calculator`,
       label: "Trade Calculator",
       icon: <TradeIcon />,
-      disabled: true,
-      badge: "MVP2",
     },
     {
       href: `/league/${leagueId}/mock-draft`,

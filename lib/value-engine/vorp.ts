@@ -8,6 +8,10 @@
 
 import { calculateReplacementLevel, calculateStarterDemand } from "./replacement-level";
 import type { FlexRule } from "@/types";
+import {
+  VALID_STAT_KEYS,
+  type CanonicalStatKey,
+} from "@/lib/stats/canonical-keys";
 
 interface VORPInput {
   playerPoints: number;
@@ -17,7 +21,7 @@ interface VORPInput {
   flexRules: FlexRule[];
   positionMappings?: Record<string, string[]>;
   totalTeams: number;
-  benchSlots: number;
+  liquidityMultiplier?: number;
 }
 
 interface VORPResult {
@@ -27,6 +31,7 @@ interface VORPResult {
   normalizedVorp: number;
   scarcityMultiplier: number;
   rankInPosition: number;
+  liquidityMultiplier: number;
 }
 
 /**
@@ -41,7 +46,7 @@ export function calculateVORP(input: VORPInput): VORPResult {
     flexRules,
     positionMappings,
     totalTeams,
-    benchSlots,
+    liquidityMultiplier: liqMult = 1.0,
   } = input;
 
   // Get sorted points for this position
@@ -57,7 +62,7 @@ export function calculateVORP(input: VORPInput): VORPResult {
     flexRules,
     positionMappings,
     totalTeams,
-    benchSlots,
+    allPlayerPoints,
   });
 
   // Get replacement player's points
@@ -75,13 +80,14 @@ export function calculateVORP(input: VORPInput): VORPResult {
     rosterPositions,
     flexRules,
     positionMappings,
-    totalTeams
+    totalTeams,
+    allPlayerPoints,
   );
 
-  // Normalize VORP by positional demand
-  // This makes values comparable across positions
+  // Normalize VORP by positional demand, scaled by liquidity
   const demandFactor = Math.sqrt(starterDemand);
-  const normalizedVorp = rawVorp / Math.max(1, demandFactor);
+  const normalizedVorp =
+    (rawVorp / Math.max(1, demandFactor)) * liqMult;
 
   // Calculate scarcity multiplier
   const scarcityMultiplier = calculateScarcityMultiplier(
@@ -98,6 +104,7 @@ export function calculateVORP(input: VORPInput): VORPResult {
     normalizedVorp,
     scarcityMultiplier,
     rankInPosition,
+    liquidityMultiplier: liqMult,
   };
 }
 
@@ -118,7 +125,7 @@ function calculateScarcityMultiplier(
     QB: 0.8, // Deep position
     RB: 1.1, // Medium scarcity, high attrition
     WR: 0.9, // Deepest skill position
-    TE: 1.05, // Thin at elite but shouldn't outrank WR/RB
+    TE: 1.15, // Scarcity boost for elite TEs (McBride ~top 15-20)
     K: 0.5, // Replaceable
     // IDP
     LB: 0.9, // Deep
@@ -173,26 +180,51 @@ export interface BonusThreshold {
  * @param gamesPlayed - Number of games for per-game calculation (default: 17)
  */
 export function calculateFantasyPoints(
-  projections: Record<string, number>,
-  scoringRules: Record<string, number>,
-  positionOverrides?: Record<string, number>,
-  bonusThresholds?: Record<string, BonusThreshold[]>,
+  projections: Partial<Record<CanonicalStatKey, number>>,
+  scoringRules: Partial<Record<CanonicalStatKey, number>>,
+  positionOverrides?: Partial<Record<CanonicalStatKey, number>>,
+  bonusThresholds?: Partial<
+    Record<CanonicalStatKey, BonusThreshold[]>
+  >,
   gamesPlayed: number = 17
 ): number {
+  // Validate scoring rule keys are canonical
+  const unknownRuleKeys = Object.keys(scoringRules)
+    .filter((k) => !VALID_STAT_KEYS.has(k));
+  if (unknownRuleKeys.length > 0) {
+    throw new Error(
+      `Non-canonical scoring rule keys: ${unknownRuleKeys.join(", ")}`,
+    );
+  }
+
+  // Validate projection stat keys are canonical
+  const unknownStatKeys = Object.keys(projections)
+    .filter((k) => !VALID_STAT_KEYS.has(k));
+  if (unknownStatKeys.length > 0) {
+    throw new Error(
+      `Non-canonical projection stat keys: ${unknownStatKeys.join(", ")}`,
+    );
+  }
+
   let points = 0;
 
+  // Keys are validated canonical above; cast for Object.entries iteration
+  const proj = projections as Record<string, number>;
+  const rules = scoringRules as Record<string, number>;
+
   // Apply general scoring rules
-  for (const [stat, value] of Object.entries(projections)) {
-    const pts = scoringRules[stat] || 0;
+  for (const [stat, value] of Object.entries(proj)) {
+    const pts = rules[stat] || 0;
     points += value * pts;
   }
 
   // Apply position-specific overrides
   if (positionOverrides) {
-    for (const [stat, pts] of Object.entries(positionOverrides)) {
-      const value = projections[stat] || 0;
+    const overrides = positionOverrides as Record<string, number>;
+    for (const [stat, pts] of Object.entries(overrides)) {
+      const value = proj[stat] || 0;
       // Override replaces the general rule
-      const generalPts = scoringRules[stat] || 0;
+      const generalPts = rules[stat] || 0;
       points -= value * generalPts;
       points += value * pts;
     }
@@ -200,8 +232,9 @@ export function calculateFantasyPoints(
 
   // Apply threshold bonuses (per-game bonuses)
   if (bonusThresholds && gamesPlayed > 0) {
-    for (const [stat, thresholds] of Object.entries(bonusThresholds)) {
-      const seasonTotal = projections[stat] || 0;
+    const threshMap = bonusThresholds as Record<string, BonusThreshold[]>;
+    for (const [stat, thresholds] of Object.entries(threshMap)) {
+      const seasonTotal = proj[stat] || 0;
       const perGame = seasonTotal / gamesPlayed;
 
       for (const { min, max, bonus } of thresholds) {

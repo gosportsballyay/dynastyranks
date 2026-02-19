@@ -1,0 +1,68 @@
+{
+  "rosterPositions": [
+    { "label": "QB", "group": "START", "start": 1 },
+    { "label": "RB", "group": "START", "start": 2 },
+    { "label": "WR", "group": "START", "start": 2 },
+    { "label": "TE", "group": "START", "start": 1 },
+    { "label": "RB/WR/TE", "group": "START", "start": 1, "eligibility": ["RB", "WR", "TE"] },
+    { "label": "EDR", "group": "START", "start": 2 },
+    { "label": "IL", "group": "START", "start": 1 },
+    { "label": "LB", "group": "START", "start": 2 },
+    { "label": "CB", "group": "START", "start": 2 },
+    { "label": "S", "group": "START", "start": 1 },
+    { "label": "DL/LB/DB", "group": "START", "start": 1, "eligibility": ["DL", "LB", "DB"] },
+    { "label": "BN", "max": 10 },
+    { "label": "IR", "group": "INJURED_RESERVE", "start": 3 },
+    { "label": "TAXI", "group": "TAXI", "start": 4 }
+  ],
+  "groups": [
+    {
+      "label": "Passing",
+      "scoringRules": [
+        { "category": { "id": 1, "nameSingular": "Passing Yard", "namePlural": "Passing Yards", "abbreviation": "PY" }, "pointsPer": { "value": 0.04, "formatted": "0.04" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 2, "nameSingular": "Passing TD", "namePlural": "Passing TDs", "abbreviation": "PTD" }, "points": { "value": 4, "formatted": "4" }, "applyToAll": true },
+        { "category": { "id": 3, "nameSingular": "Interception", "namePlural": "Interceptions", "abbreviation": "INT" }, "points": { "value": -2, "formatted": "-2" }, "applyToAll": true }
+      ]
+    },
+    {
+      "label": "Rushing",
+      "scoringRules": [
+        { "category": { "id": 4, "nameSingular": "Rushing Yard", "namePlural": "Rushing Yards", "abbreviation": "RY" }, "pointsPer": { "value": 0.1, "formatted": "0.1" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 5, "nameSingular": "Rushing TD", "namePlural": "Rushing TDs", "abbreviation": "RTD" }, "points": { "value": 6, "formatted": "6" }, "applyToAll": true }
+      ]
+    },
+    {
+      "label": "Receiving",
+      "scoringRules": [
+        { "category": { "id": 6, "nameSingular": "Receiving Yard", "namePlural": "Receiving Yards", "abbreviation": "REY" }, "pointsPer": { "value": 0.1, "formatted": "0.1" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 7, "nameSingular": "Receiving TD", "namePlural": "Receiving TDs", "abbreviation": "RETD" }, "points": { "value": 6, "formatted": "6" }, "applyToAll": true },
+        { "category": { "id": 8, "nameSingular": "Reception", "namePlural": "Receptions", "abbreviation": "REC" }, "points": { "value": 1.0, "formatted": "1" }, "applyToAll": true }
+      ]
+    },
+    {
+      "label": "Defense",
+      "scoringRules": [
+        { "category": { "id": 10, "nameSingular": "Solo Tackle", "namePlural": "Solo Tackles", "abbreviation": "TK" }, "points": { "value": 1.0, "formatted": "1" }, "applyToAll": true },
+        { "category": { "id": 11, "nameSingular": "Assisted Tackle", "namePlural": "Assisted Tackles", "abbreviation": "TKA" }, "points": { "value": 0.5, "formatted": "0.5" }, "applyToAll": true },
+        { "category": { "id": 12, "nameSingular": "Tackle for Loss", "namePlural": "Tackles for Loss", "abbreviation": "TFL" }, "points": { "value": 2.0, "formatted": "2" }, "applyToAll": true },
+        { "category": { "id": 13, "nameSingular": "Sack", "namePlural": "Sacks", "abbreviation": "SK" }, "points": { "value": 4.0, "formatted": "4" }, "applyToAll": true },
+        { "category": { "id": 14, "nameSingular": "QB Hit", "namePlural": "QB Hits", "abbreviation": "QBH" }, "points": { "value": 1.5, "formatted": "1.5" }, "applyToAll": true },
+        { "category": { "id": 15, "nameSingular": "Interception", "namePlural": "Interceptions", "abbreviation": "INT" }, "points": { "value": 5.0, "formatted": "5" }, "applyToAll": true },
+        { "category": { "id": 16, "nameSingular": "Fumble Force", "namePlural": "Forced Fumbles", "abbreviation": "FF" }, "points": { "value": 3.0, "formatted": "3" }, "applyToAll": true },
+        { "category": { "id": 17, "nameSingular": "Fumble Recovery", "namePlural": "Fumble Recoveries", "abbreviation": "FR" }, "points": { "value": 3.0, "formatted": "3" }, "applyToAll": true },
+        { "category": { "id": 18, "nameSingular": "Pass Defended", "namePlural": "Passes Defended", "abbreviation": "PD" }, "points": { "value": 2.0, "formatted": "2" }, "applyToAll": true },
+        { "category": { "id": 19, "nameSingular": "Safety", "namePlural": "Safeties", "abbreviation": "SAF" }, "points": { "value": 4.0, "formatted": "4" }, "applyToAll": true },
+        { "category": { "id": 21, "nameSingular": "Defensive TD", "namePlural": "Defensive TDs", "abbreviation": "DTD" }, "points": { "value": 6.0, "formatted": "6" }, "applyToAll": true },
+        { "category": { "id": 22, "nameSingular": "Sack", "namePlural": "Sacks", "abbreviation": "SK" }, "points": { "value": 5.0, "formatted": "5" }, "applyTo": ["EDR"], "applyToAll": false }
+      ]
+    },
+    {
+      "label": "Misc",
+      "scoringRules": [
+        { "category": { "id": 9, "nameSingular": "Fumble Lost", "namePlural": "Fumbles Lost", "abbreviation": "FL" }, "points": { "value": -2, "formatted": "-2" }, "applyToAll": true }
+      ]
+    }
+  ],
+  "numStarters": 17,
+  "numBench": 10
+}

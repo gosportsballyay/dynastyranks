@@ -9,10 +9,18 @@ import {
   draftPicks,
   playerValues,
   rawPayloads,
+  userTokens,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { createSleeperAdapter, createFleaflickerAdapter } from "@/lib/adapters";
+import {
+  createSleeperAdapter,
+  createFleaflickerAdapter,
+  createESPNAdapter,
+  createYahooAdapter,
+} from "@/lib/adapters";
 import { getPlayersByProviderIds } from "@/lib/player-mapping";
+import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
+import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
 import type { Provider } from "@/types";
 
 export async function POST(
@@ -61,13 +69,31 @@ export async function POST(
       await db.delete(leagueSettings).where(eq(leagueSettings.leagueId, leagueId));
       await db.delete(rawPayloads).where(eq(rawPayloads.leagueId, leagueId));
 
+      // Parse optional ESPN cookie override from body
+      let espnS2: string | undefined;
+      let swid: string | undefined;
+      try {
+        const body = await request.json();
+        espnS2 = body.espnS2;
+        swid = body.swid;
+      } catch {
+        // Empty body is fine — cookies are optional
+      }
+
       // Re-sync
       await syncLeagueData(
         leagueId,
         league.provider as Provider,
         league.externalLeagueId,
-        league.externalLeagueId // For Fleaflicker, identifier is the league ID
+        league.externalLeagueId,
+        session.user.id,
+        espnS2,
+        swid
       );
+
+      // Recompute values with unified engine
+      await computeAggregatedValues(leagueId);
+      await computeUnifiedValues(leagueId);
 
       // Update sync status
       await db
@@ -116,22 +142,126 @@ export async function POST(
 }
 
 /**
- * Sync league data from provider
+ * Sync league data from provider.
+ *
+ * For ESPN, cookies are resolved in this order:
+ * 1. Explicit espnS2/swid params (from POST body override)
+ * 2. Stored cookies in userTokens table
+ * If cookies provided, they're persisted for future syncs.
  */
 async function syncLeagueData(
   leagueId: string,
   provider: Provider,
   externalLeagueId: string,
-  identifier: string
+  identifier: string,
+  userId: string,
+  espnS2?: string,
+  swid?: string
 ): Promise<void> {
-  // Create adapter
-  const adapter =
-    provider === "sleeper"
-      ? createSleeperAdapter(identifier)
-      : createFleaflickerAdapter();
+  // Create adapter based on provider
+  let adapter;
+
+  if (provider === "sleeper") {
+    adapter = createSleeperAdapter(identifier);
+  } else if (provider === "fleaflicker") {
+    adapter = createFleaflickerAdapter();
+  } else if (provider === "espn") {
+    // Resolve ESPN cookies: body override > stored tokens
+    let s2 = espnS2;
+    let swidCookie = swid;
+
+    if (!s2 || !swidCookie) {
+      const [token] = await db
+        .select()
+        .from(userTokens)
+        .where(
+          and(
+            eq(userTokens.userId, userId),
+            eq(userTokens.provider, "espn")
+          )
+        )
+        .limit(1);
+
+      if (token) {
+        s2 = s2 || token.accessToken;
+        swidCookie = swidCookie || (token.refreshToken ?? undefined);
+      }
+    }
+
+    // Persist override cookies for future syncs
+    if (espnS2 && swid) {
+      await db
+        .insert(userTokens)
+        .values({
+          userId,
+          provider: "espn",
+          accessToken: espnS2,
+          refreshToken: swid,
+        })
+        .onConflictDoUpdate({
+          target: [userTokens.userId, userTokens.provider],
+          set: {
+            accessToken: espnS2,
+            refreshToken: swid,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    adapter = createESPNAdapter({
+      espnS2: s2,
+      swid: swidCookie,
+      leagueId: externalLeagueId,
+    });
+  } else if (provider === "yahoo") {
+    const [token] = await db
+      .select()
+      .from(userTokens)
+      .where(
+        and(
+          eq(userTokens.userId, userId),
+          eq(userTokens.provider, "yahoo")
+        )
+      )
+      .limit(1);
+
+    if (!token) {
+      throw new Error(
+        "Yahoo OAuth token not found. Re-authorize Yahoo."
+      );
+    }
+
+    adapter = createYahooAdapter({
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken || undefined,
+      expiresAt: token.expiresAt || undefined,
+      onTokenRefresh: async (tokens) => {
+        await db
+          .update(userTokens)
+          .set({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresAt: tokens.expiresAt,
+            updatedAt: new Date(),
+          })
+          .where(eq(userTokens.id, token.id));
+      },
+    });
+  } else {
+    throw new Error(`Unknown provider: ${provider}`);
+  }
 
   // Fetch settings
   const settings = await adapter.getLeagueSettings(externalLeagueId);
+
+  // Validate settings
+  const validation = adapter.validateSettings(settings);
+  if (!validation.valid) {
+    console.warn("League settings validation errors:", validation.errors);
+  }
+  if (validation.warnings.length > 0) {
+    console.warn("League settings warnings:", validation.warnings);
+  }
 
   // Store settings
   await db.insert(leagueSettings).values({

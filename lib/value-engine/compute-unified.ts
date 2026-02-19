@@ -1,10 +1,11 @@
 /**
  * Unified Value Engine
  *
- * Blends market consensus (70%) with league-specific signals (30%)
- * into a single authoritative value per player per league.
+ * Blends market consensus with league-specific signals into a single
+ * authoritative value per player per league. Blend weights are dynamic,
+ * scaling with format complexity (auto mode) or user-selected emphasis.
  *
- * Formula: unifiedValue = (consensusBase × 0.7) + (leagueSignal × 0.3)
+ * Auto range: consensus [0.35, 0.70], league [0.30, 0.65]
  */
 
 import { db } from "@/lib/db/client";
@@ -33,13 +34,14 @@ import {
 } from "./compute-last-season";
 import { computeEffectiveBaseline } from "./effective-baseline";
 import { computeLeagueSignal } from "./league-signal";
-import { normalizeIdpValues } from "./idp-normalization";
+import { buildPositionResolver } from "./position-normalization";
 import { hashString } from "@/lib/utils";
 import type { PositionGroup } from "@/types";
+import { computeFormatComplexity } from "./format-complexity";
+import { computeBlendWeights, type BlendMode } from "./blend";
+import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-const ENGINE_VERSION = "2.1.0";
-const CONSENSUS_WEIGHT = 0.7;
-const LEAGUE_SIGNAL_WEIGHT = 0.3;
+export const ENGINE_VERSION = "3.0.0";
 
 /**
  * IDP position-group discount applied to consensus values.
@@ -54,11 +56,23 @@ const LEAGUE_SIGNAL_WEIGHT = 0.3;
  * The demand scalar (computed per-league) further adjusts within
  * IDP positions based on roster construction.
  */
-const IDP_CONSENSUS_DISCOUNT = 0.35;
+const IDP_CONSENSUS_DISCOUNT = 0.55;
+
 
 const IDP_POSITIONS = new Set([
   "LB", "DL", "DB", "EDR", "IL", "CB", "S", "DE", "DT",
 ]);
+
+/**
+ * Penalty for consensus-expected positions with no consensus data.
+ *
+ * If a position has >50% consensus coverage (e.g. QB, RB, WR, TE)
+ * but a specific player has zero consensus value, it means no ranking
+ * site bothers to rank them — a strong negative signal. Career backups
+ * and fringe players get this penalty to prevent them from ranking
+ * near starters.
+ */
+const NO_CONSENSUS_PENALTY = 0.55;
 
 const POSITION_BOUNDS: Record<string, { min: number; max: number }> = {
   QB: { min: 50, max: 500 },
@@ -84,6 +98,7 @@ interface ComputeValuesResult {
 type ValueSource =
   | "unified"
   | "consensus_only"
+  | "signal_primary"
   | "league_signal_only"
   | "minimum";
 
@@ -92,11 +107,12 @@ type ValueSource =
  *
  * Steps:
  * 1. Fetch league settings, players, historical stats
- * 2. Compute fantasy points per player
- * 3. Read consensus from aggregated_values
- * 4. Blend: value = consensus×0.7 + leagueSignal×0.3
- * 5. IDP normalization post-pass
- * 6. Rank, tier, write to player_values
+ * 2. Compute format complexity + dynamic blend weights
+ * 3. Compute fantasy points per player
+ * 4. Read consensus from aggregated_values
+ * 5. Blend: value = consensus×W_c + leagueSignal×W_l
+ * 6. IDP normalization post-pass
+ * 7. Rank, tier, write to player_values
  */
 export async function computeUnifiedValues(
   leagueId: string,
@@ -123,11 +139,51 @@ export async function computeUnifiedValues(
 
     if (!settings) throw new Error("League settings not found");
 
+    // Normalize scoring rules (e.g. tfl → tackle_loss) so
+    // they match canonical stat keys from any historical data source
+    const normalizedScoringRules = normalizeStatKeys(
+      settings.scoringRules as Record<string, number>,
+    ) as typeof settings.scoringRules;
+
     const bonusThresholds = (
       settings.metadata as Record<string, unknown> | null
     )?.bonusThresholds as
       | Record<string, Array<{ min: number; max?: number; bonus: number }>>
       | undefined;
+
+    // --- Compute dynamic blend weights ---
+    const complexity = computeFormatComplexity({
+      totalTeams: league.totalTeams,
+      rosterPositions: settings.rosterPositions,
+      scoringRules: normalizedScoringRules,
+    });
+    const blendMode = (
+      (settings.metadata as Record<string, unknown> | null)
+        ?.valuationMode ?? "auto"
+    ) as BlendMode;
+    const {
+      consensus: CONSENSUS_WEIGHT,
+      league: LEAGUE_SIGNAL_WEIGHT,
+    } = computeBlendWeights(complexity, blendMode);
+
+    console.log(
+      `Blend: complexity=${complexity.toFixed(2)}, ` +
+        `mode=${blendMode}, ` +
+        `consensus=${(CONSENSUS_WEIGHT * 100).toFixed(0)}%, ` +
+        `league=${(LEAGUE_SIGNAL_WEIGHT * 100).toFixed(0)}%`,
+    );
+
+    const idpSignalDiscount = computeIdpSignalDiscount(
+      settings.rosterPositions as Record<string, number>,
+    );
+    console.log(
+      `IDP signal discount: ${idpSignalDiscount.toFixed(3)}`,
+    );
+
+    // --- Build position resolver for IDP normalization ---
+    const resolvePosition = await buildPositionResolver(
+      settings.rosterPositions as Record<string, number>,
+    );
 
     // --- Fetch players ---
     const players = await db
@@ -161,7 +217,7 @@ export async function computeUnifiedValues(
 
     // --- Last season points (proof layer) ---
     const lastSeasonResults = await computeLastSeasonPoints({
-      scoringRules: settings.scoringRules,
+      scoringRules: normalizedScoringRules,
       positionScoringOverrides:
         settings.positionScoringOverrides ?? undefined,
       bonusThresholds,
@@ -205,55 +261,100 @@ export async function computeUnifiedValues(
       historicalByPlayer.set(stat.canonicalPlayerId, existing);
     }
 
-    // --- Calculate fantasy points for each player ---
-    const playerPoints = new Map<
+    // --- Compute per-season fantasy points for each player ---
+    // Compute raw (non-prorated) fantasy points per historical
+    // season so the smoothing function can prorate at the points
+    // level instead of scaling stats (avoids bonus distortion).
+    const playerSeasonPoints = new Map<
       string,
-      { points: number; player: (typeof players)[0] }
+      Array<{ season: number; points: number; gamesPlayed: number }>
     >();
 
     for (const player of players) {
       const history = historicalByPlayer.get(player.id);
       if (!history || history.length === 0) continue;
 
-      // Use most recent season stats
-      const sorted = [...history].sort(
+      const seasonPts: Array<{
+        season: number;
+        points: number;
+        gamesPlayed: number;
+      }> = [];
+
+      for (const h of history) {
+        const stats = normalizeStatKeys(h.stats);
+        const pts = calculateFantasyPoints(
+          stats,
+          normalizedScoringRules,
+          settings.positionScoringOverrides?.[player.position],
+          bonusThresholds,
+        );
+        seasonPts.push({
+          season: h.season,
+          points: pts,
+          gamesPlayed: h.gamesPlayed,
+        });
+      }
+
+      playerSeasonPoints.set(player.id, seasonPts);
+    }
+
+    // --- Compute smoothed projections per player ---
+    const playerPoints = new Map<
+      string,
+      { points: number; player: (typeof players)[0] }
+    >();
+
+    for (const player of players) {
+      const seasons = playerSeasonPoints.get(player.id);
+      if (!seasons || seasons.length === 0) continue;
+
+      // Gating uses most recent season with data
+      const sorted = [...seasons].sort(
         (a, b) => b.season - a.season,
       );
       const recent = sorted[0];
 
-      // Scale to 17 games
-      let projectedStats = { ...recent.stats };
-      if (recent.gamesPlayed < 17 && recent.gamesPlayed > 0) {
-        const ratio = 17 / recent.gamesPlayed;
-        for (const stat of Object.keys(projectedStats)) {
-          if (!stat.includes("pct") && !stat.includes("rate")) {
-            projectedStats[stat] *= ratio;
-          }
-        }
-      }
+      const isFA = !player.nflTeam || player.nflTeam === "FA";
+      const seasonAge = targetSeason - recent.season;
 
-      // Age curve adjustment for offseason projections
+      // Skip stale data (>2 seasons old)
+      if (seasonAge > 2) continue;
+
+      // Skip FAs with stale data (>1 season old)
+      if (isFA && seasonAge > 1) continue;
+
+      // Skip tiny-sample FAs entirely
+      const minGames = 4;
+      if (isFA && recent.gamesPlayed < minGames) continue;
+
+      // Weighted multi-season smoothing (prorates internally)
+      let points = computeSmoothedProjection(
+        seasons,
+        targetSeason,
+      );
+
+      // Age curve on smoothed projection
       if (player.age && recent.season < targetSeason) {
         const ageFactor = getAgeCurveMultiplier(
           player.position,
           player.age + 1,
         );
-        for (const stat of Object.keys(projectedStats)) {
-          projectedStats[stat] *= ageFactor;
-        }
+        points *= ageFactor;
       }
-
-      let points = calculateFantasyPoints(
-        projectedStats,
-        settings.scoringRules,
-        settings.positionScoringOverrides?.[player.position],
-        bonusThresholds,
-      );
 
       // Clamp to position bounds
       const bounds = POSITION_BOUNDS[player.position];
       if (bounds && points > bounds.max) {
         points = bounds.max;
+      }
+
+      // Confidence scaling based on most recent season
+      const confidence = Math.min(1, recent.gamesPlayed / 8);
+      points *= confidence;
+
+      // FA discount — free agents are riskier / less valuable
+      if (isFA) {
+        points *= recent.gamesPlayed < 8 ? 0.5 : 0.75;
       }
 
       if (points > 0) {
@@ -265,10 +366,22 @@ export async function computeUnifiedValues(
       `Computed fantasy points for ${playerPoints.size} players`,
     );
 
+    // --- Resolve positions for IDP normalization ---
+    // Resolve all players (not just those with stats) so the
+    // rookie/consensus-only path also uses resolved positions.
+    const resolvedPositions = new Map<string, string>();
+    for (const player of players) {
+      resolvedPositions.set(
+        player.id,
+        resolvePosition(player.id, player.position),
+      );
+    }
+
     // --- Build position points arrays (sorted desc) ---
     const pointsByPosition: Record<string, number[]> = {};
     for (const { points, player } of playerPoints.values()) {
-      const pos = player.position;
+      const pos =
+        resolvedPositions.get(player.id) ?? player.position;
       if (!pointsByPosition[pos]) pointsByPosition[pos] = [];
       pointsByPosition[pos].push(points);
     }
@@ -308,8 +421,31 @@ export async function computeUnifiedValues(
       starterDemands,
     );
 
+    // --- Compute consensus coverage per position ---
+    // Used to detect "signal-primary" positions (IDP) where no
+    // consensus data exists vs "consensus-expected" positions
+    // (offense) where missing consensus is a negative signal.
+    const posCoverageTotal = new Map<string, number>();
+    const posCoverageHas = new Map<string, number>();
+    for (const [playerId, { player }] of playerPoints) {
+      const pos =
+        resolvedPositions.get(playerId) ?? player.position;
+      posCoverageTotal.set(
+        pos, (posCoverageTotal.get(pos) ?? 0) + 1,
+      );
+      const consVal = consensusMap.get(playerId);
+      if (consVal && (consVal.aggregatedValue ?? 0) > 0) {
+        posCoverageHas.set(
+          pos, (posCoverageHas.get(pos) ?? 0) + 1,
+        );
+      }
+    }
+
     // --- Compute median league signal per position (for rookies) ---
     const positionSignals: Record<string, number[]> = {};
+
+    // --- IDP signal collector for percentile ranking ---
+    const idpSignals: Array<{ id: string; signal: number }> = [];
 
     // --- Blend values ---
     const valuesList: Array<{
@@ -330,10 +466,12 @@ export async function computeUnifiedValues(
       ktcValue: number | null;
       fcValue: number | null;
       dpValue: number | null;
+      fpValue: number | null;
       consensusComponent: number;
       leagueSignalComponent: number;
       lowConfidence: boolean;
       valueSource: ValueSource;
+      eligibilityPosition: string | null;
       lastSeasonPoints: number | null;
       lastSeasonRankOverall: number | null;
       lastSeasonRankPosition: number | null;
@@ -348,6 +486,7 @@ export async function computeUnifiedValues(
       const ktcVal = consensus?.ktcValue ?? null;
       const fcVal = consensus?.fcValue ?? null;
       const dpVal = consensus?.dpValue ?? null;
+      const fpVal = consensus?.fpValue ?? null;
 
       let leagueSignalVal = 0;
       let delta = 0;
@@ -356,8 +495,11 @@ export async function computeUnifiedValues(
       let projectedPts = 0;
       let rankInPos = 0;
 
+      // Use resolved position for all scarcity/baseline logic
+      const pos =
+        resolvedPositions.get(player.id) ?? player.position;
+
       if (pointsData) {
-        const pos = player.position;
         projectedPts = pointsData.points;
         const baseline = baselines[pos] ?? 0;
 
@@ -391,6 +533,11 @@ export async function computeUnifiedValues(
         // Track signals for median calculation (rookies)
         if (!positionSignals[pos]) positionSignals[pos] = [];
         positionSignals[pos].push(leagueSignalVal);
+
+        // Collect IDP signals for percentile ranking
+        if (IDP_POSITIONS.has(pos) && leagueSignalVal > 0) {
+          idpSignals.push({ id: player.id, signal: leagueSignalVal });
+        }
       }
 
       // Determine value source and final blend
@@ -404,23 +551,29 @@ export async function computeUnifiedValues(
       // 1. Position-group discount: IDP consensus comes from a
       //    separate ranking universe and must not compete with offense.
       // 2. Demand scalar: adjusts within IDP based on roster slots.
-      const isIdp = IDP_POSITIONS.has(player.position);
+      const isIdp = IDP_POSITIONS.has(pos);
       const groupDiscount = isIdp ? IDP_CONSENSUS_DISCOUNT : 1.0;
-      const demandScalar =
-        idpDemandScalars[player.position] ?? 1.0;
+      const demandScalar = idpDemandScalars[pos] ?? 1.0;
       const adjustedConsensus =
         consensusBase * groupDiscount * demandScalar;
 
-      if (adjustedConsensus > 0 && leagueSignalVal > 0) {
+      // Discount IDP league signal — high IDP scoring doesn't
+      // translate to dynasty trade value. demandScalar is NOT
+      // applied here because the league signal already reflects
+      // demand via starterDemand in baseline/scarcity calcs.
+      const adjustedSignal = isIdp
+        ? leagueSignalVal * idpSignalDiscount
+        : leagueSignalVal;
+
+      if (adjustedConsensus > 0 && adjustedSignal > 0) {
         // Both available — standard blend
         consensusComponent = adjustedConsensus * CONSENSUS_WEIGHT;
-        leagueSignalComponent = leagueSignalVal * LEAGUE_SIGNAL_WEIGHT;
+        leagueSignalComponent = adjustedSignal * LEAGUE_SIGNAL_WEIGHT;
         finalValue = consensusComponent + leagueSignalComponent;
         valueSource = "unified";
-      } else if (adjustedConsensus > 0 && leagueSignalVal === 0) {
+      } else if (adjustedConsensus > 0 && adjustedSignal === 0) {
         // Rookie or no stats — consensus only, use position
         // median signal as fallback for league signal
-        const pos = player.position;
         const signals = positionSignals[pos];
         const medianSignal =
           signals && signals.length > 0
@@ -429,18 +582,44 @@ export async function computeUnifiedValues(
               ]
             : 0;
 
+        const adjMedian = isIdp
+          ? medianSignal * idpSignalDiscount
+          : medianSignal;
+
         consensusComponent = adjustedConsensus * CONSENSUS_WEIGHT;
-        leagueSignalComponent = medianSignal * LEAGUE_SIGNAL_WEIGHT;
+        leagueSignalComponent = adjMedian * LEAGUE_SIGNAL_WEIGHT;
         finalValue = consensusComponent + leagueSignalComponent;
         valueSource =
-          medianSignal > 0 ? "unified" : "consensus_only";
+          adjMedian > 0 ? "unified" : "consensus_only";
       } else if (consensusBase === 0 && leagueSignalVal > 0) {
-        // No-consensus IDP or obscure player
+        const coverageRatio =
+          (posCoverageHas.get(pos) ?? 0) /
+          (posCoverageTotal.get(pos) ?? 1);
+
         consensusComponent = 0;
-        leagueSignalComponent = leagueSignalVal;
-        finalValue = leagueSignalVal;
-        valueSource = "league_signal_only";
-        lowConfidence = true;
+
+        if (coverageRatio < 0.2) {
+          // Signal-primary position (IDP) — consensus doesn't
+          // exist for this position group, so signal is the
+          // best available data, not a fallback
+          const stability = pos === "CB"
+            ? cbStabilityMultiplier(
+                (settings.rosterPositions as Record<string, number>)["CB"] ?? 0,
+              )
+            : 1.0;
+          leagueSignalComponent = adjustedSignal * stability;
+          finalValue = adjustedSignal * stability;
+          valueSource = "signal_primary";
+          lowConfidence = false;
+        } else {
+          // Consensus-expected position — no ranking site
+          // bothers to rank this player, strong negative signal
+          const penalized = adjustedSignal * NO_CONSENSUS_PENALTY;
+          leagueSignalComponent = penalized;
+          finalValue = penalized;
+          valueSource = "league_signal_only";
+          lowConfidence = true;
+        }
       } else {
         // Neither — skip unless rostered (handled below)
         continue;
@@ -454,7 +633,7 @@ export async function computeUnifiedValues(
         canonicalPlayerId: player.id,
         value: Math.round(finalValue),
         projectedPoints: projectedPts,
-        replacementPoints: baselines[player.position] ?? 0,
+        replacementPoints: baselines[pos] ?? 0,
         vorp: Math.max(0, delta),
         normalizedVorp: Math.max(0, delta),
         scarcityMultiplier: scarcity,
@@ -462,13 +641,16 @@ export async function computeUnifiedValues(
         dynastyPremium: dampenedMod,
         rankInPosition: rankInPos,
         positionGroup: player.positionGroup as PositionGroup,
-        position: player.position,
+        position: pos,
+        eligibilityPosition:
+          pos !== player.position ? pos : null,
         consensusValue: adjustedConsensus > 0
           ? Math.round(adjustedConsensus)
           : null,
         ktcValue: ktcVal,
         fcValue: fcVal,
         dpValue: dpVal,
+        fpValue: fpVal,
         consensusComponent,
         leagueSignalComponent,
         lowConfidence,
@@ -479,12 +661,41 @@ export async function computeUnifiedValues(
       });
     }
 
-    // --- IDP normalization ---
-    const idpSlots = countIdpSlots(settings.rosterPositions);
-    const offenseSlots = countOffenseSlots(settings.rosterPositions);
+    // --- Compute IDP percentiles from collected signals ---
+    idpSignals.sort((a, b) => b.signal - a.signal);
+    const idpPercentiles = new Map<string, number>();
+    for (let i = 0; i < idpSignals.length; i++) {
+      const p =
+        idpSignals.length > 1
+          ? 1 - i / (idpSignals.length - 1)
+          : 0.5;
+      idpPercentiles.set(idpSignals[i].id, p);
+    }
 
-    if (idpSlots > 0) {
-      normalizeIdpValues(valuesList, idpSlots, offenseSlots);
+    // --- Second pass: apply tiered discount to signal_primary IDP ---
+    for (const entry of valuesList) {
+      if (entry.valueSource !== "signal_primary") continue;
+      if (!IDP_POSITIONS.has(entry.position)) continue;
+
+      const pctile =
+        idpPercentiles.get(entry.canonicalPlayerId) ?? 0;
+      const tiered = computeIdpTieredDiscount(pctile);
+      const liqPenalty =
+        pctile < 0.85
+          ? computeIdpLiquidityPenalty(
+              entry.position,
+              pointsByPosition,
+              starterDemands[entry.position] ?? 1,
+            )
+          : 1.0;
+
+      // Recover raw signal: stored as leagueSignalVal * idpSignalDiscount
+      const rawSignal =
+        entry.leagueSignalComponent / idpSignalDiscount;
+      const tieredSignal = rawSignal * tiered * liqPenalty;
+
+      entry.leagueSignalComponent = tieredSignal;
+      entry.value = Math.round(tieredSignal);
     }
 
     // --- Sort and assign ranks ---
@@ -542,11 +753,13 @@ export async function computeUnifiedValues(
             ? ("high" as const)
             : ("medium" as const),
           engineVersion: ENGINE_VERSION,
+          eligibilityPosition: pv.eligibilityPosition ?? null,
           // Unified-specific columns
           consensusValue: pv.consensusValue,
           ktcValue: pv.ktcValue,
           fcValue: pv.fcValue,
           dpValue: pv.dpValue,
+          fpValue: pv.fpValue,
           consensusComponent: pv.consensusComponent,
           leagueSignalComponent: pv.leagueSignalComponent,
           lowConfidence: pv.lowConfidence,
@@ -558,12 +771,14 @@ export async function computeUnifiedValues(
     // --- Log computation ---
     const inputsHash = await hashString(
       JSON.stringify({
-        settings: settings.scoringRules,
+        settings: normalizedScoringRules,
         rosterPositions: settings.rosterPositions,
         flexRules: settings.flexRules,
         totalTeams: league.totalTeams,
         playerCount: valuesList.length,
         engine: "unified",
+        blendMode,
+        complexity,
       }),
     );
 
@@ -675,4 +890,167 @@ function countOffenseSlots(
     }
   }
   return slots;
+}
+
+/**
+ * Compute a format-aware IDP signal discount.
+ *
+ * Leagues with more IDP starter slots relative to total starters
+ * tend to have higher tackle-driven point inflation. The discount
+ * scales accordingly to prevent IDP from dominating offensive tiers.
+ *
+ * @returns Discount factor in [0.45, 0.60]
+ */
+export function computeIdpSignalDiscount(
+  rosterPositions: Record<string, number>,
+): number {
+  const IDP_SLOTS = new Set([
+    "LB", "DL", "DB", "EDR", "IL", "CB", "S", "IDP_FLEX",
+  ]);
+  const NON_STARTER = new Set(["BN", "IR", "TAXI"]);
+
+  let idpStarters = 0;
+  let totalStarters = 0;
+
+  for (const [slot, count] of Object.entries(rosterPositions)) {
+    if (NON_STARTER.has(slot)) continue;
+    totalStarters += count;
+    if (IDP_SLOTS.has(slot)) idpStarters += count;
+  }
+
+  if (totalStarters === 0) return 0.50;
+
+  const idpRatio = idpStarters / totalStarters;
+  const raw = 0.55 - idpRatio * 0.10;
+  return Math.max(0.45, Math.min(0.60, raw));
+}
+
+/**
+ * Percentile-based tiered discount for IDP signal_primary values.
+ *
+ * Elite IDPs (top 5%) get a higher multiplier (~0.62) while bulk
+ * IDPs get a lower one (~0.42). Linear interpolation within each
+ * band prevents cliff effects at tier boundaries.
+ *
+ * @param percentile - Player percentile in [0, 1] where 1.0 = best
+ * @returns Discount factor in [0.42, 0.62]
+ */
+export function computeIdpTieredDiscount(
+  percentile: number,
+): number {
+  if (percentile >= 0.95) return 0.62;
+  if (percentile >= 0.85) {
+    const t = (percentile - 0.85) / 0.10;
+    return 0.55 + t * (0.62 - 0.55);
+  }
+  if (percentile >= 0.50) {
+    const t = (percentile - 0.50) / 0.35;
+    return 0.48 + t * (0.55 - 0.48);
+  }
+  const t = percentile / 0.50;
+  return 0.42 + t * (0.48 - 0.42);
+}
+
+/**
+ * Liquidity-based penalty for mid/low-tier IDP positions.
+ *
+ * Estimates waiver talent availability by comparing fantasy points
+ * at the waiver index (starterDemand + 15) vs the replacement
+ * index. If the drop-off is shallow (ratio >= 0.85), replacements
+ * are plentiful and mid/low IDP values are penalized further.
+ *
+ * @returns Penalty factor in [0.92, 1.0]; 1.0 = no penalty
+ */
+export function computeIdpLiquidityPenalty(
+  position: string,
+  pointsByPosition: Record<string, number[]>,
+  starterDemand: number,
+): number {
+  const posPoints = pointsByPosition[position];
+  if (!posPoints) return 1.0;
+
+  const replacementIdx = starterDemand;
+  const waiverIdx = replacementIdx + 15;
+
+  if (
+    waiverIdx >= posPoints.length ||
+    replacementIdx >= posPoints.length
+  ) {
+    return 1.0;
+  }
+
+  const replacementPts = posPoints[replacementIdx];
+  if (replacementPts <= 0) return 1.0;
+
+  const depthRatio = posPoints[waiverIdx] / replacementPts;
+
+  if (depthRatio >= 0.85) {
+    const penalty =
+      1 - 0.08 * ((depthRatio - 0.85) / 0.15);
+    return Math.max(0.92, Math.min(1.0, penalty));
+  }
+
+  return 1.0;
+}
+
+/**
+ * Demand-scaled stability multiplier for CB signal_primary values.
+ *
+ * CBs are volatile week-to-week — tackle-driven scoring swings
+ * make them streamable in shallow leagues. Start-1 leagues get a
+ * strong penalty (0.75) because any waiver CB can fill the slot.
+ * Start-2+ leagues ease the penalty because demand narrows the
+ * replacement pool, but it never disappears (cap 0.92).
+ *
+ * @param cbSlotsPerTeam - rosterPositions["CB"] per team
+ * @returns Multiplier in [0.75, 0.92]
+ */
+export function cbStabilityMultiplier(
+  cbSlotsPerTeam: number,
+): number {
+  const base = 0.75;
+  const step = 0.07;
+  const mult = base + step * Math.max(0, cbSlotsPerTeam - 1);
+  return Math.min(mult, 0.92);
+}
+
+/**
+ * Weighted multi-season smoothing for projected fantasy points.
+ *
+ * Replaces single-season 17-game extrapolation with a 3-year
+ * weighted average. Each season is prorated to 17 games at the
+ * points level (not stats level) to avoid bonus-threshold
+ * distortion. Missing seasons count as 0 — a player who vanished
+ * for a year has that reflected in their projection.
+ *
+ * Weights: most recent 60%, prior 30%, two back 10%.
+ *
+ * @param seasons - Per-season fantasy points (raw, not prorated)
+ * @param targetSeason - Season being projected for
+ * @returns Smoothed 17-game projected fantasy points
+ */
+export function computeSmoothedProjection(
+  seasons: Array<{
+    season: number;
+    points: number;
+    gamesPlayed: number;
+  }>,
+  targetSeason: number,
+): number {
+  const weights = [0.6, 0.3, 0.1];
+  let total = 0;
+
+  for (let i = 0; i < 3; i++) {
+    const seasonYear = targetSeason - 1 - i;
+    const season = seasons.find((s) => s.season === seasonYear);
+
+    if (season && season.gamesPlayed > 0) {
+      const prorated =
+        (season.points / season.gamesPlayed) * 17;
+      total += prorated * weights[i];
+    }
+    // Missing season or 0 GP → adds 0
+  }
+
+  return total;
 }

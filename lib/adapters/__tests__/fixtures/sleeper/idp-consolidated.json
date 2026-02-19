@@ -1,0 +1,46 @@
+{
+  "league_id": "1000000005",
+  "name": "Test IDP Consolidated League",
+  "season": "2025",
+  "total_rosters": 12,
+  "draft_id": "d005",
+  "status": "in_season",
+  "settings": {
+    "max_keepers": 0,
+    "draft_rounds": 6,
+    "trade_deadline": 11,
+    "reserve_slots": 3,
+    "taxi_slots": 4,
+    "playoff_teams": 6,
+    "num_teams": 12,
+    "bench_lock": 0
+  },
+  "scoring_settings": {
+    "pass_yd": 0.04,
+    "pass_td": 4,
+    "pass_int": -2,
+    "rush_yd": 0.1,
+    "rush_td": 6,
+    "rec": 1.0,
+    "rec_yd": 0.1,
+    "rec_td": 6,
+    "fum_lost": -2,
+    "tkl": 1.0,
+    "tkl_ast": 0.5,
+    "tkl_loss": 1.5,
+    "sack": 3.0,
+    "qb_hit": 1.0,
+    "int": 4.0,
+    "ff": 2.0,
+    "fum_rec": 2.0,
+    "pass_def": 1.5,
+    "safe": 2.0,
+    "td": 6.0,
+    "blk_kick": 3.0
+  },
+  "roster_positions": [
+    "QB", "RB", "RB", "WR", "WR", "TE", "FLEX",
+    "DL", "DL", "LB", "LB", "LB", "DB", "DB", "IDP_FLEX",
+    "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN", "BN"
+  ]
+}

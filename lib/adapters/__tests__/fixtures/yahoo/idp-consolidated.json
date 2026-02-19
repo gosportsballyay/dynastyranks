@@ -1,0 +1,81 @@
+{
+  "fantasy_content": {
+    "league": [
+      {
+        "league_key": "nfl.l.100003",
+        "league_id": "100003",
+        "name": "Test Yahoo IDP",
+        "num_teams": 12,
+        "draft_status": "postdraft",
+        "season": "2025"
+      },
+      {
+        "settings": [
+          {
+            "stat_categories": {
+              "stats": {
+                "stat": [
+                  { "stat_id": 4, "enabled": "1", "name": "Passing Yards", "display_name": "Pass Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 5, "enabled": "1", "name": "Passing Touchdowns", "display_name": "Pass TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 6, "enabled": "1", "name": "Interceptions Thrown", "display_name": "Int", "sort_order": "0", "position_type": "O" },
+                  { "stat_id": 9, "enabled": "1", "name": "Rushing Yards", "display_name": "Rush Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 10, "enabled": "1", "name": "Rushing Touchdowns", "display_name": "Rush TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 11, "enabled": "1", "name": "Receptions", "display_name": "Rec", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 12, "enabled": "1", "name": "Receiving Yards", "display_name": "Rec Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 13, "enabled": "1", "name": "Receiving Touchdowns", "display_name": "Rec TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 18, "enabled": "1", "name": "Fumbles Lost", "display_name": "Fum", "sort_order": "0", "position_type": "O" },
+                  { "stat_id": 50, "enabled": "1", "name": "Total Tackles", "display_name": "Tkl", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 51, "enabled": "1", "name": "Assisted Tackles", "display_name": "Ast", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 52, "enabled": "1", "name": "Sacks", "display_name": "Sack", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 53, "enabled": "1", "name": "Defensive Interceptions", "display_name": "Int", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 54, "enabled": "1", "name": "Forced Fumbles", "display_name": "FF", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 55, "enabled": "1", "name": "Fumble Recoveries", "display_name": "FR", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 56, "enabled": "1", "name": "Defensive Touchdowns", "display_name": "DTD", "sort_order": "1", "position_type": "DT" },
+                  { "stat_id": 57, "enabled": "1", "name": "Passes Defended", "display_name": "PD", "sort_order": "1", "position_type": "DT" }
+                ]
+              }
+            },
+            "stat_modifiers": {
+              "stats": {
+                "stat": [
+                  { "stat_id": 4, "value": "0.04" },
+                  { "stat_id": 5, "value": "4" },
+                  { "stat_id": 6, "value": "-2" },
+                  { "stat_id": 9, "value": "0.1" },
+                  { "stat_id": 10, "value": "6" },
+                  { "stat_id": 11, "value": "1" },
+                  { "stat_id": 12, "value": "0.1" },
+                  { "stat_id": 13, "value": "6" },
+                  { "stat_id": 18, "value": "-2" },
+                  { "stat_id": 50, "value": "1" },
+                  { "stat_id": 51, "value": "0.5" },
+                  { "stat_id": 52, "value": "3" },
+                  { "stat_id": 53, "value": "4" },
+                  { "stat_id": 54, "value": "2" },
+                  { "stat_id": 55, "value": "2" },
+                  { "stat_id": 56, "value": "6" },
+                  { "stat_id": 57, "value": "1.5" }
+                ]
+              }
+            },
+            "roster_positions": {
+              "roster_position": [
+                { "position": "QB", "position_type": "O", "count": 1 },
+                { "position": "RB", "position_type": "O", "count": 2 },
+                { "position": "WR", "position_type": "O", "count": 2 },
+                { "position": "TE", "position_type": "O", "count": 1 },
+                { "position": "W/R/T", "count": 1 },
+                { "position": "DL", "count": 2 },
+                { "position": "LB", "count": 3 },
+                { "position": "DB", "count": 2 },
+                { "position": "D", "count": 1 },
+                { "position": "BN", "count": 10, "is_bench": 1 },
+                { "position": "IR", "count": 3 }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@ import { db } from "@/lib/db/client";
 import { historicalStats, canonicalPlayers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { calculateFantasyPoints } from "./vorp";
+import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
 export interface LastSeasonResult {
   canonicalPlayerId: string;
@@ -135,7 +136,7 @@ export async function computeLastSeasonPoints(
     // Calculate fantasy points using the same function as projections
     // Note: For historical data, bonus thresholds use the actual games played
     const points = calculateFantasyPoints(
-      stat.stats as Record<string, number>,
+      normalizeStatKeys(stat.stats as Record<string, number>),
       scoringRules,
       overrides,
       bonusThresholds,

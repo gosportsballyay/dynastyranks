@@ -8,7 +8,7 @@
  */
 
 import { db } from "@/lib/db/client";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import {
   externalRankings,
   aggregatedValues,
@@ -24,6 +24,7 @@ interface SourceWeights {
   ktc: number;
   fantasycalc: number;
   dynastyprocess: number;
+  fantasypros?: number;
   idpModel?: number;
 }
 
@@ -37,7 +38,7 @@ const IDP_WEIGHTS: SourceWeights = {
   ktc: 0.20, // KTC has some IDP
   fantasycalc: 0.20, // FC has minimal IDP
   dynastyprocess: 0.10, // DP rarely covers IDP
-  idpModel: 0.50, // Our stats-based IDP model
+  fantasypros: 0.50, // Primary IDP consensus source
 };
 
 /**
@@ -84,6 +85,7 @@ interface PlayerRankings {
   ktc: number | null;
   fantasycalc: number | null;
   dynastyprocess: number | null;
+  fantasypros: number | null;
   idpValue: number | null;
 }
 
@@ -139,12 +141,12 @@ async function fetchExternalRankings(
  */
 function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings> {
   const playerMap = new Map<string, PlayerRankings>();
+  // Track all canonical IDs seen per player key for majority vote
+  const idVotes = new Map<string, Map<string, number>>();
 
   for (const r of rankings) {
-    // Skip draft picks for now (they need separate handling)
     if (r.position === "PICK") continue;
 
-    // Create a normalized key for matching
     const key = normalizePlayerKey(r.playerName, r.position);
 
     if (!playerMap.has(key)) {
@@ -156,18 +158,23 @@ function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings>
         ktc: null,
         fantasycalc: null,
         dynastyprocess: null,
+        fantasypros: null,
         idpValue: null,
       });
+      idVotes.set(key, new Map());
     }
 
     const player = playerMap.get(key)!;
 
-    // Update canonical player ID if we have one
-    if (r.canonicalPlayerId && !player.canonicalPlayerId) {
-      player.canonicalPlayerId = r.canonicalPlayerId;
+    // Track canonical ID votes across sources
+    if (r.canonicalPlayerId) {
+      const votes = idVotes.get(key)!;
+      votes.set(
+        r.canonicalPlayerId,
+        (votes.get(r.canonicalPlayerId) ?? 0) + 1,
+      );
     }
 
-    // Store value by source
     switch (r.source) {
       case "ktc":
         player.ktc = r.value;
@@ -178,7 +185,26 @@ function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings>
       case "dynastyprocess":
         player.dynastyprocess = r.value;
         break;
+      case "fantasypros":
+        player.fantasypros = r.value;
+        break;
     }
+  }
+
+  // Resolve canonical IDs by majority vote
+  for (const [key, player] of playerMap) {
+    const votes = idVotes.get(key);
+    if (!votes || votes.size === 0) continue;
+
+    let bestId: string | null = null;
+    let bestCount = 0;
+    for (const [id, count] of votes) {
+      if (count > bestCount) {
+        bestId = id;
+        bestCount = count;
+      }
+    }
+    player.canonicalPlayerId = bestId;
   }
 
   return playerMap;
@@ -187,6 +213,19 @@ function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings>
 /**
  * Normalize player name for matching across sources
  */
+/**
+ * Collapse IDP sub-positions into parent groups for matching.
+ *
+ * FantasyPros may tag a player as "DB" while other sources use
+ * "CB" or "S". Similarly "DL" may appear instead of "EDR"/"IL".
+ * Normalizing to the parent group ensures cross-source merging.
+ */
+const IDP_POSITION_GROUPS: Record<string, string> = {
+  cb: "db", s: "db", db: "db",
+  edr: "dl", il: "dl", de: "dl", dt: "dl", dl: "dl",
+  lb: "lb",
+};
+
 function normalizePlayerKey(name: string, position: string): string {
   // Normalize name: lowercase, remove suffixes like "II", "III", "Jr.", etc.
   const normalized = name
@@ -195,7 +234,10 @@ function normalizePlayerKey(name: string, position: string): string {
     .replace(/[^a-z0-9]/g, "")
     .trim();
 
-  return `${normalized}:${position.toLowerCase()}`;
+  const posLower = position.toLowerCase();
+  const posGroup = IDP_POSITION_GROUPS[posLower] ?? posLower;
+
+  return `${normalized}:${posGroup}`;
 }
 
 /**
@@ -226,10 +268,14 @@ function calculateAggregateValue(player: PlayerRankings): number {
     totalWeight += weights.dynastyprocess;
   }
 
-  // IDP model value (only for IDP players)
-  if (isIDP && player.idpValue !== null && player.idpValue > 0 && weights.idpModel) {
-    weightedSum += player.idpValue * weights.idpModel;
-    totalWeight += weights.idpModel;
+  // FantasyPros (primarily IDP, but handles any position)
+  if (
+    player.fantasypros !== null &&
+    player.fantasypros > 0 &&
+    weights.fantasypros
+  ) {
+    weightedSum += player.fantasypros * weights.fantasypros;
+    totalWeight += weights.fantasypros;
   }
 
   // If no sources have data, return 0
@@ -334,6 +380,7 @@ export async function computeAggregatedValues(leagueId: string): Promise<void> {
     position: string;
     ktc: number | null;
     fc: number | null;
+    fp: number | null;
     dp: number | null;
     idp: number | null;
   }> = [];
@@ -350,6 +397,7 @@ export async function computeAggregatedValues(leagueId: string): Promise<void> {
         position: player.position,
         ktc: player.ktc,
         fc: player.fantasycalc,
+        fp: player.fantasypros,
         dp: player.dynastyprocess,
         idp: player.idpValue,
       });
@@ -376,6 +424,7 @@ export async function computeAggregatedValues(leagueId: string): Promise<void> {
         aggregatedPositionRank: ranks.positionRank,
         ktcValue: result.ktc,
         fcValue: result.fc,
+        fpValue: result.fp,
         dpValue: result.dp,
         idpValue: result.idp,
         sfAdjustment: isSuperFlex ? 1.0 : 0,
@@ -390,6 +439,7 @@ export async function computeAggregatedValues(leagueId: string): Promise<void> {
           aggregatedPositionRank: ranks.positionRank,
           ktcValue: result.ktc,
           fcValue: result.fc,
+          fpValue: result.fp,
           dpValue: result.dp,
           idpValue: result.idp,
           sfAdjustment: isSuperFlex ? 1.0 : 0,
@@ -403,8 +453,35 @@ export async function computeAggregatedValues(leagueId: string): Promise<void> {
 }
 
 /**
- * Match external rankings to canonical players by name
- * This should be run after scraping to link external_rankings to canonical_players
+ * Pick the best canonical player from multiple name matches.
+ *
+ * When stripping suffixes (Jr, Sr, III) produces multiple hits,
+ * prefer active players on real NFL teams over retired/FA players.
+ */
+function pickBestCandidate<
+  T extends { isActive: boolean; nflTeam: string | null },
+>(candidates: T[]): T | undefined {
+  if (candidates.length === 0) return undefined;
+  if (candidates.length === 1) return candidates[0];
+
+  // Prefer active + on a real team
+  const active = candidates.filter(
+    (c) => c.isActive && c.nflTeam && !c.nflTeam.includes("FA"),
+  );
+  if (active.length === 1) return active[0];
+
+  // Prefer any active player
+  const anyActive = candidates.filter((c) => c.isActive);
+  if (anyActive.length > 0) return anyActive[0];
+
+  return candidates[0];
+}
+
+/**
+ * Match external rankings to canonical players by name.
+ *
+ * Runs after scraping to link external_rankings rows to
+ * canonical_players via canonicalPlayerId.
  */
 export async function matchExternalRankingsToPlayers(): Promise<void> {
   // Get all unmatched external rankings
@@ -423,44 +500,79 @@ export async function matchExternalRankingsToPlayers(): Promise<void> {
   let matched = 0;
 
   for (const ranking of unmatched) {
-    // Try exact name match first
+    // Strategy 1: exact name + position match
     let player = await db.query.canonicalPlayers.findFirst({
       where: and(
         eq(canonicalPlayers.name, ranking.playerName),
-        eq(canonicalPlayers.position, ranking.position)
+        eq(canonicalPlayers.position, ranking.position),
       ),
     });
 
-    // Try fuzzy matching if exact match fails
+    // Strategy 2: normalize periods in suffixes
+    // "Marvin Harrison Jr" should match "Marvin Harrison Jr."
     if (!player) {
-      // Normalize the name
+      const withPeriod = ranking.playerName.replace(
+        /\s+(Jr|Sr|II|III|IV)$/i,
+        (m) => m + ".",
+      );
+      if (withPeriod !== ranking.playerName) {
+        player = await db.query.canonicalPlayers.findFirst({
+          where: and(
+            eq(canonicalPlayers.name, withPeriod),
+            eq(canonicalPlayers.position, ranking.position),
+          ),
+        });
+      }
+    }
+
+    // Strategy 3: strip suffix entirely, search both stripped
+    // and suffix variants. "Marvin Harrison" must find both
+    // "Marvin Harrison" and "Marvin Harrison Jr." in canonical.
+    if (!player) {
       const normalized = ranking.playerName
         .replace(/\s+(II|III|IV|Jr\.?|Sr\.?)$/i, "")
         .trim();
 
-      player = await db.query.canonicalPlayers.findFirst({
+      const nameVariants = [
+        normalized,
+        `${normalized} Jr.`,
+        `${normalized} Jr`,
+        `${normalized} Sr.`,
+        `${normalized} Sr`,
+        `${normalized} II`,
+        `${normalized} III`,
+        `${normalized} IV`,
+      ];
+
+      const candidates = await db.query.canonicalPlayers.findMany({
         where: and(
-          eq(canonicalPlayers.name, normalized),
-          eq(canonicalPlayers.position, ranking.position)
+          inArray(canonicalPlayers.name, nameVariants),
+          eq(canonicalPlayers.position, ranking.position),
         ),
       });
+
+      // Prefer active player on a real NFL team over retired
+      player = pickBestCandidate(candidates);
     }
 
-    // Try matching by team if we have it
+    // Strategy 4: match by team + last name
     if (!player && ranking.nflTeam) {
       const players = await db.query.canonicalPlayers.findMany({
         where: and(
           eq(canonicalPlayers.nflTeam, ranking.nflTeam),
-          eq(canonicalPlayers.position, ranking.position)
+          eq(canonicalPlayers.position, ranking.position),
         ),
       });
 
-      // Find best name match
-      const nameParts = ranking.playerName.toLowerCase().split(" ");
+      const nameParts = ranking.playerName
+        .toLowerCase()
+        .split(" ");
       for (const p of players) {
         const pNameParts = p.name.toLowerCase().split(" ");
-        // Check if last names match
-        if (nameParts[nameParts.length - 1] === pNameParts[pNameParts.length - 1]) {
+        if (
+          nameParts[nameParts.length - 1] ===
+          pNameParts[pNameParts.length - 1]
+        ) {
           player = p;
           break;
         }

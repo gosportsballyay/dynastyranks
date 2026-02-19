@@ -13,11 +13,16 @@ import {
   teams,
 } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
-import { computeUnifiedValues } from "@/lib/value-engine";
+import {
+  computeUnifiedValues,
+  ENGINE_VERSION,
+} from "@/lib/value-engine";
 import { RankingsTable } from "@/components/rankings/rankings-table";
+import { StaleEngineRecompute } from "@/components/rankings/stale-engine-recompute";
 import { SearchInput } from "@/components/rankings/search-input";
 import { ExportCsvButton } from "@/components/rankings/export-csv-button";
 import { PositionDropdown } from "@/components/rankings/position-dropdown";
+import { ValuationEmphasisControl } from "@/components/rankings/valuation-emphasis-control";
 
 interface PageProps {
   params: { id: string };
@@ -28,6 +33,25 @@ interface PageProps {
     search?: string;
     sort?: "value" | "projected" | "last_season";
   };
+}
+
+/**
+ * Build a reverse mapping from granular positions to consolidated.
+ *
+ * Given `{"DL": ["EDR", "IL"], "DB": ["CB", "S"]}`, returns
+ * `{"EDR": "DL", "IL": "DL", "CB": "DB", "S": "DB"}`.
+ */
+function buildReverseMapping(
+  positionMappings: Record<string, string[]> | null | undefined,
+): Record<string, string> {
+  const reverse: Record<string, string> = {};
+  for (const [consolidated, granularList] of
+    Object.entries(positionMappings || {})) {
+    for (const g of granularList) {
+      reverse[g] = consolidated;
+    }
+  }
+  return reverse;
 }
 
 export default async function RankingsPage({ params, searchParams }: PageProps) {
@@ -93,6 +117,13 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     }
   }
 
+  // Check if stored values were computed by a different engine version
+  const storedVersion = values.length > 0
+    ? values[0].value.engineVersion
+    : null;
+  const staleEngine = storedVersion !== null
+    && storedVersion !== ENGINE_VERSION;
+
   // Create ownership map: playerId -> { teamId, teamName, ownerName }
   const ownershipMap = new Map<string, { teamId: string; teamName: string; ownerName: string }>();
   for (const roster of rosterData) {
@@ -112,10 +143,19 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
   let filteredValues = values;
 
   if (searchParams.position) {
-    filteredValues = filteredValues.filter(
-      (v) =>
-        v.player.position.toUpperCase() ===
-        searchParams.position?.toUpperCase()
+    // Expand consolidated positions (e.g. "DL" → ["EDR", "IL", "DE", "DT"])
+    // so granular player positions match the filter.
+    const filterPos = searchParams.position.toUpperCase();
+    const granularSet = new Set(
+      settings?.positionMappings?.[filterPos]?.map((p) => p.toUpperCase())
+        ?? [filterPos],
+    );
+    // Always include the filter position itself (handles identity
+    // mappings like LB→LB and non-IDP positions).
+    granularSet.add(filterPos);
+
+    filteredValues = filteredValues.filter((v) =>
+      granularSet.has(v.player.position.toUpperCase()),
     );
   }
 
@@ -146,8 +186,18 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     );
   }
 
-  // Get unique positions for filter
-  const positions = [...new Set(values.map((v) => v.player.position))].sort();
+  // Get unique positions for filter, mapping granular → consolidated
+  // when the league uses consolidated IDP (DL/LB/DB instead of
+  // EDR/IL/CB/S).
+  const reverseMapping =
+    settings?.idpStructure === "consolidated"
+      ? buildReverseMapping(settings.positionMappings)
+      : {};
+  const positions = [
+    ...new Set(
+      values.map((v) => reverseMapping[v.player.position] ?? v.player.position),
+    ),
+  ].sort();
 
   // Determine sort mode (default: value for overall, projected for position-specific)
   const sortMode = searchParams.sort || (searchParams.position ? "projected" : "value");
@@ -186,14 +236,38 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     return `/league/${league.id}/rankings${queryString ? `?${queryString}` : ""}`;
   };
 
+  // Compute group rank maps (offense / IDP) from full sorted values
+  const offenseRankMap = new Map<string, number>();
+  const idpRankMap = new Map<string, number>();
+  let offenseCounter = 0;
+  let idpCounter = 0;
+  for (const v of values) {
+    if (v.player.positionGroup === "offense") {
+      offenseCounter++;
+      offenseRankMap.set(v.value.id, offenseCounter);
+    } else if (v.player.positionGroup === "defense") {
+      idpCounter++;
+      idpRankMap.set(v.value.id, idpCounter);
+    }
+  }
+
+  // Extract current valuation mode from settings metadata
+  const currentValuationMode =
+    ((settings?.metadata as Record<string, unknown> | null)
+      ?.valuationMode as string) ?? "auto";
+
   // Transform values with ownership info for table
   const valuesWithOwnership = sortedValues.map((v) => {
     const ownership = ownershipMap.get(v.player.id);
     return {
       ...v.value,
       player: v.player,
-      owner: ownership ? ownership.ownerName : null,
-      teamName: ownership ? ownership.teamName : null,
+      owner: ownership ? ownership.teamName : null,
+      ownerName: ownership ? ownership.ownerName : null,
+      isOwnedByCurrentUser: ownership?.teamId === league.userTeamId,
+      isFreeAgent: !ownership,
+      offenseRank: offenseRankMap.get(v.value.id) ?? null,
+      idpRank: idpRankMap.get(v.value.id) ?? null,
     };
   });
 
@@ -214,6 +288,10 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
           </span>
         </div>
       </div>
+
+      {staleEngine && (
+        <StaleEngineRecompute leagueId={league.id} />
+      )}
 
       {/* Filters Row */}
       <div className="flex flex-wrap items-center gap-4 mb-6">
@@ -269,55 +347,21 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
           </FilterChip>
         </div>
 
-        {/* Sort Mode Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 uppercase tracking-wider">
-            Sort by:
-          </span>
-          <FilterChip
-            href={buildFilterUrl({
-              position: searchParams.position,
-              group: searchParams.group,
-              ownership: searchParams.ownership,
-              sort: "value",
-            })}
-            active={sortMode === "value"}
-          >
-            Value
-          </FilterChip>
-          <FilterChip
-            href={buildFilterUrl({
-              position: searchParams.position,
-              group: searchParams.group,
-              ownership: searchParams.ownership,
-              sort: "projected",
-            })}
-            active={sortMode === "projected"}
-          >
-            Projected
-          </FilterChip>
-          <FilterChip
-            href={buildFilterUrl({
-              position: searchParams.position,
-              group: searchParams.group,
-              ownership: searchParams.ownership,
-              sort: "last_season",
-            })}
-            active={sortMode === "last_season"}
-          >
-            Last Season
-          </FilterChip>
-        </div>
+        {/* Valuation Emphasis */}
+        <ValuationEmphasisControl
+          leagueId={league.id}
+          currentMode={currentValuationMode}
+        />
       </div>
 
       {/* Rankings Table */}
-      <div className="bg-slate-800/50 rounded-lg overflow-hidden">
-        <RankingsTable
-          values={valuesWithOwnership}
-          positionFilter={searchParams.position}
-          sortMode={sortMode}
-        />
-      </div>
+      <RankingsTable
+        values={valuesWithOwnership}
+        positionFilter={searchParams.position}
+        groupFilter={searchParams.group}
+        sortMode={sortMode}
+        userTeamId={league.userTeamId}
+      />
     </div>
   );
 }

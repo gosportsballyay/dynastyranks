@@ -687,11 +687,33 @@ export class FleaflickerAdapter
     if (fullName.includes("receiving yard")) return "rec_yd";
     if (fullName.includes("receiving td")) return "rec_td";
 
+    // === ABBREVIATION FALLBACK ===
+    // Map known Fleaflicker abbreviations to canonical keys.
+    // This catches cases where the group/category text doesn't
+    // match our pattern rules but the abbreviation is recognizable.
+    const abbrevMap: Record<string, string> = {
+      tfl: "tackle_loss",
+      ff: "fum_force",
+      pd: "pass_def",
+      tkl: "tackle",
+      sk: "sack",
+      int: "int",
+      fr: "fum_rec",
+    };
+    const abbrev = rule.category.abbreviation.toLowerCase();
+    if (abbrevMap[abbrev]) {
+      return abbrevMap[abbrev];
+    }
+
     // Log warning with full context for debugging
     console.warn(
-      `[Fleaflicker] Unknown scoring rule - Group: "${groupLabel}", Category: "${rule.category.nameSingular}" / "${rule.category.namePlural}", Abbrev: "${rule.category.abbreviation}"`
+      `[Fleaflicker] Unknown scoring rule - ` +
+      `Group: "${groupLabel}", ` +
+      `Category: "${rule.category.nameSingular}" / ` +
+      `"${rule.category.namePlural}", ` +
+      `Abbrev: "${rule.category.abbreviation}"`
     );
-    return rule.category.abbreviation.toLowerCase();
+    return abbrev;
   }
 
   /**

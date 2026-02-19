@@ -31,7 +31,7 @@ const SLEEPER_TO_OUR_KEYS: Record<string, string> = {
   idp_sack: "sack",
   idp_sack_yd: "sack_yd",
   idp_qb_hit: "qb_hit",
-  idp_tkl_loss: "tfl",
+  idp_tkl_loss: "tackle_loss",
   idp_ff: "fum_force",
   idp_fum_rec: "fum_rec",
   idp_pass_def: "pass_def",
@@ -173,37 +173,70 @@ function aggregateSeasonStats(
 }
 
 /**
- * Build mapping from Sleeper player_id to canonical_player_id via gsis_id
+ * Build mapping from Sleeper player_id to canonical_player_id.
+ *
+ * Uses two strategies:
+ * 1. Direct sleeperId match (most reliable)
+ * 2. gsis_id match (fallback for players without sleeperId)
  */
 function buildPlayerMapping(
   sleeperPlayers: Map<string, SleeperPlayer>,
-  canonicalPlayers: Array<{ id: string; gsisPid: string | null; name: string; position: string }>
+  canonicalPlayers: Array<{
+    id: string;
+    gsisPid: string | null;
+    sleeperId: string | null;
+    name: string;
+    position: string;
+  }>
 ): Map<string, { canonicalId: string; name: string; position: string }> {
   const mapping = new Map<string, { canonicalId: string; name: string; position: string }>();
 
-  // Build gsis_id -> canonical mapping
+  // Build sleeperId -> canonical mapping (primary)
+  const sleeperIdToCanonical = new Map<string, { canonicalId: string; name: string; position: string }>();
+  // Build gsis_id -> canonical mapping (fallback)
   const gsisToCanonical = new Map<string, { canonicalId: string; name: string; position: string }>();
+
   for (const player of canonicalPlayers) {
+    const entry = {
+      canonicalId: player.id,
+      name: player.name,
+      position: player.position,
+    };
+    if (player.sleeperId) {
+      sleeperIdToCanonical.set(player.sleeperId, entry);
+    }
     if (player.gsisPid) {
-      gsisToCanonical.set(player.gsisPid, {
-        canonicalId: player.id,
-        name: player.name,
-        position: player.position,
-      });
+      gsisToCanonical.set(player.gsisPid, entry);
     }
   }
 
-  // Map sleeper_id -> canonical via gsis_id
-  // Note: Sleeper gsis_id often has leading whitespace that needs trimming
+  let matchedBySleeperId = 0;
+  let matchedByGsis = 0;
+
   for (const [sleeperId, sleeperPlayer] of sleeperPlayers) {
+    // Strategy 1: Direct sleeperId match
+    const bySleeperMatch = sleeperIdToCanonical.get(sleeperId);
+    if (bySleeperMatch) {
+      mapping.set(sleeperId, bySleeperMatch);
+      matchedBySleeperId++;
+      continue;
+    }
+
+    // Strategy 2: gsis_id match (fallback)
     if (sleeperPlayer.gsis_id) {
       const trimmedGsisId = sleeperPlayer.gsis_id.trim();
-      const canonical = gsisToCanonical.get(trimmedGsisId);
-      if (canonical) {
-        mapping.set(sleeperId, canonical);
+      const byGsisMatch = gsisToCanonical.get(trimmedGsisId);
+      if (byGsisMatch) {
+        mapping.set(sleeperId, byGsisMatch);
+        matchedByGsis++;
       }
     }
   }
+
+  console.log(
+    `  Matched by sleeperId: ${matchedBySleeperId}, ` +
+    `by gsis_id: ${matchedByGsis}`
+  );
 
   return mapping;
 }
@@ -240,6 +273,7 @@ async function main() {
     .select({
       id: schema.canonicalPlayers.id,
       gsisPid: schema.canonicalPlayers.gsisPid,
+      sleeperId: schema.canonicalPlayers.sleeperId,
       name: schema.canonicalPlayers.name,
       position: schema.canonicalPlayers.position,
     })
@@ -347,7 +381,7 @@ async function main() {
 
   // Execute updates in batches
   console.log(`\nExecuting ${toUpdate.length} updates...`);
-  const UPDATE_BATCH_SIZE = 50;
+  const UPDATE_BATCH_SIZE = 10;
   for (let i = 0; i < toUpdate.length; i += UPDATE_BATCH_SIZE) {
     const batch = toUpdate.slice(i, i + UPDATE_BATCH_SIZE);
     await Promise.all(

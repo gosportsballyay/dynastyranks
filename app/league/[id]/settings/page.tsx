@@ -3,9 +3,10 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db/client";
-import { leagues, teams } from "@/lib/db/schema";
+import { leagues, teams, leagueSettings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { TeamSelector } from "./team-selector";
+import { ValuationModeSelector } from "./valuation-mode-selector";
 import { LeagueActions } from "./league-actions";
 
 interface PageProps {
@@ -30,11 +31,19 @@ export default async function LeagueSettingsPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch all teams
-  const leagueTeams = await db
-    .select()
-    .from(teams)
-    .where(eq(teams.leagueId, league.id));
+  // Fetch teams and settings in parallel
+  const [leagueTeams, [settings]] = await Promise.all([
+    db.select().from(teams).where(eq(teams.leagueId, league.id)),
+    db
+      .select()
+      .from(leagueSettings)
+      .where(eq(leagueSettings.leagueId, league.id))
+      .limit(1),
+  ]);
+
+  const currentValuationMode =
+    ((settings?.metadata as Record<string, unknown> | null)
+      ?.valuationMode as string) ?? "auto";
 
   return (
     <div>
@@ -113,6 +122,21 @@ export default async function LeagueSettingsPage({ params }: PageProps) {
               </div>
             )}
           </dl>
+        </div>
+
+        {/* Valuation Emphasis */}
+        <div className="bg-slate-800/50 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">
+            Valuation Emphasis
+          </h2>
+          <p className="text-slate-400 text-sm mb-4">
+            Control how player values blend market consensus with your
+            league&apos;s specific scoring. Changing this recomputes all values.
+          </p>
+          <ValuationModeSelector
+            leagueId={league.id}
+            currentMode={currentValuationMode as "auto" | "market_anchored" | "balanced" | "league_driven"}
+          />
         </div>
 
         {/* League Actions (Sync & Delete) */}

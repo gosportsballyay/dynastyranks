@@ -28,10 +28,12 @@ interface PlayerValue {
   ktcValue?: number | null;
   fcValue?: number | null;
   dpValue?: number | null;
+  fpValue?: number | null;
   consensusComponent?: number | null;
   leagueSignalComponent?: number | null;
   lowConfidence?: boolean | null;
   valueSource?: string | null;
+  eligibilityPosition?: string | null;
   player: {
     id: string;
     name: string;
@@ -41,7 +43,11 @@ interface PlayerValue {
     age: number | null;
   };
   owner?: string | null;
-  teamName?: string | null;
+  ownerName?: string | null;
+  isOwnedByCurrentUser: boolean;
+  isFreeAgent: boolean;
+  offenseRank?: number | null;
+  idpRank?: number | null;
 }
 
 type SortColumn = "rank" | "name" | "position" | "team" | "age" | "value" | "vorp" | "tier" | "owner" | "lastSeason";
@@ -57,14 +63,39 @@ const SORT_MODE_MAP: Record<string, { column: SortColumn; direction: SortDirecti
 interface RankingsTableProps {
   values: PlayerValue[];
   positionFilter?: string;
+  groupFilter?: string;
   sortMode?: string;
+  userTeamId?: string | null;
 }
 
-export function RankingsTable({ values, positionFilter, sortMode }: RankingsTableProps) {
+export function RankingsTable({
+  values,
+  positionFilter,
+  groupFilter,
+  sortMode,
+  userTeamId,
+}: RankingsTableProps) {
+  type HighlightMode = "none" | "mine" | "other" | "fa";
+
   const initial = SORT_MODE_MAP[sortMode ?? ""] ?? { column: "rank" as SortColumn, direction: "asc" as SortDirection };
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>(initial.column);
   const [sortDirection, setSortDirection] = useState<SortDirection>(initial.direction);
+  const [highlightMode, setHighlightMode] = useState<HighlightMode>("none");
+
+  /** Returns a bg class for the row based on highlight mode. */
+  function getHighlightClass(v: PlayerValue): string {
+    if (highlightMode === "mine" && v.isOwnedByCurrentUser) {
+      return "bg-blue-900/20";
+    }
+    if (highlightMode === "other" && !v.isFreeAgent && !v.isOwnedByCurrentUser) {
+      return "bg-amber-900/15";
+    }
+    if (highlightMode === "fa" && v.isFreeAgent) {
+      return "bg-emerald-900/15";
+    }
+    return "";
+  }
 
   // Handle column header click
   const handleSort = (column: SortColumn) => {
@@ -160,22 +191,44 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
   }) => (
     <th
       onClick={() => handleSort(column)}
-      className={`py-3 px-4 font-medium text-slate-400 cursor-pointer hover:text-white transition-colors select-none ${className}`}
+      className={`py-3 px-4 font-medium text-slate-400 cursor-pointer hover:text-white transition-colors select-none bg-slate-900 ${className}`}
     >
       {children}
       <SortIndicator column={column} />
     </th>
   );
 
+  const highlightOptions: Array<{ mode: HighlightMode; label: string }> = [
+    { mode: "none", label: "None" },
+    ...(userTeamId ? [{ mode: "mine" as HighlightMode, label: "Mine" }] : []),
+    { mode: "other", label: "Other Teams" },
+    { mode: "fa", label: "FA" },
+  ];
+
   return (
-    <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 overflow-hidden">
-      <div className="overflow-x-auto">
+    <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700/50">
+        <span className="text-xs text-slate-500 uppercase tracking-wider">
+          Highlight:
+        </span>
+        {highlightOptions.map((opt) => (
+          <button
+            key={opt.mode}
+            onClick={() => setHighlightMode(opt.mode)}
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              highlightMode === opt.mode
+                ? "bg-blue-600 text-white"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-700 text-left">
-              <SortableHeader column="rank">
-                {positionFilter ? "Pos Rank" : "Rank"}
-              </SortableHeader>
+          <thead className="sticky top-16 z-20">
+            <tr className="border-b border-slate-700 text-left bg-slate-900">
+              <SortableHeader column="rank">Rank</SortableHeader>
               <SortableHeader column="name">Player</SortableHeader>
               <SortableHeader column="position">Pos</SortableHeader>
               <SortableHeader column="team">Team</SortableHeader>
@@ -186,7 +239,7 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
               <SortableHeader column="value" className="text-right">Value</SortableHeader>
               <SortableHeader column="vorp" className="text-right">VORP</SortableHeader>
               <SortableHeader column="tier">Tier</SortableHeader>
-              <SortableHeader column="owner">Owner</SortableHeader>
+              <SortableHeader column="owner">Team</SortableHeader>
             </tr>
           </thead>
           <tbody>
@@ -197,11 +250,17 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
                     setExpandedRow(expandedRow === v.id ? null : v.id)
                   }
                   className={`border-b border-slate-700/50 cursor-pointer transition-colors ${
-                    index % 2 === 0 ? "bg-slate-800/30" : ""
+                    getHighlightClass(v) || (index % 2 === 0 ? "bg-slate-800/30" : "")
                   } hover:bg-slate-700/50`}
                 >
                   <td className="py-3 px-4 text-slate-300">
-                    {positionFilter ? v.rankInPosition : v.rank}
+                    <span className="font-medium">#{v.rank}</span>
+                    {groupFilter === "offense" && v.offenseRank != null && (
+                      <span className="text-xs text-slate-400 ml-2">OFF{v.offenseRank}</span>
+                    )}
+                    {groupFilter === "defense" && v.idpRank != null && (
+                      <span className="text-xs text-slate-400 ml-2">IDP{v.idpRank}</span>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="font-medium text-white">{v.player.name}</div>
@@ -210,7 +269,7 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPositionColor(v.player.position)}`}
                     >
-                      {v.player.position}
+                      {v.player.position}{v.rankInPosition}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-slate-400">
@@ -237,7 +296,10 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
                   </td>
                   <td className="py-3 px-4">
                     {v.owner ? (
-                      <span className="text-slate-300" title={v.teamName || undefined}>
+                      <span
+                        className="text-slate-300"
+                        title={v.ownerName || undefined}
+                      >
                         {v.owner}
                       </span>
                     ) : (
@@ -256,13 +318,16 @@ export function RankingsTable({ values, positionFilter, sortMode }: RankingsTabl
             ))}
           </tbody>
         </table>
-      </div>
     </div>
   );
 }
 
 function ValueBreakdown({ value, positionFilter }: { value: PlayerValue; positionFilter?: string }) {
-  const hasConsensusBreakdown = value.ktcValue != null || value.fcValue != null || value.dpValue != null;
+  const hasConsensusBreakdown =
+    value.ktcValue != null ||
+    value.fcValue != null ||
+    value.dpValue != null ||
+    value.fpValue != null;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -305,20 +370,54 @@ function ValueBreakdown({ value, positionFilter }: { value: PlayerValue; positio
               {value.dpValue ?? "-"}
             </div>
           </div>
+          {value.fpValue != null && (
+            <div>
+              <div className="text-blue-400 mb-1">FantasyPros</div>
+              <div className="text-white font-mono">
+                {value.fpValue}
+              </div>
+            </div>
+          )}
         </>
       )}
 
       {/* Blend Components */}
-      {value.consensusComponent != null && (
+      {value.consensusComponent != null && value.consensusComponent > 0 && (
         <>
           <div>
-            <div className="text-purple-400 mb-1">Consensus (70%)</div>
+            <div className="text-purple-400 mb-1">
+              Consensus ({(() => {
+                const total =
+                  (value.consensusComponent ?? 0) +
+                  (value.leagueSignalComponent ?? 0);
+                return total > 0
+                  ? Math.round(
+                      ((value.consensusComponent ?? 0) / total) *
+                        100,
+                    )
+                  : 70;
+              })()}%)
+            </div>
             <div className="text-white font-mono">
               {value.consensusComponent.toFixed(0)}
             </div>
           </div>
           <div>
-            <div className="text-purple-400 mb-1">League Signal (30%)</div>
+            <div className="text-purple-400 mb-1">
+              League Signal ({(() => {
+                const total =
+                  (value.consensusComponent ?? 0) +
+                  (value.leagueSignalComponent ?? 0);
+                const consPct =
+                  total > 0
+                    ? Math.round(
+                        ((value.consensusComponent ?? 0) / total) *
+                          100,
+                      )
+                    : 70;
+                return 100 - consPct;
+              })()}%)
+            </div>
             <div className="text-white font-mono">
               {(value.leagueSignalComponent ?? 0).toFixed(0)}
             </div>
@@ -387,6 +486,14 @@ function ValueBreakdown({ value, positionFilter }: { value: PlayerValue; positio
           {value.valueSource?.replace(/_/g, " ") || value.dataSource?.replace("_", " ") || value.projectionSource.replace("_", " ")}
         </div>
       </div>
+      {value.eligibilityPosition && (
+        <div>
+          <div className="text-slate-500 mb-1">Eligibility Position</div>
+          <div className="text-white">
+            {value.eligibilityPosition}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

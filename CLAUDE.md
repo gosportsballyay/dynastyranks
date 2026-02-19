@@ -117,6 +117,25 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `external_rankings` - Raw scraped rankings
 - `rosters` + `teams` - League membership data
 
+### IDP Value Engine Design Constraint
+
+IDP dynasty values have no industry consensus. KTC, FantasyCalc, and
+DynastyProcess publish **zero** IDP rankings. DynastyRanks must compute
+IDP values entirely from league-specific signals (stats, projections,
+league config). This is a first-class design constraint, not a fallback:
+
+- Positions with <20% consensus coverage are "signal-primary" — their
+  values come from `IDP_SIGNAL_DISCOUNT × leagueSignal` with no penalty.
+- Offensive positions with >50% consensus coverage where a specific
+  player has zero consensus get `NO_CONSENSUS_PENALTY` (0.55) applied —
+  absence of consensus is a strong negative signal for offense.
+- Future improvements: depth charts, snap counts, expert IDP opinions,
+  contract data. But the engine must always work without external
+  consensus as the baseline.
+
+Do NOT re-introduce consensus-dependent assumptions for IDP positions.
+The `signal_primary` valueSource exists specifically for this case.
+
 ---
 
 ## Conventions

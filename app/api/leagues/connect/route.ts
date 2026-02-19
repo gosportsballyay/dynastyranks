@@ -18,6 +18,8 @@ import {
   createYahooAdapter,
 } from "@/lib/adapters";
 import { getPlayersByProviderIds } from "@/lib/player-mapping";
+import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
+import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
 import type { Provider, AdapterLeague } from "@/types";
 
 interface ConnectRequest {
@@ -123,6 +125,26 @@ export async function POST(request: NextRequest) {
       }
 
       externalLeagueId = identifier;
+
+      // Persist ESPN cookies for re-sync
+      if (body.espnS2 && body.swid) {
+        await db
+          .insert(userTokens)
+          .values({
+            userId: session.user.id,
+            provider: "espn",
+            accessToken: body.espnS2,
+            refreshToken: body.swid,
+          })
+          .onConflictDoUpdate({
+            target: [userTokens.userId, userTokens.provider],
+            set: {
+              accessToken: body.espnS2,
+              refreshToken: body.swid,
+              updatedAt: new Date(),
+            },
+          });
+      }
     } else if (provider === "yahoo") {
       // Yahoo: must have OAuth token stored first
       const [token] = await db
@@ -262,6 +284,10 @@ export async function POST(request: NextRequest) {
         body.espnS2,
         body.swid
       );
+
+      // Compute values immediately so rankings are ready
+      await computeAggregatedValues(newLeague.id);
+      await computeUnifiedValues(newLeague.id);
 
       // Update sync status
       await db

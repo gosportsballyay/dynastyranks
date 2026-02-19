@@ -16,7 +16,7 @@ const DEPTH_FACTORS: Record<string, number> = {
   QB: 0.8,
   RB: 1.1,
   WR: 0.9,
-  TE: 1.05, // Thin at elite but shouldn't outrank WR/RB
+  TE: 1.15, // Scarcity boost for elite TEs (McBride ~top 15-20)
   K: 0.5,
   LB: 0.9,
   DL: 1.0,

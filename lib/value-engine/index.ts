@@ -3,12 +3,20 @@
  */
 
 export { computeLeagueValues } from "./compute-values";
-export { computeUnifiedValues } from "./compute-unified";
+export {
+  computeUnifiedValues,
+  ENGINE_VERSION,
+  computeIdpTieredDiscount,
+  computeIdpLiquidityPenalty,
+  cbStabilityMultiplier,
+  computeSmoothedProjection,
+} from "./compute-unified";
 export { calculateVORP, calculateFantasyPoints, getPercentilePoints } from "./vorp";
 export {
   calculateReplacementLevel,
   calculateAllReplacementLevels,
   calculateStarterDemand,
+  calculateLiquidityMultiplier,
 } from "./replacement-level";
 export {
   getAgeCurveMultiplier,
@@ -30,3 +38,5 @@ export { sigmoidScale } from "./sigmoid";
 export { computeEffectiveBaseline } from "./effective-baseline";
 export { computeLeagueSignal } from "./league-signal";
 export { normalizeIdpValues } from "./idp-normalization";
+export { computeFormatComplexity } from "./format-complexity";
+export { computeBlendWeights, type BlendMode } from "./blend";

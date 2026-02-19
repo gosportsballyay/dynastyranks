@@ -36,6 +36,20 @@
       "when": 1771038273454,
       "tag": "0004_thick_martin_li",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771436283646,
+      "tag": "0005_careful_warbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771535552927,
+      "tag": "0006_orange_naoko",
+      "breakpoints": true
     }
   ]
 }

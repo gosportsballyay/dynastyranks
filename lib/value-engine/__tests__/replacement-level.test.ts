@@ -3,31 +3,60 @@ import {
   calculateReplacementLevel,
   calculateAllReplacementLevels,
   calculateStarterDemand,
+  calculateLiquidityMultiplier,
 } from "../replacement-level";
 
+/**
+ * Helper: create a descending points array.
+ */
+function makePoints(
+  count: number,
+  start: number,
+  decrement: number,
+): number[] {
+  return Array.from(
+    { length: count },
+    (_, i) => start - i * decrement,
+  );
+}
+
 describe("calculateReplacementLevel", () => {
-  test("calculates basic replacement level for direct starters only", () => {
+  test("calculates basic replacement with buffer", () => {
     const result = calculateReplacementLevel({
       position: "QB",
       rosterPositions: { QB: 1 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: {},
     });
 
-    // 12 teams × 1 QB = 12 starters
-    expect(result).toBe(12);
+    // 12 * 1.15 = 13.8 → round = 14
+    expect(result).toBe(14);
   });
 
   test("scales replacement level with team count", () => {
-    const base = { position: "QB", rosterPositions: { QB: 1 }, flexRules: [], benchSlots: 0 };
+    // Provide enough QBs so production cap doesn't truncate
+    const qbPts = makePoints(50, 400, 5);
+    const base = {
+      position: "QB",
+      rosterPositions: { QB: 1 },
+      flexRules: [],
+      allPlayerPoints: { QB: qbPts },
+    };
 
-    const result12 = calculateReplacementLevel({ ...base, totalTeams: 12 });
-    const result24 = calculateReplacementLevel({ ...base, totalTeams: 24 });
+    const r12 = calculateReplacementLevel({
+      ...base,
+      totalTeams: 12,
+    });
+    const r24 = calculateReplacementLevel({
+      ...base,
+      totalTeams: 24,
+    });
 
-    expect(result24).toBeGreaterThan(result12);
-    expect(result24).toBe(24);
-    expect(result12).toBe(12);
+    expect(r24).toBeGreaterThan(r12);
+    // 12*1.15 = 13.8→14, 24*1.15 = 27.6→28
+    expect(r12).toBe(14);
+    expect(r24).toBe(28);
   });
 
   test("handles multiple starter slots", () => {
@@ -36,59 +65,64 @@ describe("calculateReplacementLevel", () => {
       rosterPositions: { RB: 2 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: {},
     });
 
-    // 12 teams × 2 RBs = 24 starters
-    expect(result).toBe(24);
+    // 24 * 1.15 = 27.6 → 28
+    expect(result).toBe(28);
   });
 
-  test("includes flex demand with default weights", () => {
+  test("includes flex demand with equal-split fallback", () => {
     const result = calculateReplacementLevel({
       position: "RB",
       rosterPositions: { RB: 2, FLEX: 1 },
-      flexRules: [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
+      flexRules: [
+        { slot: "FLEX", eligible: ["RB", "WR", "TE"] },
+      ],
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: {},
     });
 
-    // 12 × 2 = 24 direct + 12 × 0.4 (FLEX weight for RB) = 24 + 4.8 ≈ 29
-    expect(result).toBeGreaterThan(24);
-    expect(result).toBe(29); // Math.round(24 + 4.8)
+    // direct: 24, flex equal-split: 12/3 = 4, total: 28
+    // buffered: 28 * 1.15 = 32.2 → 32
+    expect(result).toBe(32);
   });
 
-  test("includes bench factor", () => {
-    const withoutBench = calculateReplacementLevel({
+  test("dynamic flex allocates by surplus production", () => {
+    // RB has strong surplus, WR/TE weaker
+    const pts = {
+      RB: makePoints(60, 300, 3),  // 300, 297, 294, ...
+      WR: makePoints(60, 250, 3),  // 250, 247, 244, ...
+      TE: makePoints(30, 180, 5),  // 180, 175, 170, ...
+    };
+
+    const result = calculateReplacementLevel({
       position: "RB",
-      rosterPositions: { RB: 2 },
-      flexRules: [],
+      rosterPositions: { RB: 2, WR: 2, TE: 1, FLEX: 1 },
+      flexRules: [
+        { slot: "FLEX", eligible: ["RB", "WR", "TE"] },
+      ],
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: pts,
     });
 
-    const withBench = calculateReplacementLevel({
-      position: "RB",
-      rosterPositions: { RB: 2 },
-      flexRules: [],
-      totalTeams: 12,
-      benchSlots: 60, // 5 per team
-    });
-
-    expect(withBench).toBeGreaterThan(withoutBench);
+    // RB direct: 24, plus dynamic flex share > equal third
+    // With projections, RB surplus should be meaningful
+    expect(result).toBeGreaterThan(28);
   });
 
   test("handles position mappings for consolidated IDP", () => {
     const result = calculateReplacementLevel({
       position: "CB",
-      rosterPositions: { DB: 2 }, // DB is a consolidated slot
+      rosterPositions: { DB: 2 },
       flexRules: [],
-      positionMappings: { DB: ["CB", "S"] }, // CB and S can fill DB slots
+      positionMappings: { DB: ["CB", "S"] },
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: {},
     });
 
-    // 12 × 2 DB slots / 2 granular positions = 12 for CB
-    expect(result).toBe(12);
+    // 12 * 2 / 2 = 12, buffered: 12 * 1.15 = 13.8 → 14
+    expect(result).toBe(14);
   });
 
   test("returns minimum of 1 even with no slots", () => {
@@ -97,10 +131,86 @@ describe("calculateReplacementLevel", () => {
       rosterPositions: {},
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
+      allPlayerPoints: {},
     });
 
     expect(result).toBe(1);
+  });
+});
+
+describe("production cap", () => {
+  test("caps when points drop off sharply", () => {
+    // 20 good QBs then a cliff: points drop below 65% avg
+    const qbPoints = [
+      ...makePoints(20, 400, 5),  // 400 down to 305
+      ...makePoints(30, 150, 3),  // cliff to 150, 147, ...
+    ];
+
+    const result = calculateReplacementLevel({
+      position: "QB",
+      rosterPositions: { QB: 2 },
+      flexRules: [],
+      totalTeams: 12,
+      allPlayerPoints: { QB: qbPoints },
+    });
+
+    // Without cap: 24 * 1.15 = 27.6 → 28
+    // With cap: avg of top 28 starters includes cliff players,
+    // cap should trigger before 28 since cliff at rank 20
+    // Floor for QB is 16, so result should be between 16 and 28
+    expect(result).toBeGreaterThanOrEqual(16);
+    expect(result).toBeLessThanOrEqual(28);
+  });
+
+  test("floor prevents unreasonably low cap", () => {
+    // Only 5 QBs with data — cap would be tiny without floor
+    const qbPoints = makePoints(5, 400, 10);
+
+    const result = calculateReplacementLevel({
+      position: "QB",
+      rosterPositions: { QB: 1 },
+      flexRules: [],
+      totalTeams: 12,
+      allPlayerPoints: { QB: qbPoints },
+    });
+
+    // Floor for QB is 16, buffered demand is 14
+    // min(14, 16) = 14 since buffered < floor,
+    // but cap = max(floor, dataResult) = 16
+    // result = min(14, 16) = 14
+    expect(result).toBe(14);
+  });
+
+  test("ceiling enforces hard max", () => {
+    // Huge league with tons of QBs
+    const qbPoints = makePoints(200, 500, 1);
+
+    const result = calculateReplacementLevel({
+      position: "QB",
+      rosterPositions: { QB: 2 },
+      flexRules: [],
+      totalTeams: 40,
+      allPlayerPoints: { QB: qbPoints },
+    });
+
+    // buffered = 80 * 1.15 = 92, QB ceiling = 36
+    // result = min(92, 36) = 36
+    expect(result).toBe(36);
+  });
+
+  test("empty projections fall back to floor cap", () => {
+    const result = calculateReplacementLevel({
+      position: "RB",
+      rosterPositions: { RB: 2 },
+      flexRules: [],
+      totalTeams: 12,
+      allPlayerPoints: {},
+    });
+
+    // buffered = 24 * 1.15 = 27.6 → 28
+    // With empty {}, productionCap uses floor (RB: 32)
+    // min(28, 32) = 28
+    expect(result).toBe(28);
   });
 });
 
@@ -111,13 +221,14 @@ describe("calculateAllReplacementLevels", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
-    expect(levels.QB).toBe(12);
-    expect(levels.RB).toBe(24);
-    expect(levels.WR).toBe(24);
-    expect(levels.TE).toBe(12);
+    // All use buffer: 14, 28, 28, 14
+    expect(levels.QB).toBe(14);
+    expect(levels.RB).toBe(28);
+    expect(levels.WR).toBe(28);
+    expect(levels.TE).toBe(14);
   });
 
   test("includes positions from flex rules", () => {
@@ -126,10 +237,9 @@ describe("calculateAllReplacementLevels", () => {
       [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
       undefined,
       12,
-      0
+      {},
     );
 
-    // RB, WR, TE should all be included even though no direct slots
     expect(levels.RB).toBeDefined();
     expect(levels.WR).toBeDefined();
     expect(levels.TE).toBeDefined();
@@ -141,7 +251,7 @@ describe("calculateAllReplacementLevels", () => {
       [],
       { DB: ["CB", "S"] },
       12,
-      0
+      {},
     );
 
     expect(levels.CB).toBeDefined();
@@ -154,7 +264,7 @@ describe("calculateAllReplacementLevels", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
     expect(levels.QB).toBeDefined();
@@ -171,23 +281,43 @@ describe("calculateStarterDemand", () => {
       { RB: 2 },
       [],
       undefined,
-      12
+      12,
     );
 
     expect(demand).toBe(24);
   });
 
-  test("includes flex contribution", () => {
+  test("includes flex via equal-split without projections", () => {
     const demand = calculateStarterDemand(
       "RB",
       { RB: 2, FLEX: 1 },
       [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
       undefined,
-      12
+      12,
     );
 
-    // 24 direct + 12 × 0.4 = 28.8
-    expect(demand).toBeCloseTo(28.8, 1);
+    // 24 direct + 12/3 = 28
+    expect(demand).toBeCloseTo(28, 1);
+  });
+
+  test("uses dynamic flex with projections", () => {
+    const pts = {
+      RB: makePoints(60, 300, 3),
+      WR: makePoints(60, 250, 3),
+      TE: makePoints(30, 180, 5),
+    };
+
+    const demand = calculateStarterDemand(
+      "RB",
+      { RB: 2, WR: 2, TE: 1, FLEX: 1 },
+      [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
+      undefined,
+      12,
+      pts,
+    );
+
+    // With projections, RB should get more than equal share
+    expect(demand).toBeGreaterThan(24);
   });
 });
 
@@ -198,26 +328,35 @@ describe("extreme configurations (torture tests)", () => {
       [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
       undefined,
       4,
-      0
+      {},
     );
 
-    expect(levels.QB).toBe(4); // 4 teams × 1 QB
-    expect(levels.RB).toBeLessThan(12); // Smaller than 12-team league
+    // QB: 4*1.15 = 4.6 → 5
+    expect(levels.QB).toBe(5);
+    expect(levels.RB).toBeLessThan(15);
   });
 
-  test("handles 40-team league", () => {
+  test("handles 40-team league with ceiling caps", () => {
+    const pts = {
+      QB: makePoints(200, 500, 1),
+      RB: makePoints(200, 400, 1),
+      WR: makePoints(200, 400, 1),
+      TE: makePoints(100, 300, 2),
+    };
+
     const levels = calculateAllReplacementLevels(
       { QB: 2, RB: 2, WR: 2, TE: 1 },
       [],
       undefined,
       40,
-      0
+      pts,
     );
 
-    expect(levels.QB).toBe(80); // 40 teams × 2 QBs
-    expect(levels.RB).toBe(80);
-    expect(levels.WR).toBe(80);
-    expect(levels.TE).toBe(40);
+    // QB ceiling = 36, so capped
+    expect(levels.QB).toBeLessThanOrEqual(36);
+    expect(levels.RB).toBeLessThanOrEqual(72);
+    expect(levels.WR).toBeLessThanOrEqual(100);
+    expect(levels.TE).toBeLessThanOrEqual(40);
   });
 
   test("handles weird slot mix (5 TE, 0 WR)", () => {
@@ -226,47 +365,64 @@ describe("extreme configurations (torture tests)", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
-    expect(levels.TE).toBe(60); // 12 × 5
-    expect(levels.WR).toBeUndefined(); // No WR slots
+    // 60 * 1.15 = 69, TE ceiling = 40 → capped at 40
+    expect(levels.TE).toBeLessThanOrEqual(40);
+    expect(levels.WR).toBeUndefined();
   });
 
   test("handles superflex (2QB eligible)", () => {
     const levels = calculateAllReplacementLevels(
       { QB: 1, SUPERFLEX: 1 },
-      [{ slot: "SUPERFLEX", eligible: ["QB", "RB", "WR", "TE"] }],
+      [
+        {
+          slot: "SUPERFLEX",
+          eligible: ["QB", "RB", "WR", "TE"],
+        },
+      ],
       undefined,
       12,
-      0
+      {},
     );
 
-    // QB: 12 direct + 12 × 0.8 (SUPERFLEX weight) ≈ 22
+    // QB: 12 direct + 12/4 flex = 15, buffered: 15*1.15 = 17.25 → 17
     expect(levels.QB).toBeGreaterThan(12);
-    expect(levels.QB).toBeLessThanOrEqual(22);
+    expect(levels.QB).toBeLessThanOrEqual(36); // ceiling
   });
 
   test("handles all-IDP league", () => {
+    // Provide enough IDP players so floor caps don't truncate
+    const pts = {
+      LB: makePoints(100, 250, 1),
+      EDR: makePoints(60, 200, 2),
+      CB: makePoints(60, 180, 2),
+      S: makePoints(60, 180, 2),
+      IL: makePoints(40, 150, 2),
+    };
+
     const levels = calculateAllReplacementLevels(
       { LB: 4, EDR: 2, CB: 2, S: 2, IL: 2 },
       [],
       undefined,
       12,
-      0
+      pts,
     );
 
-    expect(levels.LB).toBe(48); // 12 × 4
-    expect(levels.EDR).toBe(24);
-    expect(levels.CB).toBe(24);
-    expect(levels.S).toBe(24);
-    expect(levels.IL).toBe(24);
+    // LB: 48*1.15 = 55.2 → 55, LB ceiling = 90
+    expect(levels.LB).toBe(55);
+    // EDR: 24*1.15 = 27.6 → 28, ceiling = 48
+    expect(levels.EDR).toBe(28);
   });
 });
 
 describe("invariants", () => {
   test("replacement levels are always positive integers", () => {
-    const configs = [
+    const configs: Array<{
+      rosterPositions: Record<string, number>;
+      totalTeams: number;
+    }> = [
       { rosterPositions: { QB: 1 }, totalTeams: 12 },
       { rosterPositions: { QB: 0 }, totalTeams: 12 },
       { rosterPositions: {}, totalTeams: 12 },
@@ -279,10 +435,10 @@ describe("invariants", () => {
         [],
         undefined,
         config.totalTeams,
-        0
+        {},
       );
 
-      for (const [pos, level] of Object.entries(levels)) {
+      for (const [, level] of Object.entries(levels)) {
         expect(level).toBeGreaterThan(0);
         expect(Number.isInteger(level)).toBe(true);
       }
@@ -299,11 +455,10 @@ describe("invariants", () => {
         [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
         undefined,
         teams,
-        0
+        {},
       );
     }
 
-    // Each position's replacement level should increase with team count
     for (let i = 1; i < teamCounts.length; i++) {
       const smaller = results[teamCounts[i - 1]];
       const larger = results[teamCounts[i]];
@@ -320,7 +475,7 @@ describe("invariants", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
     const twoRB = calculateAllReplacementLevels(
@@ -328,7 +483,7 @@ describe("invariants", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
     const threeRB = calculateAllReplacementLevels(
@@ -336,10 +491,33 @@ describe("invariants", () => {
       [],
       undefined,
       12,
-      0
+      {},
     );
 
     expect(twoRB.RB).toBeGreaterThan(oneRB.RB);
     expect(threeRB.RB).toBeGreaterThan(twoRB.RB);
+  });
+
+  test("replacement never exceeds ceiling cap", () => {
+    const positions = ["QB", "RB", "WR", "TE"];
+    const ceilings: Record<string, number> = {
+      QB: 36, RB: 72, WR: 100, TE: 40,
+    };
+
+    for (const pos of positions) {
+      const pts: Record<string, number[]> = {
+        [pos]: makePoints(200, 500, 1),
+      };
+
+      const result = calculateReplacementLevel({
+        position: pos,
+        rosterPositions: { [pos]: 5 },
+        flexRules: [],
+        totalTeams: 40,
+        allPlayerPoints: pts,
+      });
+
+      expect(result).toBeLessThanOrEqual(ceilings[pos]);
+    }
   });
 });

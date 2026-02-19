@@ -17,7 +17,8 @@ interface PlayerValue {
     age: number | null;
   };
   owner: string | null;
-  teamName: string | null;
+  isOwnedByCurrentUser: boolean;
+  isFreeAgent: boolean;
 }
 
 interface ExportCsvButtonProps {
@@ -32,14 +33,14 @@ export function ExportCsvButton({ values, leagueName }: ExportCsvButtonProps) {
       "Rank",
       "Name",
       "Position",
-      "Team",
+      "NFL Team",
       "Age",
       "Value",
       "Position Rank",
       "Tier",
       "Projected Points",
       "VORP",
-      "Owner",
+      "Fantasy Team",
     ];
 
     const rows = values.map((v) => [

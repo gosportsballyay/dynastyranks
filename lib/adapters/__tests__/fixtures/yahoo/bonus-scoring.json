@@ -1,0 +1,79 @@
+{
+  "fantasy_content": {
+    "league": [
+      {
+        "league_key": "nfl.l.100004",
+        "league_id": "100004",
+        "name": "Test Yahoo Bonus Scoring",
+        "num_teams": 12,
+        "draft_status": "postdraft",
+        "season": "2025"
+      },
+      {
+        "settings": [
+          {
+            "stat_categories": {
+              "stats": {
+                "stat": [
+                  { "stat_id": 4, "enabled": "1", "name": "Passing Yards", "display_name": "Pass Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 5, "enabled": "1", "name": "Passing Touchdowns", "display_name": "Pass TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 6, "enabled": "1", "name": "Interceptions Thrown", "display_name": "Int", "sort_order": "0", "position_type": "O" },
+                  { "stat_id": 9, "enabled": "1", "name": "Rushing Yards", "display_name": "Rush Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 10, "enabled": "1", "name": "Rushing Touchdowns", "display_name": "Rush TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 11, "enabled": "1", "name": "Receptions", "display_name": "Rec", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 12, "enabled": "1", "name": "Receiving Yards", "display_name": "Rec Yds", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 13, "enabled": "1", "name": "Receiving Touchdowns", "display_name": "Rec TD", "sort_order": "1", "position_type": "O" },
+                  { "stat_id": 18, "enabled": "1", "name": "Fumbles Lost", "display_name": "Fum", "sort_order": "0", "position_type": "O" }
+                ]
+              }
+            },
+            "stat_modifiers": {
+              "stats": {
+                "stat": [
+                  { "stat_id": 4, "value": "0.04" },
+                  { "stat_id": 5, "value": "4" },
+                  { "stat_id": 6, "value": "-2" },
+                  { "stat_id": 9, "value": "0.1" },
+                  { "stat_id": 10, "value": "6" },
+                  { "stat_id": 11, "value": "1" },
+                  { "stat_id": 12, "value": "0.1" },
+                  { "stat_id": 13, "value": "6" },
+                  { "stat_id": 18, "value": "-2" },
+                  {
+                    "stat_id": 4,
+                    "value": "0.04",
+                    "bonuses": [
+                      { "target": "300", "points": "3" },
+                      { "target": "400", "points": "6" }
+                    ]
+                  },
+                  {
+                    "stat_id": 9,
+                    "value": "0.1",
+                    "bonuses": [
+                      { "target": "100", "points": "3" },
+                      { "target": "200", "points": "6" }
+                    ]
+                  }
+                ]
+              }
+            },
+            "roster_positions": {
+              "roster_position": [
+                { "position": "QB", "position_type": "O", "count": 1 },
+                { "position": "RB", "position_type": "O", "count": 2 },
+                { "position": "WR", "position_type": "O", "count": 2 },
+                { "position": "TE", "position_type": "O", "count": 1 },
+                { "position": "W/R/T", "count": 2 },
+                { "position": "K", "position_type": "O", "count": 1 },
+                { "position": "DEF", "position_type": "DT", "count": 1 },
+                { "position": "BN", "count": 7, "is_bench": 1 },
+                { "position": "IR", "count": 2 }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

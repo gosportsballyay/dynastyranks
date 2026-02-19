@@ -180,6 +180,18 @@ function getPositionVariants(position: string): string[] {
     S: ["S", "DB"],
   };
 
+  // Handle combo positions like "WR/CB", "TE/QB", "LB/DL"
+  if (position.includes("/")) {
+    const combined = new Set<string>();
+    for (const part of position.split("/")) {
+      const trimmed = part.trim();
+      for (const v of variants[trimmed] ?? [trimmed]) {
+        combined.add(v);
+      }
+    }
+    return [...combined];
+  }
+
   return variants[position] || [position];
 }
 

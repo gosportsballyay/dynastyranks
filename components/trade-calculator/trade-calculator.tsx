@@ -1,312 +1,326 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type {
+  PlayerAsset,
+  DraftPickAsset,
+  TradeAsset,
+  LeagueConfig,
+  FairnessResult,
+  RosterImpactResult,
+  TradeDivergenceResult,
+} from "@/lib/trade-engine";
+import {
+  computeFairness,
+  computeMarketDivergence,
+} from "@/lib/trade-engine/trade-analysis";
+import { TradeSide } from "./trade-side";
+import { FairnessPanel } from "./fairness-panel";
+import { MarketPanel } from "./market-panel";
+import { RosterImpactPanel } from "./roster-impact-panel";
+import { analyzeRosterImpactAction } from "@/app/league/[id]/trade-calculator/actions";
 
-interface Player {
-  playerId: string;
-  playerName: string;
-  position: string;
-  value: number;
-}
-
-interface Team {
+interface TeamData {
   id: string;
   name: string;
-  roster: Player[];
+  roster: PlayerAsset[];
+  picks: DraftPickAsset[];
 }
 
 interface TradeCalculatorProps {
-  teams: Team[];
+  teams: TeamData[];
+  genericPicks: DraftPickAsset[];
+  leagueConfig: LeagueConfig;
+  userTeamId: string | null;
+  leagueId: string;
+  replacementValue: number;
 }
 
-export function TradeCalculator({ teams }: TradeCalculatorProps) {
-  const [team1Id, setTeam1Id] = useState<string>("");
-  const [team2Id, setTeam2Id] = useState<string>("");
-  const [team1Players, setTeam1Players] = useState<Player[]>([]);
-  const [team2Players, setTeam2Players] = useState<Player[]>([]);
+export function TradeCalculator({
+  teams,
+  genericPicks,
+  leagueConfig,
+  userTeamId,
+  leagueId,
+  replacementValue,
+}: TradeCalculatorProps) {
+  const [team1Id, setTeam1Id] = useState("");
+  const [team2Id, setTeam2Id] = useState("");
+  const [team1Players, setTeam1Players] = useState<PlayerAsset[]>([]);
+  const [team2Players, setTeam2Players] = useState<PlayerAsset[]>([]);
+  const [team1Picks, setTeam1Picks] = useState<DraftPickAsset[]>([]);
+  const [team2Picks, setTeam2Picks] = useState<DraftPickAsset[]>([]);
+  const [rosterImpact, setRosterImpact] =
+    useState<RosterImpactResult | null>(null);
+  const [impactLoading, setImpactLoading] = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const team1 = teams.find((t) => t.id === team1Id);
   const team2 = teams.find((t) => t.id === team2Id);
 
-  const team1Value = team1Players.reduce((sum, p) => sum + p.value, 0);
-  const team2Value = team2Players.reduce((sum, p) => sum + p.value, 0);
-  const valueDiff = team1Value - team2Value;
+  // Build TradeAsset arrays
+  const side1Assets: TradeAsset[] = [
+    ...team1Players.map(
+      (p) => ({ type: "player", asset: p }) as TradeAsset,
+    ),
+    ...team1Picks.map(
+      (p) => ({ type: "pick", asset: p }) as TradeAsset,
+    ),
+  ];
+  const side2Assets: TradeAsset[] = [
+    ...team2Players.map(
+      (p) => ({ type: "player", asset: p }) as TradeAsset,
+    ),
+    ...team2Picks.map(
+      (p) => ({ type: "pick", asset: p }) as TradeAsset,
+    ),
+  ];
 
-  const addPlayer = (side: 1 | 2, player: Player) => {
-    if (side === 1) {
-      if (!team1Players.find((p) => p.playerId === player.playerId)) {
-        setTeam1Players([...team1Players, player]);
-      }
-    } else {
-      if (!team2Players.find((p) => p.playerId === player.playerId)) {
-        setTeam2Players([...team2Players, player]);
-      }
+  const hasAssets = side1Assets.length > 0 || side2Assets.length > 0;
+
+  // Compute client-side analysis
+  let fairness: FairnessResult | null = null;
+  let divergence: TradeDivergenceResult | null = null;
+
+  if (hasAssets) {
+    fairness = computeFairness(side1Assets, side2Assets, replacementValue);
+    divergence = computeMarketDivergence(side1Assets, side2Assets);
+  }
+
+  // Determine which TradeSide gets the value adjustment line item.
+  // adjustedSide indicates the MORE-asset side (where deduction applies),
+  // so the FEWER-asset side (opposite) gets the positive adjustment row.
+  const adjustmentValue = fairness?.totalAdjustmentValue ?? 0;
+  const adjustedSide = fairness?.adjustedSide ?? null;
+  const side1Adjustment =
+    adjustmentValue > 0 && adjustedSide === 2 ? adjustmentValue : 0;
+  const side2Adjustment =
+    adjustmentValue > 0 && adjustedSide === 1 ? adjustmentValue : 0;
+
+  // Check if user's team is involved
+  const userTeamInvolved =
+    userTeamId !== null &&
+    (team1Id === userTeamId || team2Id === userTeamId);
+
+  // Debounced roster impact server action
+  const fetchRosterImpact = useCallback(() => {
+    if (!userTeamId || !userTeamInvolved || !hasAssets) {
+      setRosterImpact(null);
+      return;
     }
-  };
 
-  const removePlayer = (side: 1 | 2, playerId: string) => {
-    if (side === 1) {
-      setTeam1Players(team1Players.filter((p) => p.playerId !== playerId));
-    } else {
-      setTeam2Players(team2Players.filter((p) => p.playerId !== playerId));
+    // Determine which side is the user's team
+    const isUserTeam1 = team1Id === userTeamId;
+    const userAssetsOut = isUserTeam1 ? side1Assets : side2Assets;
+    const userAssetsIn = isUserTeam1 ? side2Assets : side1Assets;
+
+    if (userAssetsOut.length === 0 && userAssetsIn.length === 0) {
+      setRosterImpact(null);
+      return;
     }
-  };
 
-  const clearTrade = () => {
+    setImpactLoading(true);
+    analyzeRosterImpactAction(
+      leagueId,
+      userTeamId,
+      userAssetsOut,
+      userAssetsIn,
+    ).then((result) => {
+      setRosterImpact(result);
+      setImpactLoading(false);
+    });
+  }, [
+    userTeamId,
+    userTeamInvolved,
+    hasAssets,
+    team1Id,
+    leagueId,
+    // Serialize asset IDs to detect changes
+    team1Players.map((p) => p.playerId).join(","),
+    team2Players.map((p) => p.playerId).join(","),
+    team1Picks.map((p) => `${p.pickId}:${p.value}`).join(","),
+    team2Picks.map((p) => `${p.pickId}:${p.value}`).join(","),
+  ]);
+
+  // Trigger debounced roster impact analysis
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(fetchRosterImpact, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [fetchRosterImpact]);
+
+  function clearTrade() {
     setTeam1Players([]);
     setTeam2Players([]);
-  };
+    setTeam1Picks([]);
+    setTeam2Picks([]);
+    setRosterImpact(null);
+  }
+
+  function selectTeam1(id: string, keepSelections = false) {
+    setTeam1Id(id);
+    if (!keepSelections) {
+      setTeam1Players([]);
+      setTeam1Picks([]);
+      setRosterImpact(null);
+    }
+  }
+
+  function selectTeam2(id: string, keepSelections = false) {
+    setTeam2Id(id);
+    if (!keepSelections) {
+      setTeam2Players([]);
+      setTeam2Picks([]);
+      setRosterImpact(null);
+    }
+  }
+
+  /** Update a pick's value (used by E/M/L toggle). */
+  function updatePick1Value(pickId: string, value: number) {
+    setTeam1Picks((prev) =>
+      prev.map((p) => (p.pickId === pickId ? { ...p, value } : p)),
+    );
+  }
+
+  function updatePick2Value(pickId: string, value: number) {
+    setTeam2Picks((prev) =>
+      prev.map((p) => (p.pickId === pickId ? { ...p, value } : p)),
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Team Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Team 1
-          </label>
-          <select
-            value={team1Id}
-            onChange={(e) => {
-              setTeam1Id(e.target.value);
-              setTeam1Players([]);
-            }}
-            className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a team...</option>
-            {teams
-              .filter((t) => t.id !== team2Id)
-              .map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">
-            Team 2
-          </label>
-          <select
-            value={team2Id}
-            onChange={(e) => {
-              setTeam2Id(e.target.value);
-              setTeam2Players([]);
-            }}
-            className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select a team...</option>
-            {teams
-              .filter((t) => t.id !== team1Id)
-              .map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Trade Sides */}
-      {team1 && team2 && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Team 1 Side */}
-            <TradeSide
-              team={team1}
-              selectedPlayers={team1Players}
-              onAddPlayer={(p) => addPlayer(1, p)}
-              onRemovePlayer={(id) => removePlayer(1, id)}
-              totalValue={team1Value}
-            />
-
-            {/* Team 2 Side */}
-            <TradeSide
-              team={team2}
-              selectedPlayers={team2Players}
-              onAddPlayer={(p) => addPlayer(2, p)}
-              onRemovePlayer={(id) => removePlayer(2, id)}
-              totalValue={team2Value}
-            />
-          </div>
-
-          {/* Trade Analysis */}
-          {(team1Players.length > 0 || team2Players.length > 0) && (
-            <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">
-                  Trade Analysis
-                </h3>
-                <button
-                  onClick={clearTrade}
-                  className="text-sm text-slate-400 hover:text-white transition-colors"
-                >
-                  Clear Trade
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-sm text-slate-400 mb-1">{team1.name}</div>
-                  <div className="text-2xl font-bold text-white font-mono">
-                    {team1Value.toFixed(1)}
-                  </div>
-                </div>
-                <div className="flex items-center justify-center">
-                  <div
-                    className={`px-4 py-2 rounded-lg font-mono font-bold ${
-                      Math.abs(valueDiff) < 10
-                        ? "bg-green-500/20 text-green-400"
-                        : Math.abs(valueDiff) < 25
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {valueDiff > 0 ? "+" : ""}
-                    {valueDiff.toFixed(1)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-slate-400 mb-1">{team2.name}</div>
-                  <div className="text-2xl font-bold text-white font-mono">
-                    {team2Value.toFixed(1)}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-slate-700">
-                <div className="text-center">
-                  {Math.abs(valueDiff) < 10 ? (
-                    <span className="text-green-400">
-                      This trade is fairly balanced
-                    </span>
-                  ) : Math.abs(valueDiff) < 25 ? (
-                    <span className="text-yellow-400">
-                      {valueDiff > 0 ? team1.name : team2.name} slightly wins
-                      this trade
-                    </span>
-                  ) : (
-                    <span className="text-red-400">
-                      {valueDiff > 0 ? team1.name : team2.name} clearly wins
-                      this trade
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-function TradeSide({
-  team,
-  selectedPlayers,
-  onAddPlayer,
-  onRemovePlayer,
-  totalValue,
-}: {
-  team: Team;
-  selectedPlayers: Player[];
-  onAddPlayer: (player: Player) => void;
-  onRemovePlayer: (playerId: string) => void;
-  totalValue: number;
-}) {
-  const [search, setSearch] = useState("");
-
-  const availablePlayers = team.roster.filter(
-    (p) =>
-      !selectedPlayers.find((sp) => sp.playerId === p.playerId) &&
-      (search === "" ||
-        p.playerName.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  return (
-    <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-white">{team.name} receives</h3>
-        <div className="text-sm font-mono text-green-400">
-          {totalValue.toFixed(1)}
-        </div>
-      </div>
-
-      {/* Selected Players */}
-      <div className="space-y-2 mb-4 min-h-[60px]">
-        {selectedPlayers.length === 0 ? (
-          <div className="text-slate-500 text-sm py-4 text-center">
-            Add players below
-          </div>
-        ) : (
-          selectedPlayers.map((player) => (
-            <div
-              key={player.playerId}
-              className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-400">
-                  {player.position}
-                </span>
-                <span className="text-white">{player.playerName}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-mono text-green-400">
-                  {player.value.toFixed(1)}
-                </span>
-                <button
-                  onClick={() => onRemovePlayer(player.playerId)}
-                  className="text-slate-400 hover:text-red-400 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Player Search */}
-      <div className="border-t border-slate-700 pt-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search players..."
-          className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+    <div className="space-y-6">
+      {/* Trade workspace */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TradeSide
+          teamId={team1Id}
+          teamName={team1?.name ?? ""}
+          allTeamsData={teams}
+          genericPicks={genericPicks}
+          selectedPlayers={team1Players}
+          selectedPicks={team1Picks}
+          onSelectTeam={selectTeam1}
+          onAddPlayer={(p) => {
+            if (!team1Players.find((x) => x.playerId === p.playerId)) {
+              setTeam1Players([...team1Players, p]);
+            }
+          }}
+          onRemovePlayer={(id) =>
+            setTeam1Players(team1Players.filter((p) => p.playerId !== id))
+          }
+          onAddPick={(p) => {
+            if (!team1Picks.find((x) => x.pickId === p.pickId)) {
+              setTeam1Picks([...team1Picks, p]);
+            }
+          }}
+          onRemovePick={(id) =>
+            setTeam1Picks(team1Picks.filter((p) => p.pickId !== id))
+          }
+          onUpdatePickValue={updatePick1Value}
+          otherTeamId={team2Id}
+          totalValue={
+            team1Players.reduce((s, p) => s + p.value, 0) +
+            team1Picks.reduce((s, p) => s + p.value, 0)
+          }
+          valueAdjustment={side1Adjustment}
         />
-        <div className="max-h-48 overflow-y-auto space-y-1">
-          {availablePlayers.slice(0, 20).map((player) => (
-            <button
-              key={player.playerId}
-              onClick={() => onAddPlayer(player)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-700/50 transition-colors text-left"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-slate-400 w-6">
-                  {player.position}
-                </span>
-                <span className="text-slate-300">{player.playerName}</span>
-              </div>
-              <span className="text-xs font-mono text-slate-400">
-                {player.value.toFixed(1)}
-              </span>
-            </button>
-          ))}
-        </div>
+
+        <TradeSide
+          teamId={team2Id}
+          teamName={team2?.name ?? ""}
+          allTeamsData={teams}
+          genericPicks={genericPicks}
+          selectedPlayers={team2Players}
+          selectedPicks={team2Picks}
+          onSelectTeam={selectTeam2}
+          onAddPlayer={(p) => {
+            if (!team2Players.find((x) => x.playerId === p.playerId)) {
+              setTeam2Players([...team2Players, p]);
+            }
+          }}
+          onRemovePlayer={(id) =>
+            setTeam2Players(team2Players.filter((p) => p.playerId !== id))
+          }
+          onAddPick={(p) => {
+            if (!team2Picks.find((x) => x.pickId === p.pickId)) {
+              setTeam2Picks([...team2Picks, p]);
+            }
+          }}
+          onRemovePick={(id) =>
+            setTeam2Picks(team2Picks.filter((p) => p.pickId !== id))
+          }
+          onUpdatePickValue={updatePick2Value}
+          otherTeamId={team1Id}
+          totalValue={
+            team2Players.reduce((s, p) => s + p.value, 0) +
+            team2Picks.reduce((s, p) => s + p.value, 0)
+          }
+          valueAdjustment={side2Adjustment}
+        />
       </div>
+
+      {/* Clear button */}
+      {hasAssets && (
+        <div className="flex justify-center">
+          <button
+            onClick={clearTrade}
+            className="text-sm text-slate-400 hover:text-white transition-colors px-4 py-1.5"
+          >
+            Clear Trade
+          </button>
+        </div>
+      )}
+
+      {/* Analysis panels */}
+      {hasAssets && fairness && team1 && team2 && (
+        <div className="space-y-4">
+          <FairnessPanel
+            fairness={fairness}
+            team1Name={team1.name}
+            team2Name={team2.name}
+          />
+
+          {divergence && (
+            <MarketPanel
+              divergence={divergence}
+              team1Name={team1.name}
+              team2Name={team2.name}
+            />
+          )}
+
+          {userTeamInvolved &&
+            (rosterImpact || impactLoading) && (
+              <RosterImpactPanel
+                impact={
+                  rosterImpact ?? {
+                    lineupDelta: 0,
+                    lineupBefore: {
+                      starters: [],
+                      bench: [],
+                      totalStarterPoints: 0,
+                    },
+                    lineupAfter: {
+                      starters: [],
+                      bench: [],
+                      totalStarterPoints: 0,
+                    },
+                    oneYearDelta: 0,
+                    threeYearDelta: 0,
+                    efficiency: {
+                      spotDelta: 0,
+                      consolidation: false,
+                      thinPositions: [],
+                    },
+                  }
+                }
+                loading={impactLoading}
+              />
+            )}
+        </div>
+      )}
     </div>
   );
 }

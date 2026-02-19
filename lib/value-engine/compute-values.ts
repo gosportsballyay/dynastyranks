@@ -23,13 +23,17 @@ import {
 import { eq, inArray } from "drizzle-orm";
 import { calculateVORP, calculateFantasyPoints } from "./vorp";
 import { getDynastyPremium, getAgeTier, getAgeCurveMultiplier } from "./age-curves";
-import { calculateAllReplacementLevels } from "./replacement-level";
+import {
+  calculateAllReplacementLevels,
+  calculateStarterDemand,
+  calculateLiquidityMultiplier,
+} from "./replacement-level";
 import { generateOffseasonProjection, shouldUseOffseasonProjections } from "./offseason-projections";
 import { computeLastSeasonPoints, getTargetSeasonForRankings } from "./compute-last-season";
 import { hashString, groupBy } from "@/lib/utils";
 import type { PositionGroup, DataSource } from "@/types";
 
-const ENGINE_VERSION = "1.2.0"; // Updated for estimator gating and bounds validation
+const ENGINE_VERSION = "1.3.0"; // Projection-aware replacement + liquidity multiplier
 const PROJECTION_COVERAGE_THRESHOLD = 0.70; // 70% of top players must have projections
 
 // Position bounds for projected points (plausibility check)
@@ -461,14 +465,34 @@ export async function computeLeagueValues(
       pointsByPosition[pos].sort((a, b) => b - a);
     }
 
-    // Calculate replacement levels
+    // Calculate replacement levels (projection-aware)
     const replacementLevels = calculateAllReplacementLevels(
       settings.rosterPositions,
       settings.flexRules,
       settings.positionMappings ?? undefined,
       league.totalTeams,
-      settings.benchSlots
+      pointsByPosition,
     );
+
+    // Calculate liquidity multipliers per position
+    const liquidityMultipliers: Record<string, number> = {};
+    for (const pos of Object.keys(pointsByPosition)) {
+      const demand = calculateStarterDemand(
+        pos,
+        settings.rosterPositions,
+        settings.flexRules,
+        settings.positionMappings ?? undefined,
+        league.totalTeams,
+        pointsByPosition,
+      );
+      liquidityMultipliers[pos] = calculateLiquidityMultiplier(
+        pos,
+        pointsByPosition[pos],
+        demand,
+        settings.benchSlots,
+        league.totalTeams,
+      );
+    }
 
     // Calculate VORP for each player
     const playerValuesList: Array<{
@@ -500,7 +524,8 @@ export async function computeLeagueValues(
         flexRules: settings.flexRules,
         positionMappings: settings.positionMappings ?? undefined,
         totalTeams: league.totalTeams,
-        benchSlots: settings.benchSlots,
+        liquidityMultiplier:
+          liquidityMultipliers[player.position] ?? 1.0,
       });
 
       // Calculate dynasty premium

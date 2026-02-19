@@ -128,7 +128,7 @@ async function main() {
     flexRules,
     settings.positionMappings as Record<string, string[]> | undefined,
     league.totalTeams,
-    settings.benchSlots
+    {},  // projection-aware caps use floor values in debug mode
   );
 
   console.log("\nStarters Required by Position:");

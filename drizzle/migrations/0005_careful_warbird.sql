@@ -1,0 +1,1 @@
+ALTER TABLE "player_values" ADD COLUMN "fp_value" integer;

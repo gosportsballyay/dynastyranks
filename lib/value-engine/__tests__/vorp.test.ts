@@ -7,40 +7,36 @@ describe("calculateVORP", () => {
   };
 
   test("calculates basic VORP correctly", () => {
-    // Create 50 QBs with points from 400 down to 105
     const qbPoints = createPointsArray(50, 400, 6);
 
     const result = calculateVORP({
-      playerPoints: 400, // Elite QB1
+      playerPoints: 400,
       position: "QB",
       allPlayerPoints: { QB: qbPoints },
       rosterPositions: { QB: 1 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
-    // Replacement level includes bench factor even with benchSlots=0
-    // due to BENCH_WEIGHTS[QB] = 0.5, but benchFactor = (0/12)*0.5 = 0
-    // So replacement = 12 starters exactly
-    expect(result.replacementRank).toBe(12);
-    // Replacement points = qbPoints[11] = 400 - 11*6 = 334
-    expect(result.replacementPoints).toBeCloseTo(334, 0);
-    expect(result.vorp).toBeCloseTo(66, 0); // 400 - 334
+    // Replacement rank with buffer: round(12 * 1.15) = 14
+    expect(result.replacementRank).toBe(14);
+    // Replacement points = qbPoints[13] = 400 - 13*6 = 322
+    expect(result.replacementPoints).toBeCloseTo(322, 0);
+    expect(result.vorp).toBeCloseTo(78, 0);
     expect(result.rankInPosition).toBe(1);
+    expect(result.liquidityMultiplier).toBe(1.0);
   });
 
   test("VORP is 0 for below-replacement players", () => {
     const qbPoints = createPointsArray(50, 400, 6);
 
     const result = calculateVORP({
-      playerPoints: 100, // Well below replacement
+      playerPoints: 100,
       position: "QB",
       allPlayerPoints: { QB: qbPoints },
       rosterPositions: { QB: 1 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
     expect(result.vorp).toBe(0);
@@ -51,23 +47,21 @@ describe("calculateVORP", () => {
     const rbPoints = createPointsArray(100, 350, 3);
 
     const elite = calculateVORP({
-      playerPoints: 350, // RB1
+      playerPoints: 350,
       position: "RB",
       allPlayerPoints: { RB: rbPoints },
       rosterPositions: { RB: 2 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
     const starter = calculateVORP({
-      playerPoints: 300, // Around RB17
+      playerPoints: 300,
       position: "RB",
       allPlayerPoints: { RB: rbPoints },
       rosterPositions: { RB: 2 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
     expect(elite.scarcityMultiplier).toBeGreaterThan(starter.scarcityMultiplier);
@@ -81,10 +75,9 @@ describe("calculateVORP", () => {
       rosterPositions: { QB: 1 },
       flexRules: [],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
-    expect(result.vorp).toBe(100); // Full points since replacement is 0
+    expect(result.vorp).toBe(100);
     expect(result.replacementPoints).toBe(0);
   });
 
@@ -92,31 +85,55 @@ describe("calculateVORP", () => {
     const qbPoints = createPointsArray(50, 400, 4);
     const rbPoints = createPointsArray(100, 350, 2);
 
-    // Both have 100 raw VORP
     const qb = calculateVORP({
-      playerPoints: 380, // 100 above QB13 (280)
+      playerPoints: 380,
       position: "QB",
       allPlayerPoints: { QB: qbPoints, RB: rbPoints },
       rosterPositions: { QB: 1, RB: 2, FLEX: 1 },
       flexRules: [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
     const rb = calculateVORP({
-      playerPoints: 300, // About 100 above RB replacement
+      playerPoints: 300,
       position: "RB",
       allPlayerPoints: { QB: qbPoints, RB: rbPoints },
       rosterPositions: { QB: 1, RB: 2, FLEX: 1 },
       flexRules: [{ slot: "FLEX", eligible: ["RB", "WR", "TE"] }],
       totalTeams: 12,
-      benchSlots: 0,
     });
 
-    // RB has higher demand (2 slots + flex), so normalized VORP should be lower
-    // per unit of raw VORP
     expect(rb.normalizedVorp).toBeDefined();
     expect(qb.normalizedVorp).toBeDefined();
+  });
+
+  test("liquidityMultiplier scales normalizedVorp", () => {
+    const rbPoints = createPointsArray(80, 350, 3);
+
+    const base = calculateVORP({
+      playerPoints: 350,
+      position: "RB",
+      allPlayerPoints: { RB: rbPoints },
+      rosterPositions: { RB: 2 },
+      flexRules: [],
+      totalTeams: 12,
+    });
+
+    const boosted = calculateVORP({
+      playerPoints: 350,
+      position: "RB",
+      allPlayerPoints: { RB: rbPoints },
+      rosterPositions: { RB: 2 },
+      flexRules: [],
+      totalTeams: 12,
+      liquidityMultiplier: 1.2,
+    });
+
+    expect(boosted.liquidityMultiplier).toBe(1.2);
+    expect(boosted.normalizedVorp).toBeCloseTo(
+      base.normalizedVorp * 1.2,
+      1,
+    );
   });
 });
 
@@ -152,8 +169,8 @@ describe("calculateFantasyPoints", () => {
     };
 
     const positionOverrides = {
-      tackle_solo: 2, // Double tackle points for this position
-      sack: 6, // Triple sack points
+      tackle_solo: 2,
+      sack: 6,
     };
 
     const pointsWithoutOverride = calculateFantasyPoints(projections, scoringRules);
@@ -169,17 +186,42 @@ describe("calculateFantasyPoints", () => {
   });
 
   test("handles missing scoring rules", () => {
-    const projections = { rush_yd: 1000, mystery_stat: 50 };
+    // rec_yd has no scoring rule — should contribute 0 points
+    const projections = { rush_yd: 1000, rec_yd: 50 };
     const scoringRules = { rush_yd: 0.1 };
 
     const points = calculateFantasyPoints(projections, scoringRules);
 
-    expect(points).toBe(100); // Only rush_yd counted, mystery_stat ignored
+    expect(points).toBe(100);
+  });
+
+  test("rejects non-canonical projection keys", () => {
+    const projections = { rush_yd: 1000, mystery_stat: 50 };
+    const scoringRules = { rush_yd: 0.1 };
+
+    expect(() =>
+      calculateFantasyPoints(
+        projections as Record<string, number>,
+        scoringRules,
+      ),
+    ).toThrow("Non-canonical projection stat keys: mystery_stat");
+  });
+
+  test("rejects non-canonical scoring rule keys", () => {
+    const projections = { rush_yd: 1000 };
+    const scoringRules = { rush_yd: 0.1, bad_key: 2.0 };
+
+    expect(() =>
+      calculateFantasyPoints(
+        projections,
+        scoringRules as Record<string, number>,
+      ),
+    ).toThrow("Non-canonical scoring rule keys: bad_key");
   });
 
   test("calculates bonus thresholds", () => {
     const projections = {
-      rush_yd: 1400, // ~82 per game over 17 games
+      rush_yd: 1400,
     };
 
     const scoringRules = {
@@ -203,18 +245,16 @@ describe("calculateFantasyPoints", () => {
 
     const pointsWithoutBonus = calculateFantasyPoints(projections, scoringRules);
 
-    // With 82 yd/game average, should hit some 100+ yard bonuses
     expect(pointsWithBonus).toBeGreaterThan(pointsWithoutBonus);
   });
 
   test("handles gamesPlayed parameter", () => {
-    const projections = { rush_yd: 800 }; // 800 yards total
+    const projections = { rush_yd: 800 };
     const scoringRules = { rush_yd: 0.1 };
     const bonusThresholds = {
       rush_yd: [{ min: 100, bonus: 3 }],
     };
 
-    // 800 / 8 = 100 per game (right at threshold)
     const pointsIn8 = calculateFantasyPoints(
       projections,
       scoringRules,
@@ -223,7 +263,6 @@ describe("calculateFantasyPoints", () => {
       8
     );
 
-    // 800 / 17 = 47 per game (below threshold)
     const pointsIn17 = calculateFantasyPoints(
       projections,
       scoringRules,
@@ -232,7 +271,6 @@ describe("calculateFantasyPoints", () => {
       17
     );
 
-    // Higher per-game average should yield more bonuses
     expect(pointsIn8).toBeGreaterThan(pointsIn17);
   });
 });
@@ -241,11 +279,9 @@ describe("getPercentilePoints", () => {
   test("returns correct percentile", () => {
     const points = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
 
-    // getPercentilePoints uses floor(percentile/100 * length)
-    // For 10 items: 0% = index 0, 50% = index 5, 100% = index 10 (clamped to 9)
-    expect(getPercentilePoints(points, 0)).toBe(100); // index 0
-    expect(getPercentilePoints(points, 50)).toBe(50); // index 5
-    expect(getPercentilePoints(points, 100)).toBe(10); // index 9 (clamped)
+    expect(getPercentilePoints(points, 0)).toBe(100);
+    expect(getPercentilePoints(points, 50)).toBe(50);
+    expect(getPercentilePoints(points, 100)).toBe(10);
   });
 
   test("handles empty array", () => {
@@ -269,7 +305,6 @@ describe("invariants", () => {
         rosterPositions: { QB: 1 },
         flexRules: [],
         totalTeams: 12,
-        benchSlots: 0,
       });
 
       expect(result.vorp).toBeGreaterThanOrEqual(0);
@@ -287,7 +322,6 @@ describe("invariants", () => {
         rosterPositions: { RB: 2 },
         flexRules: [],
         totalTeams: 12,
-        benchSlots: 0,
       });
 
       expect(result.scarcityMultiplier).toBeGreaterThanOrEqual(1);
@@ -296,9 +330,9 @@ describe("invariants", () => {
 
   test("normalized VORP is always finite", () => {
     const configs = [
-      { totalTeams: 4, benchSlots: 0 },
-      { totalTeams: 40, benchSlots: 100 },
-      { totalTeams: 12, benchSlots: 60 },
+      { totalTeams: 4 },
+      { totalTeams: 40 },
+      { totalTeams: 12 },
     ];
 
     const points = [350, 340, 330, 320, 310, 300];

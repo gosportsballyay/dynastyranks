@@ -1,0 +1,46 @@
+{
+  "rosterPositions": [
+    { "label": "QB", "group": "START", "start": 1 },
+    { "label": "RB", "group": "START", "start": 2 },
+    { "label": "WR", "group": "START", "start": 2 },
+    { "label": "TE", "group": "START", "start": 1 },
+    { "label": "RB/WR/TE", "group": "START", "start": 2, "eligibility": ["RB", "WR", "TE"] },
+    { "label": "BN", "max": 7 },
+    { "label": "IR", "group": "INJURED_RESERVE", "start": 2 },
+    { "label": "TAXI", "group": "TAXI", "start": 3 }
+  ],
+  "groups": [
+    {
+      "label": "Passing",
+      "scoringRules": [
+        { "category": { "id": 1, "nameSingular": "Passing Yard", "namePlural": "Passing Yards", "abbreviation": "PY" }, "pointsPer": { "value": 0.04, "formatted": "0.04" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 2, "nameSingular": "Passing TD", "namePlural": "Passing TDs", "abbreviation": "PTD" }, "points": { "value": 4, "formatted": "4" }, "applyToAll": true },
+        { "category": { "id": 3, "nameSingular": "Interception", "namePlural": "Interceptions", "abbreviation": "INT" }, "points": { "value": -2, "formatted": "-2" }, "applyToAll": true }
+      ]
+    },
+    {
+      "label": "Rushing",
+      "scoringRules": [
+        { "category": { "id": 4, "nameSingular": "Rushing Yard", "namePlural": "Rushing Yards", "abbreviation": "RY" }, "pointsPer": { "value": 0.1, "formatted": "0.1" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 5, "nameSingular": "Rushing TD", "namePlural": "Rushing TDs", "abbreviation": "RTD" }, "points": { "value": 6, "formatted": "6" }, "applyToAll": true }
+      ]
+    },
+    {
+      "label": "Receiving",
+      "scoringRules": [
+        { "category": { "id": 6, "nameSingular": "Receiving Yard", "namePlural": "Receiving Yards", "abbreviation": "REY" }, "pointsPer": { "value": 0.1, "formatted": "0.1" }, "points": { "value": 0, "formatted": "0" }, "applyToAll": true },
+        { "category": { "id": 7, "nameSingular": "Receiving TD", "namePlural": "Receiving TDs", "abbreviation": "RETD" }, "points": { "value": 6, "formatted": "6" }, "applyToAll": true },
+        { "category": { "id": 8, "nameSingular": "Reception", "namePlural": "Receptions", "abbreviation": "REC" }, "points": { "value": 1.0, "formatted": "1" }, "applyToAll": true },
+        { "category": { "id": 20, "nameSingular": "Reception", "namePlural": "Receptions", "abbreviation": "REC" }, "points": { "value": 1.5, "formatted": "1.5" }, "applyTo": ["TE"], "applyToAll": false }
+      ]
+    },
+    {
+      "label": "Misc",
+      "scoringRules": [
+        { "category": { "id": 9, "nameSingular": "Fumble Lost", "namePlural": "Fumbles Lost", "abbreviation": "FL" }, "points": { "value": -2, "formatted": "-2" }, "applyToAll": true }
+      ]
+    }
+  ],
+  "numStarters": 9,
+  "numBench": 7
+}

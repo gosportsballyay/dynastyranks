@@ -43,6 +43,12 @@ python3 scripts/scrape_dynastyprocess.py $DRY_RUN
 
 echo ""
 
+# Step 3.5: Fetch FantasyPros IDP dynasty ECR
+echo ">>> Step 3.5: Fetching FantasyPros IDP dynasty rankings..."
+python3 scripts/scrape_fantasypros_idp.py $DRY_RUN
+
+echo ""
+
 # Step 4: Match external rankings to canonical players (TypeScript)
 if [[ -z "$DRY_RUN" ]]; then
     echo ">>> Step 4: Matching rankings to canonical players..."

@@ -13,6 +13,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import type { CanonicalStatKey } from "@/lib/stats/canonical-keys";
 
 /**
  * Enums
@@ -138,10 +139,12 @@ export const leagueSettings = pgTable("league_settings", {
     .references(() => leagues.id, { onDelete: "cascade" })
     .unique(),
   // Scoring rules: {"pass_yd": 0.04, "rush_yd": 0.1, "rec": 1.0, ...}
-  scoringRules: jsonb("scoring_rules").notNull().$type<Record<string, number>>(),
+  scoringRules: jsonb("scoring_rules").notNull().$type<
+    Partial<Record<CanonicalStatKey, number>>
+  >(),
   // Position-specific scoring overrides: {"EDR": {"sack": 3.5}, "CB": {"int": 5.0}}
   positionScoringOverrides: jsonb("position_scoring_overrides").$type<
-    Record<string, Record<string, number>>
+    Record<string, Partial<Record<CanonicalStatKey, number>>>
   >(),
   // Roster positions: {"QB": 1, "RB": 2, "FLEX": 2, "DL": 2, "LB": 3, ...}
   rosterPositions: jsonb("roster_positions").notNull().$type<Record<string, number>>(),
@@ -401,12 +404,15 @@ export const playerValues = pgTable(
     ktcValue: integer("ktc_value"),
     fcValue: integer("fc_value"),
     dpValue: integer("dp_value"),
+    fpValue: integer("fp_value"), // FantasyPros
     // Blend components (transparency)
     consensusComponent: real("consensus_component"),
     leagueSignalComponent: real("league_signal_component"),
     // Unified engine confidence
     lowConfidence: boolean("low_confidence").default(false),
     valueSource: varchar("value_source", { length: 30 }),
+    // Normalized eligibility position (null = no normalization applied)
+    eligibilityPosition: varchar("eligibility_position", { length: 20 }),
     // Confidence
     confidenceBand: jsonb("confidence_band").$type<{
       lower: number;
@@ -568,6 +574,22 @@ export const aggregatedValues = pgTable(
       table.aggregatedRank
     ),
   })
+);
+
+/**
+ * Player Position Overrides (manual or external position corrections)
+ */
+export const playerPositionOverrides = pgTable(
+  "player_position_overrides",
+  {
+    playerId: uuid("player_id")
+      .primaryKey()
+      .references(() => canonicalPlayers.id, { onDelete: "cascade" }),
+    canonicalPosition: varchar("canonical_position", { length: 20 })
+      .notNull(),
+    source: varchar("source", { length: 20 }).notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  }
 );
 
 /**

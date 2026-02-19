@@ -100,7 +100,7 @@ export default function LeagueDataDebugPage() {
       } else if (key.startsWith("rec") || key === "te_rec_bonus") {
         groups.Receiving[key] = value;
       } else if (
-        ["tackle_solo", "tackle_assist", "tfl", "sack", "qb_hit", "def_int", "ff", "fum_rec", "pd", "safety", "def_td", "blk_kick"].includes(key)
+        ["tackle", "tackle_solo", "tackle_assist", "tackle_ast", "tackle_loss", "tackle_loss_yd", "sack", "sack_yd", "qb_hit", "def_int", "def_int_yd", "fum_force", "fum_rec", "fum_rec_yd", "pass_def", "safety", "def_td", "def_fum", "blk_kick"].includes(key)
       ) {
         groups.IDP[key] = value;
       } else {

@@ -10,9 +10,23 @@ import {
   rosters,
   playerValues,
   canonicalPlayers,
+  draftPicks,
 } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sum } from "drizzle-orm";
 import { TeamRankingsTable } from "@/components/summary/team-rankings-table";
+import {
+  calculateAllReplacementLevels,
+  calculateStarterDemand,
+} from "@/lib/value-engine/replacement-level";
+import {
+  computeTeamNeeds,
+  classifyTeams,
+  computeUpgradeTargets,
+  type PositionStrength,
+  type TeamNeedInput,
+  type TeamTier,
+  type TeamNeedsResult,
+} from "@/lib/value-engine/team-needs";
 
 interface PageProps {
   params: { id: string };
@@ -40,6 +54,28 @@ interface TeamRanking {
   idpValue: number;
   idpRank: number;
   roster: RosterPlayer[];
+  needs?: PositionStrength[];
+  surplus?: PositionStrength[];
+  upgradeTargets?: PositionStrength[];
+  teamTier?: TeamTier;
+  teamCompetitivePercentile?: number;
+  // Team Profile
+  averageAge: number | null;
+  under26ValueShare: number;
+  over28ValueShare: number;
+  draftPickValue: number;
+  // Competitive Snapshot
+  teamCompetitiveScore: number;
+  gapToLeader: number;
+  gapToContenderMedian: number;
+  strongestUnit: string | null;
+  weakestUnit: string | null;
+  // Slot splits
+  benchValue: number;
+  taxiValue: number;
+  irValue: number;
+  // Position ranks
+  positionRanks: Record<string, { value: number; rank: number }>;
 }
 
 export default async function LeagueSummaryPage({ params }: PageProps) {
@@ -60,36 +96,53 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     notFound();
   }
 
-  // Parallel fetch: settings, teams, and rosters
+  // Parallel fetch: settings, teams, rosters, and draft picks
   let leagueTeams;
   let rosterData;
   let settings;
+  let draftPickSums: Map<string, number>;
   try {
-    const [settingsResult, teamsResult, rostersResult] = await Promise.all([
-      db.select().from(leagueSettings).where(eq(leagueSettings.leagueId, league.id)).limit(1),
-      db.select().from(teams).where(eq(teams.leagueId, league.id)),
-      db
-        .select({
-          roster: rosters,
-          player: canonicalPlayers,
-          value: playerValues,
-        })
-        .from(rosters)
-        .innerJoin(teams, eq(rosters.teamId, teams.id))
-        .innerJoin(canonicalPlayers, eq(rosters.canonicalPlayerId, canonicalPlayers.id))
-        .leftJoin(
-          playerValues,
-          and(
-            eq(playerValues.canonicalPlayerId, canonicalPlayers.id),
-            eq(playerValues.leagueId, league.id)
+    const [settingsResult, teamsResult, rostersResult, picksResult] =
+      await Promise.all([
+        db.select().from(leagueSettings)
+          .where(eq(leagueSettings.leagueId, league.id)).limit(1),
+        db.select().from(teams)
+          .where(eq(teams.leagueId, league.id)),
+        db
+          .select({
+            roster: rosters,
+            player: canonicalPlayers,
+            value: playerValues,
+          })
+          .from(rosters)
+          .innerJoin(teams, eq(rosters.teamId, teams.id))
+          .innerJoin(
+            canonicalPlayers,
+            eq(rosters.canonicalPlayerId, canonicalPlayers.id),
           )
-        )
-        .where(eq(teams.leagueId, league.id)),
-    ]);
+          .leftJoin(
+            playerValues,
+            and(
+              eq(playerValues.canonicalPlayerId, canonicalPlayers.id),
+              eq(playerValues.leagueId, league.id),
+            ),
+          )
+          .where(eq(teams.leagueId, league.id)),
+        db.select({
+          ownerTeamId: draftPicks.ownerTeamId,
+          totalValue: sum(draftPicks.value),
+        })
+          .from(draftPicks)
+          .where(eq(draftPicks.leagueId, league.id))
+          .groupBy(draftPicks.ownerTeamId),
+      ]);
 
     [settings] = settingsResult;
     leagueTeams = teamsResult;
     rosterData = rostersResult;
+    draftPickSums = new Map(
+      picksResult.map((r) => [r.ownerTeamId, Number(r.totalValue) || 0]),
+    );
   } catch (error) {
     console.error("Failed to fetch league data:", error);
     return (
@@ -143,34 +196,43 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     );
   }
 
+  // Position-group mapping for detailed view
+  const POS_GROUP_MAP: Record<string, string> = {
+    QB: "QB", RB: "RB", WR: "WR", TE: "TE",
+    DL: "DL", EDR: "DL", IL: "DL",
+    LB: "LB",
+    DB: "DB", CB: "DB", S: "DB",
+  };
+  const POS_GROUPS = ["QB", "RB", "WR", "TE", "DL", "LB", "DB"];
+
   // Calculate team rankings
   const teamRankings: TeamRanking[] = leagueTeams.map((team) => {
-    const teamRoster = rosterData.filter((r) => r.roster.teamId === team.id);
+    const teamRoster = rosterData.filter(
+      (r) => r.roster.teamId === team.id,
+    );
 
     // Calculate values by category
-    const starterRoster = teamRoster.filter((r) => r.roster.slotPosition === "START");
+    const starterRoster = teamRoster.filter(
+      (r) => r.roster.slotPosition === "START",
+    );
     const offenseRoster = teamRoster.filter(
-      (r) => r.player.positionGroup === "offense"
+      (r) => r.player.positionGroup === "offense",
     );
     const idpRoster = teamRoster.filter(
-      (r) => r.player.positionGroup === "defense"
+      (r) => r.player.positionGroup === "defense",
     );
 
     const overallValue = teamRoster.reduce(
-      (sum, r) => sum + (r.value?.value || 0),
-      0
+      (s, r) => s + (r.value?.value || 0), 0,
     );
     const starterValue = starterRoster.reduce(
-      (sum, r) => sum + (r.value?.value || 0),
-      0
+      (s, r) => s + (r.value?.value || 0), 0,
     );
     const offenseValue = offenseRoster.reduce(
-      (sum, r) => sum + (r.value?.value || 0),
-      0
+      (s, r) => s + (r.value?.value || 0), 0,
     );
     const idpValue = idpRoster.reduce(
-      (sum, r) => sum + (r.value?.value || 0),
-      0
+      (s, r) => s + (r.value?.value || 0), 0,
     );
 
     // Build roster player list for expanded details
@@ -182,13 +244,45 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       slot: r.roster.slotPosition || "BN",
     }));
 
+    // Age metrics
+    const withAge = roster.filter((p) => p.age !== null);
+    const averageAge = withAge.length > 0
+      ? withAge.reduce((s, p) => s + (p.age ?? 0), 0) / withAge.length
+      : null;
+    const under26Val = roster
+      .filter((p) => p.age !== null && p.age < 26)
+      .reduce((s, p) => s + p.value, 0);
+    const over28Val = roster
+      .filter((p) => p.age !== null && p.age > 28)
+      .reduce((s, p) => s + p.value, 0);
+    const under26ValueShare = overallValue > 0
+      ? (under26Val / overallValue) * 100 : 0;
+    const over28ValueShare = overallValue > 0
+      ? (over28Val / overallValue) * 100 : 0;
+
+    // Slot-based values
+    const slotVal = (slots: string[]) => roster
+      .filter((p) => slots.includes(p.slot))
+      .reduce((s, p) => s + p.value, 0);
+    const benchValue = slotVal(["BN", "TAXI", "IR"]);
+    const taxiValue = slotVal(["TAXI"]);
+    const irValue = slotVal(["IR"]);
+
+    // Position-group values (for ranking later)
+    const posGroupValues: Record<string, number> = {};
+    for (const g of POS_GROUPS) posGroupValues[g] = 0;
+    for (const p of roster) {
+      const g = POS_GROUP_MAP[p.position];
+      if (g) posGroupValues[g] += p.value;
+    }
+
     return {
       teamId: team.id,
       teamName: team.teamName,
       ownerName: team.ownerName,
       isCurrentUser: team.id === league.userTeamId,
       overallValue,
-      overallRank: 0, // Will be calculated after sorting
+      overallRank: 0,
       starterValue,
       starterRank: 0,
       offenseValue,
@@ -196,6 +290,21 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       idpValue,
       idpRank: 0,
       roster,
+      averageAge,
+      under26ValueShare,
+      over28ValueShare,
+      draftPickValue: draftPickSums.get(team.id) ?? 0,
+      teamCompetitiveScore: 0,
+      gapToLeader: 0,
+      gapToContenderMedian: 0,
+      strongestUnit: null,
+      weakestUnit: null,
+      benchValue,
+      taxiValue,
+      irValue,
+      positionRanks: Object.fromEntries(
+        POS_GROUPS.map((g) => [g, { value: posGroupValues[g], rank: 0 }]),
+      ),
     };
   });
 
@@ -212,14 +321,170 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
   const sortByIdp = [...teamRankings].sort((a, b) => b.idpValue - a.idpValue);
 
   teamRankings.forEach((team) => {
-    team.overallRank = sortByOverall.findIndex((t) => t.teamId === team.teamId) + 1;
-    team.starterRank = sortByStarter.findIndex((t) => t.teamId === team.teamId) + 1;
-    team.offenseRank = sortByOffense.findIndex((t) => t.teamId === team.teamId) + 1;
-    team.idpRank = sortByIdp.findIndex((t) => t.teamId === team.teamId) + 1;
+    team.overallRank = sortByOverall.findIndex(
+      (t) => t.teamId === team.teamId,
+    ) + 1;
+    team.starterRank = sortByStarter.findIndex(
+      (t) => t.teamId === team.teamId,
+    ) + 1;
+    team.offenseRank = sortByOffense.findIndex(
+      (t) => t.teamId === team.teamId,
+    ) + 1;
+    team.idpRank = sortByIdp.findIndex(
+      (t) => t.teamId === team.teamId,
+    ) + 1;
   });
+
+  // Position-group ranks
+  for (const group of POS_GROUPS) {
+    const allZero = teamRankings.every(
+      (t) => t.positionRanks[group].value === 0,
+    );
+    if (allZero) {
+      // Leave rank as 0 to signal "no data" for this group
+      continue;
+    }
+    const sorted = [...teamRankings].sort(
+      (a, b) =>
+        b.positionRanks[group].value - a.positionRanks[group].value,
+    );
+    teamRankings.forEach((team) => {
+      team.positionRanks[group].rank =
+        sorted.findIndex((t) => t.teamId === team.teamId) + 1;
+    });
+  }
 
   // Sort by overall rank for display
   teamRankings.sort((a, b) => a.overallRank - b.overallRank);
+
+  // --- V2 Team Needs ---
+  if (settings) {
+    const { rosterPositions, flexRules, positionMappings } =
+      settings;
+
+    const repLevels = calculateAllReplacementLevels(
+      rosterPositions,
+      flexRules,
+      positionMappings ?? undefined,
+      league.totalTeams,
+      {},  // no projections needed for team-needs
+    );
+
+    // Build league-wide player lists per position (sorted desc)
+    const leagueByPosition: Record<
+      string,
+      Array<{ value: number }>
+    > = {};
+    for (const r of rosterData) {
+      const pos = r.player.position;
+      if (!leagueByPosition[pos]) leagueByPosition[pos] = [];
+      leagueByPosition[pos].push({ value: r.value?.value ?? 0 });
+    }
+    for (const arr of Object.values(leagueByPosition)) {
+      arr.sort((a, b) => b.value - a.value);
+    }
+
+    // Per-position starter demand (per-team)
+    const positions = Object.keys(repLevels);
+    const starterDemands: Record<string, number> = {};
+    for (const pos of positions) {
+      starterDemands[pos] =
+        calculateStarterDemand(
+          pos,
+          rosterPositions,
+          flexRules,
+          positionMappings ?? undefined,
+          league.totalTeams,
+        ) / league.totalTeams;
+    }
+
+    const allResults: TeamNeedsResult[] = [];
+
+    for (const team of teamRankings) {
+      // Group this team's players by position
+      const teamByPosition: Record<
+        string,
+        Array<{ value: number }>
+      > = {};
+      for (const p of team.roster) {
+        if (!teamByPosition[p.position]) {
+          teamByPosition[p.position] = [];
+        }
+        teamByPosition[p.position].push({ value: p.value });
+      }
+      for (const arr of Object.values(teamByPosition)) {
+        arr.sort((a, b) => b.value - a.value);
+      }
+
+      const posInputs: Record<string, TeamNeedInput> = {};
+      for (const pos of positions) {
+        posInputs[pos] = {
+          leaguePlayers: leagueByPosition[pos] ?? [],
+          teamPlayers: teamByPosition[pos] ?? [],
+          starterDemand: starterDemands[pos] ?? 0,
+          replacementRank: repLevels[pos] ?? 1,
+        };
+      }
+
+      const result = computeTeamNeeds(posInputs);
+      team.needs = result.needs;
+      team.surplus = result.surplus;
+      allResults.push(result);
+    }
+
+    // Classify teams by competitive tier (mutates results in place)
+    classifyTeams(allResults);
+
+    // Split surplus into upgrade targets vs true surplus
+    computeUpgradeTargets(allResults);
+
+    // Assign tier, percentile, surplus, upgrade targets, and score
+    for (let i = 0; i < teamRankings.length; i++) {
+      teamRankings[i].teamTier = allResults[i].teamTier ?? undefined;
+      teamRankings[i].teamCompetitivePercentile =
+        allResults[i].teamCompetitivePercentile ?? undefined;
+      teamRankings[i].surplus = allResults[i].surplus;
+      teamRankings[i].upgradeTargets = allResults[i].upgradeTargets;
+      teamRankings[i].teamCompetitiveScore =
+        allResults[i].teamCompetitiveScore;
+    }
+
+    // Competitive snapshot: gaps and strongest/weakest units
+    const maxScore = Math.max(
+      ...teamRankings.map((t) => t.teamCompetitiveScore),
+    );
+    const contenderScores = teamRankings
+      .filter((t) => t.teamTier === "contender")
+      .map((t) => t.teamCompetitiveScore);
+    const contenderMedian = contenderScores.length > 0
+      ? (() => {
+          const s = [...contenderScores].sort((a, b) => a - b);
+          const mid = Math.floor(s.length / 2);
+          return s.length % 2 !== 0
+            ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+        })()
+      : maxScore;
+
+    for (const team of teamRankings) {
+      team.gapToLeader = maxScore - team.teamCompetitiveScore;
+      team.gapToContenderMedian =
+        contenderMedian - team.teamCompetitiveScore;
+
+      // Strongest / weakest unit by rank (lower = better)
+      const ranked = POS_GROUPS
+        .filter((g) => team.positionRanks[g].rank > 0);
+      if (ranked.length > 0) {
+        team.strongestUnit = ranked.reduce((best, g) =>
+          team.positionRanks[g].rank < team.positionRanks[best].rank
+            ? g : best,
+        );
+        team.weakestUnit = ranked.reduce((worst, g) =>
+          team.positionRanks[g].rank > team.positionRanks[worst].rank
+            ? g : worst,
+        );
+      }
+    }
+  }
 
   return (
     <div>

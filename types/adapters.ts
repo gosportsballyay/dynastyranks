@@ -2,6 +2,8 @@
  * Adapter Types - Normalized data structures from fantasy providers
  */
 
+import type { CanonicalStatKey } from "@/lib/stats/canonical-keys";
+
 export type Provider = "sleeper" | "fleaflicker" | "espn" | "yahoo";
 
 export type IDPStructure = "none" | "consolidated" | "granular" | "mixed";
@@ -34,9 +36,12 @@ export interface FlexRule {
  */
 export interface AdapterSettings {
   // Scoring: {"pass_yd": 0.04, "rush_yd": 0.1, "rec": 1.0, "tackle_solo": 1.0, ...}
-  scoringRules: Record<string, number>;
+  scoringRules: Partial<Record<CanonicalStatKey, number>>;
   // Position-specific overrides: {"EDR": {"sack": 3.5}, "CB": {"int": 5.0}}
-  positionScoringOverrides?: Record<string, Record<string, number>>;
+  positionScoringOverrides?: Record<
+    string,
+    Partial<Record<CanonicalStatKey, number>>
+  >;
   // Roster positions: {"QB": 1, "RB": 2, "FLEX": 2, "DL": 2, ...}
   rosterPositions: Record<string, number>;
   // Flex eligibility rules

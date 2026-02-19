@@ -3,6 +3,7 @@
  */
 
 import type { Provider, IDPStructure, FlexRule } from "./adapters";
+import type { CanonicalStatKey } from "@/lib/stats/canonical-keys";
 
 /**
  * League from database
@@ -30,8 +31,11 @@ export interface League {
 export interface LeagueSettings {
   id: string;
   leagueId: string;
-  scoringRules: Record<string, number>;
-  positionScoringOverrides?: Record<string, Record<string, number>>;
+  scoringRules: Partial<Record<CanonicalStatKey, number>>;
+  positionScoringOverrides?: Record<
+    string,
+    Partial<Record<CanonicalStatKey, number>>
+  >;
   rosterPositions: Record<string, number>;
   flexRules: FlexRule[];
   positionMappings?: Record<string, string[]>;
