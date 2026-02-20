@@ -1,0 +1,4064 @@
+{
+  "generated": "2026-02-20T02:16:52.329Z",
+  "engineVersion": "3.0.0",
+  "leagueCount": 12,
+  "leagues": [
+    {
+      "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+      "leagueName": "💥Boom or Bust💦",
+      "format": {
+        "teams": 6,
+        "superFlex": true,
+        "idpStructure": "consolidated",
+        "idpSlots": 2,
+        "rosterPositions": {
+          "K": 1,
+          "QB": 2,
+          "RB": 2,
+          "TE": 2,
+          "WR": 3,
+          "DST": 1,
+          "FLEX": 2,
+          "IDP_FLEX": 2
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 1,
+          "value": 9129
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 9075
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 3,
+          "value": 8723
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8582
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 5,
+          "value": 7706
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 6,
+          "value": 7622
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 7,
+          "value": 7574
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 8,
+          "value": 7435
+        },
+        {
+          "name": "De'Von Achane",
+          "position": "RB",
+          "rank": 9,
+          "value": 6554
+        },
+        {
+          "name": "Trey McBride",
+          "position": "TE",
+          "rank": 10,
+          "value": 6547
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 17,
+            "value": 5244
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 34,
+            "value": 4146
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 36,
+            "value": 4018
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 38,
+            "value": 3922
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 39,
+            "value": 3880
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 1,
+            "value": 9129
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 3,
+            "value": 8723
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 9,
+            "value": 6554
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 11,
+            "value": 6284
+          },
+          {
+            "name": "James Cook",
+            "rank": 15,
+            "value": 5572
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 9075
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8582
+          },
+          {
+            "name": "Amon-Ra St. Brown",
+            "rank": 5,
+            "value": 7706
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 6,
+            "value": 7622
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 7,
+            "value": 7574
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 10,
+            "value": 6547
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 13,
+            "value": 5774
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 23,
+            "value": 4876
+          },
+          {
+            "name": "George Kittle",
+            "rank": 32,
+            "value": 4289
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 43,
+            "value": 3725
+          }
+        ],
+        "EDR": [
+          {
+            "name": "Aidan Hutchinson",
+            "rank": 95,
+            "value": 2504
+          },
+          {
+            "name": "Maxx Crosby",
+            "rank": 96,
+            "value": 2504
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 9129,
+        "valueAtRank10": 6547,
+        "valueAtRank25": 4730,
+        "valueAtRank50": 3561,
+        "replacementTierCutoff": 90,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 1,
+        "totalPlayersValued": 1682
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 17,
+          "rankInPosition": 1,
+          "value": 5244,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 6,
+          "rankInPosition": 4,
+          "value": 7622,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 24,
+          "rankInPosition": 9,
+          "value": 4817,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 14,
+          "rankInPosition": 8,
+          "value": 5774,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 80,
+          "rankInPosition": 11,
+          "value": 2953,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": false
+        },
+        {
+          "name": "Micah Parsons",
+          "position": "EDR",
+          "rank": 259,
+          "rankInPosition": 6,
+          "value": 1436,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": true
+        },
+        {
+          "name": "Roquan Smith",
+          "position": "LB",
+          "rank": 147,
+          "rankInPosition": 23,
+          "value": 2390,
+          "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+          "leagueName": "💥Boom or Bust💦",
+          "idpOnly": true
+        }
+      ]
+    },
+    {
+      "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+      "leagueName": "Heads Will Roll",
+      "format": {
+        "teams": 8,
+        "superFlex": true,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 2,
+          "RB": 3,
+          "TE": 1,
+          "WR": 4
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 1,
+          "value": 9346
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 9139
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 3,
+          "value": 8927
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8554
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 5,
+          "value": 7862
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 6,
+          "value": 7586
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 7,
+          "value": 7548
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "value": 7521
+        },
+        {
+          "name": "De'Von Achane",
+          "position": "RB",
+          "rank": 9,
+          "value": 6795
+        },
+        {
+          "name": "Jonathan Taylor",
+          "position": "RB",
+          "rank": 10,
+          "value": 6607
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 11,
+            "value": 6390
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 24,
+            "value": 4949
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 25,
+            "value": 4934
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 30,
+            "value": 4717
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 31,
+            "value": 4712
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 1,
+            "value": 9346
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 3,
+            "value": 8927
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 9,
+            "value": 6795
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 10,
+            "value": 6607
+          },
+          {
+            "name": "James Cook",
+            "rank": 12,
+            "value": 6239
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 9139
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8554
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 5,
+            "value": 7862
+          },
+          {
+            "name": "Amon-Ra St. Brown",
+            "rank": 6,
+            "value": 7586
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 7,
+            "value": 7548
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 16,
+            "value": 5560
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 18,
+            "value": 5256
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 37,
+            "value": 4303
+          },
+          {
+            "name": "George Kittle",
+            "rank": 54,
+            "value": 3696
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 55,
+            "value": 3664
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 9346,
+        "valueAtRank10": 6607,
+        "valueAtRank25": 4934,
+        "valueAtRank50": 3800,
+        "replacementTierCutoff": 80,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 3,
+        "totalPlayersValued": 1436
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 11,
+          "rankInPosition": 1,
+          "value": 6390,
+          "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+          "leagueName": "Heads Will Roll",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "rankInPosition": 6,
+          "value": 7521,
+          "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+          "leagueName": "Heads Will Roll",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 27,
+          "rankInPosition": 11,
+          "value": 4849,
+          "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+          "leagueName": "Heads Will Roll",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 15,
+          "rankInPosition": 9,
+          "value": 5710,
+          "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+          "leagueName": "Heads Will Roll",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 164,
+          "rankInPosition": 23,
+          "value": 1851,
+          "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+          "leagueName": "Heads Will Roll",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+      "leagueName": "Full Spectrum League",
+      "format": {
+        "teams": 10,
+        "superFlex": false,
+        "idpStructure": "consolidated",
+        "idpSlots": 12,
+        "rosterPositions": {
+          "K": 1,
+          "DB": 4,
+          "DL": 4,
+          "LB": 3,
+          "QB": 1,
+          "RB": 2,
+          "TE": 1,
+          "WR": 3,
+          "DST": 1,
+          "FLEX": 1,
+          "IDP_FLEX": 1,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8823
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8614
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8350
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8165
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 7938
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 6,
+          "value": 7468
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 7,
+          "value": 7353
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "value": 7311
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 9,
+          "value": 7306
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 10,
+          "value": 7304
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8823
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 6,
+            "value": 7468
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 6861
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 12,
+            "value": 6597
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 17,
+            "value": 5891
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8350
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 7938
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 13,
+            "value": 6402
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 16,
+            "value": 5990
+          },
+          {
+            "name": "James Cook",
+            "rank": 18,
+            "value": 5563
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8614
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8165
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 7,
+            "value": 7353
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 8,
+            "value": 7311
+          },
+          {
+            "name": "Amon-Ra St. Brown",
+            "rank": 9,
+            "value": 7306
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 14,
+            "value": 6258
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 20,
+            "value": 5453
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 39,
+            "value": 4543
+          },
+          {
+            "name": "George Kittle",
+            "rank": 75,
+            "value": 4125
+          }
+        ],
+        "LB": [
+          {
+            "name": "Nakobe Dean",
+            "rank": 52,
+            "value": 4186
+          },
+          {
+            "name": "Quay Walker",
+            "rank": 53,
+            "value": 4186
+          },
+          {
+            "name": "Terrel Bernard",
+            "rank": 54,
+            "value": 4186
+          },
+          {
+            "name": "Jeremiah Owusu-Koramoah",
+            "rank": 55,
+            "value": 4186
+          },
+          {
+            "name": "Nick Bolton",
+            "rank": 56,
+            "value": 4186
+          }
+        ],
+        "EDR": [
+          {
+            "name": "Aidan Hutchinson",
+            "rank": 37,
+            "value": 4623
+          },
+          {
+            "name": "Maxx Crosby",
+            "rank": 40,
+            "value": 4486
+          },
+          {
+            "name": "T.J. Watt",
+            "rank": 43,
+            "value": 4342
+          },
+          {
+            "name": "Andrew Van Ginkel",
+            "rank": 44,
+            "value": 4339
+          },
+          {
+            "name": "Myles Garrett",
+            "rank": 45,
+            "value": 4321
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8823,
+        "valueAtRank10": 7304,
+        "valueAtRank25": 5264,
+        "valueAtRank50": 4265,
+        "replacementTierCutoff": 230,
+        "countOfIDPInTop50": 7,
+        "countOfQBInTop25": 7,
+        "totalPlayersValued": 1681
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8823,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "rankInPosition": 4,
+          "value": 7311,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 33,
+          "rankInPosition": 10,
+          "value": 4703,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 19,
+          "rankInPosition": 8,
+          "value": 5534,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 170,
+          "rankInPosition": 8,
+          "value": 2899,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": false
+        },
+        {
+          "name": "Micah Parsons",
+          "position": "EDR",
+          "rank": 49,
+          "rankInPosition": 6,
+          "value": 4273,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": true
+        },
+        {
+          "name": "Roquan Smith",
+          "position": "LB",
+          "rank": 69,
+          "rankInPosition": 18,
+          "value": 4186,
+          "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+          "leagueName": "Full Spectrum League",
+          "idpOnly": true
+        }
+      ]
+    },
+    {
+      "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+      "leagueName": "Real Man’s Football",
+      "format": {
+        "teams": 10,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 1,
+          "RB": 2,
+          "TE": 1,
+          "WR": 3,
+          "FLEX": 3,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 9183
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8798
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8520
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8297
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 8033
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 6,
+          "value": 7778
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 7,
+          "value": 7608
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7386
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "value": 7301
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 10,
+          "value": 7290
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 9183
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 7,
+            "value": 7608
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 7281
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 12,
+            "value": 6576
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 15,
+            "value": 6145
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8520
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 8033
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 13,
+            "value": 6298
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 18,
+            "value": 5931
+          },
+          {
+            "name": "James Cook",
+            "rank": 20,
+            "value": 5645
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8798
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8297
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 6,
+            "value": 7778
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 8,
+            "value": 7386
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 9,
+            "value": 7301
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 14,
+            "value": 6190
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 19,
+            "value": 5756
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 39,
+            "value": 4493
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 56,
+            "value": 3884
+          },
+          {
+            "name": "George Kittle",
+            "rank": 58,
+            "value": 3742
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 9183,
+        "valueAtRank10": 7290,
+        "valueAtRank25": 5020,
+        "valueAtRank50": 4161,
+        "replacementTierCutoff": 110,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 8,
+        "totalPlayersValued": 1437
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 9183,
+          "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+          "leagueName": "Real Man’s Football",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "rankInPosition": 5,
+          "value": 7301,
+          "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+          "leagueName": "Real Man’s Football",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 37,
+          "rankInPosition": 10,
+          "value": 4568,
+          "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+          "leagueName": "Real Man’s Football",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 24,
+          "rankInPosition": 9,
+          "value": 5329,
+          "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+          "leagueName": "Real Man’s Football",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 116,
+          "rankInPosition": 15,
+          "value": 2479,
+          "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+          "leagueName": "Real Man’s Football",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+      "leagueName": "DFL",
+      "format": {
+        "teams": 12,
+        "superFlex": false,
+        "idpStructure": "consolidated",
+        "idpSlots": 11,
+        "rosterPositions": {
+          "DB": 3,
+          "DL": 3,
+          "LB": 2,
+          "QB": 1,
+          "RB": 1,
+          "TE": 1,
+          "WR": 2,
+          "FLEX": 5,
+          "IDP_FLEX": 3,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8669
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8497
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8335
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8163
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 7970
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 6,
+          "value": 7476
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 7,
+          "value": 7423
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7422
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "value": 7374
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 10,
+          "value": 7367
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8669
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 6,
+            "value": 7476
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 6991
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 13,
+            "value": 6691
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 18,
+            "value": 6101
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8335
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 7970
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 14,
+            "value": 6676
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 16,
+            "value": 6358
+          },
+          {
+            "name": "James Cook",
+            "rank": 19,
+            "value": 6063
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8497
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8163
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 7,
+            "value": 7423
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 8,
+            "value": 7422
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 9,
+            "value": 7374
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 12,
+            "value": 6816
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 15,
+            "value": 6545
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 27,
+            "value": 5437
+          },
+          {
+            "name": "George Kittle",
+            "rank": 40,
+            "value": 4719
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 42,
+            "value": 4688
+          }
+        ],
+        "LB": [
+          {
+            "name": "Zaire Franklin",
+            "rank": 53,
+            "value": 4368
+          },
+          {
+            "name": "Jeremiah Owusu-Koramoah",
+            "rank": 69,
+            "value": 4222
+          },
+          {
+            "name": "Roquan Smith",
+            "rank": 72,
+            "value": 4156
+          },
+          {
+            "name": "Robert Spillane",
+            "rank": 74,
+            "value": 4143
+          },
+          {
+            "name": "Foyesade Oluokun",
+            "rank": 76,
+            "value": 4130
+          }
+        ],
+        "EDR": [
+          {
+            "name": "Aidan Hutchinson",
+            "rank": 44,
+            "value": 4649
+          },
+          {
+            "name": "Maxx Crosby",
+            "rank": 56,
+            "value": 4298
+          },
+          {
+            "name": "Micah Parsons",
+            "rank": 63,
+            "value": 4254
+          },
+          {
+            "name": "T.J. Watt",
+            "rank": 65,
+            "value": 4241
+          },
+          {
+            "name": "Myles Garrett",
+            "rank": 68,
+            "value": 4225
+          }
+        ],
+        "CB": [
+          {
+            "name": "Paulson Adebo",
+            "rank": 73,
+            "value": 4150
+          }
+        ],
+        "S": [
+          {
+            "name": "Antoine Winfield",
+            "rank": 71,
+            "value": 4174
+          },
+          {
+            "name": "Jaquan Brisker",
+            "rank": 95,
+            "value": 3925
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8669,
+        "valueAtRank10": 7367,
+        "valueAtRank25": 5569,
+        "valueAtRank50": 4443,
+        "replacementTierCutoff": 264,
+        "countOfIDPInTop50": 1,
+        "countOfQBInTop25": 6,
+        "totalPlayersValued": 1678
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8669,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "rankInPosition": 5,
+          "value": 7374,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 33,
+          "rankInPosition": 11,
+          "value": 5113,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 20,
+          "rankInPosition": 8,
+          "value": 5854,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 125,
+          "rankInPosition": 16,
+          "value": 3661,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": false
+        },
+        {
+          "name": "Micah Parsons",
+          "position": "EDR",
+          "rank": 63,
+          "rankInPosition": 3,
+          "value": 4254,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": true
+        },
+        {
+          "name": "Roquan Smith",
+          "position": "LB",
+          "rank": 72,
+          "rankInPosition": 3,
+          "value": 4156,
+          "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+          "leagueName": "DFL",
+          "idpOnly": true
+        }
+      ]
+    },
+    {
+      "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+      "leagueName": "The Yuk",
+      "format": {
+        "teams": 12,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 1,
+          "RB": 2,
+          "TE": 1,
+          "WR": 2,
+          "FLEX": 3,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8951
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8652
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8468
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8241
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 8030
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 6,
+          "value": 7546
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 7,
+          "value": 7458
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7405
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "value": 7347
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 10,
+          "value": 7334
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8951
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 6,
+            "value": 7546
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 7159
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 12,
+            "value": 6731
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 15,
+            "value": 6297
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8468
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 8030
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 14,
+            "value": 6535
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 16,
+            "value": 6185
+          },
+          {
+            "name": "James Cook",
+            "rank": 19,
+            "value": 5915
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8652
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8241
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 7,
+            "value": 7458
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 8,
+            "value": 7405
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 9,
+            "value": 7347
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 13,
+            "value": 6575
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 17,
+            "value": 6123
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 33,
+            "value": 4988
+          },
+          {
+            "name": "George Kittle",
+            "rank": 48,
+            "value": 4250
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 50,
+            "value": 4133
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8951,
+        "valueAtRank10": 7334,
+        "valueAtRank25": 5283,
+        "valueAtRank50": 4133,
+        "replacementTierCutoff": 120,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 7,
+        "totalPlayersValued": 1438
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8951,
+          "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+          "leagueName": "The Yuk",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "rankInPosition": 5,
+          "value": 7347,
+          "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+          "leagueName": "The Yuk",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 34,
+          "rankInPosition": 10,
+          "value": 4943,
+          "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+          "leagueName": "The Yuk",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 21,
+          "rankInPosition": 8,
+          "value": 5576,
+          "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+          "leagueName": "The Yuk",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 93,
+          "rankInPosition": 13,
+          "value": 3126,
+          "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+          "leagueName": "The Yuk",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+      "leagueName": "NFL Contraction League",
+      "format": {
+        "teams": 14,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 1,
+          "RB": 2,
+          "TE": 1,
+          "WR": 2,
+          "FLEX": 2,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8679
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8450
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8335
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8073
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 7976
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 6,
+          "value": 7490
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 7,
+          "value": 7359
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "value": 7318
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 9,
+          "value": 7299
+        },
+        {
+          "name": "Joe Burrow",
+          "position": "QB",
+          "rank": 10,
+          "value": 7116
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8679
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 6,
+            "value": 7490
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 10,
+            "value": 7116
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 12,
+            "value": 6701
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 16,
+            "value": 6259
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8335
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 7976
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 13,
+            "value": 6696
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 15,
+            "value": 6380
+          },
+          {
+            "name": "James Cook",
+            "rank": 17,
+            "value": 6151
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8450
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8073
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 7,
+            "value": 7359
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 8,
+            "value": 7318
+          },
+          {
+            "name": "Amon-Ra St. Brown",
+            "rank": 9,
+            "value": 7299
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 14,
+            "value": 6667
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 18,
+            "value": 6073
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 30,
+            "value": 5201
+          },
+          {
+            "name": "George Kittle",
+            "rank": 44,
+            "value": 4621
+          },
+          {
+            "name": "David Njoku",
+            "rank": 53,
+            "value": 4207
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8679,
+        "valueAtRank10": 7116,
+        "valueAtRank25": 5470,
+        "valueAtRank50": 4293,
+        "replacementTierCutoff": 126,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 6,
+        "totalPlayersValued": 1438
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8679,
+          "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+          "leagueName": "NFL Contraction League",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "rankInPosition": 4,
+          "value": 7318,
+          "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+          "leagueName": "NFL Contraction League",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 33,
+          "rankInPosition": 11,
+          "value": 5142,
+          "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+          "leagueName": "NFL Contraction League",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 20,
+          "rankInPosition": 8,
+          "value": 5761,
+          "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+          "leagueName": "NFL Contraction League",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 82,
+          "rankInPosition": 9,
+          "value": 3528,
+          "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+          "leagueName": "NFL Contraction League",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+      "leagueName": "Chilly Willy Nut Dust",
+      "format": {
+        "teams": 14,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 1,
+          "RB": 3,
+          "TE": 1,
+          "WR": 3,
+          "FLEX": 2,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8717
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8510
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8401
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8192
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 8020
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 6,
+          "value": 7568
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 7,
+          "value": 7520
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7443
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "value": 7390
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 10,
+          "value": 7380
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8717
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 7,
+            "value": 7520
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 7176
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 13,
+            "value": 6723
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 18,
+            "value": 6257
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8401
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 8020
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 12,
+            "value": 6753
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 15,
+            "value": 6449
+          },
+          {
+            "name": "James Cook",
+            "rank": 17,
+            "value": 6306
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8510
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8192
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 6,
+            "value": 7568
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 8,
+            "value": 7443
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 9,
+            "value": 7390
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 14,
+            "value": 6673
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 19,
+            "value": 6107
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 36,
+            "value": 5206
+          },
+          {
+            "name": "George Kittle",
+            "rank": 50,
+            "value": 4602
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 68,
+            "value": 4190
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8717,
+        "valueAtRank10": 7380,
+        "valueAtRank25": 5599,
+        "valueAtRank50": 4602,
+        "replacementTierCutoff": 154,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 6,
+        "totalPlayersValued": 1438
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8717,
+          "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+          "leagueName": "Chilly Willy Nut Dust",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "rankInPosition": 5,
+          "value": 7390,
+          "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+          "leagueName": "Chilly Willy Nut Dust",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 35,
+          "rankInPosition": 13,
+          "value": 5207,
+          "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+          "leagueName": "Chilly Willy Nut Dust",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 20,
+          "rankInPosition": 8,
+          "value": 5877,
+          "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+          "leagueName": "Chilly Willy Nut Dust",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 93,
+          "rankInPosition": 11,
+          "value": 3510,
+          "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+          "leagueName": "Chilly Willy Nut Dust",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+      "leagueName": "SuperSetSixteen",
+      "format": {
+        "teams": 16,
+        "superFlex": false,
+        "idpStructure": "consolidated",
+        "idpSlots": 14,
+        "rosterPositions": {
+          "DB": 4,
+          "DL": 4,
+          "LB": 4,
+          "QB": 1,
+          "RB": 2,
+          "TE": 2,
+          "WR": 4,
+          "FLEX": 2,
+          "IDP_FLEX": 2,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "value": 8453
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 8326
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 3,
+          "value": 8263
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8139
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 7967
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 6,
+          "value": 7764
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 7,
+          "value": 7524
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7499
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "value": 7454
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 10,
+          "value": 7452
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 1,
+            "value": 8453
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 7,
+            "value": 7524
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 11,
+            "value": 7321
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 16,
+            "value": 6831
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 19,
+            "value": 6528
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 3,
+            "value": 8263
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 7967
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 14,
+            "value": 6968
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 17,
+            "value": 6723
+          },
+          {
+            "name": "James Cook",
+            "rank": 18,
+            "value": 6547
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 8326
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8139
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 6,
+            "value": 7764
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 8,
+            "value": 7499
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 9,
+            "value": 7454
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 12,
+            "value": 7116
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 13,
+            "value": 7023
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 30,
+            "value": 5960
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 45,
+            "value": 5363
+          },
+          {
+            "name": "George Kittle",
+            "rank": 46,
+            "value": 5295
+          }
+        ],
+        "LB": [
+          {
+            "name": "Zaire Franklin",
+            "rank": 84,
+            "value": 4673
+          },
+          {
+            "name": "Jeremiah Owusu-Koramoah",
+            "rank": 85,
+            "value": 4666
+          },
+          {
+            "name": "Roquan Smith",
+            "rank": 86,
+            "value": 4666
+          },
+          {
+            "name": "Robert Spillane",
+            "rank": 87,
+            "value": 4665
+          },
+          {
+            "name": "Foyesade Oluokun",
+            "rank": 88,
+            "value": 4664
+          }
+        ],
+        "EDR": [
+          {
+            "name": "Aidan Hutchinson",
+            "rank": 80,
+            "value": 4721
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8453,
+        "valueAtRank10": 7452,
+        "valueAtRank25": 6070,
+        "valueAtRank50": 5169,
+        "replacementTierCutoff": 416,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 6,
+        "totalPlayersValued": 1680
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 1,
+          "rankInPosition": 1,
+          "value": 8453,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 9,
+          "rankInPosition": 5,
+          "value": 7454,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 42,
+          "rankInPosition": 12,
+          "value": 5484,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 20,
+          "rankInPosition": 8,
+          "value": 6289,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 147,
+          "rankInPosition": 20,
+          "value": 4322,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": false
+        },
+        {
+          "name": "Micah Parsons",
+          "position": "EDR",
+          "rank": 119,
+          "rankInPosition": 3,
+          "value": 4530,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": true
+        },
+        {
+          "name": "Roquan Smith",
+          "position": "LB",
+          "rank": 86,
+          "rankInPosition": 3,
+          "value": 4666,
+          "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+          "leagueName": "SuperSetSixteen",
+          "idpOnly": true
+        }
+      ]
+    },
+    {
+      "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+      "leagueName": "The Empire Strikes Back",
+      "format": {
+        "teams": 16,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "QB": 1,
+          "RB": 2,
+          "TE": 1,
+          "WR": 3,
+          "FLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 1,
+          "value": 9282
+        },
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 2,
+          "value": 9034
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 3,
+          "value": 8866
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8631
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 5,
+          "value": 7981
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 6,
+          "value": 7726
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 7,
+          "value": 7669
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 8,
+          "value": 7657
+        },
+        {
+          "name": "De'Von Achane",
+          "position": "RB",
+          "rank": 9,
+          "value": 7113
+        },
+        {
+          "name": "Jonathan Taylor",
+          "position": "RB",
+          "rank": 10,
+          "value": 6869
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 13,
+            "value": 6486
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 26,
+            "value": 5260
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 29,
+            "value": 5156
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 31,
+            "value": 4954
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 36,
+            "value": 4767
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 1,
+            "value": 9282
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 3,
+            "value": 8866
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 9,
+            "value": 7113
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 10,
+            "value": 6869
+          },
+          {
+            "name": "James Cook",
+            "rank": 11,
+            "value": 6568
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 2,
+            "value": 9034
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8631
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 5,
+            "value": 7981
+          },
+          {
+            "name": "Amon-Ra St. Brown",
+            "rank": 6,
+            "value": 7726
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 7,
+            "value": 7669
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 14,
+            "value": 6382
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 17,
+            "value": 5810
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 33,
+            "value": 4900
+          },
+          {
+            "name": "George Kittle",
+            "rank": 46,
+            "value": 4291
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 55,
+            "value": 4065
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 9282,
+        "valueAtRank10": 6869,
+        "valueAtRank25": 5310,
+        "valueAtRank50": 4204,
+        "replacementTierCutoff": 128,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 1,
+        "totalPlayersValued": 1439
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 13,
+          "rankInPosition": 1,
+          "value": 6486,
+          "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+          "leagueName": "The Empire Strikes Back",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 7,
+          "rankInPosition": 5,
+          "value": 7669,
+          "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+          "leagueName": "The Empire Strikes Back",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 24,
+          "rankInPosition": 10,
+          "value": 5327,
+          "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+          "leagueName": "The Empire Strikes Back",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 15,
+          "rankInPosition": 8,
+          "value": 6050,
+          "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+          "leagueName": "The Empire Strikes Back",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 112,
+          "rankInPosition": 13,
+          "value": 2876,
+          "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+          "leagueName": "The Empire Strikes Back",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+      "leagueName": "dynoBall Survivor S1:E3",
+      "format": {
+        "teams": 24,
+        "superFlex": false,
+        "idpStructure": "none",
+        "idpSlots": 0,
+        "rosterPositions": {
+          "RB": 2,
+          "TE": 1,
+          "WR": 2,
+          "FLEX": 2,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 1,
+          "value": 8458
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 2,
+          "value": 8382
+        },
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 3,
+          "value": 8159
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 4,
+          "value": 8115
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 5,
+          "value": 8013
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 6,
+          "value": 7525
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 7,
+          "value": 7406
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "value": 7344
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 9,
+          "value": 7331
+        },
+        {
+          "name": "Lamar Jackson",
+          "position": "QB",
+          "rank": 10,
+          "value": 7141
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 3,
+            "value": 8159
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 10,
+            "value": 7141
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 17,
+            "value": 5916
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 20,
+            "value": 5861
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 41,
+            "value": 4851
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 2,
+            "value": 8382
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 5,
+            "value": 8013
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 11,
+            "value": 6768
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 14,
+            "value": 6491
+          },
+          {
+            "name": "James Cook",
+            "rank": 16,
+            "value": 6347
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 1,
+            "value": 8458
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 4,
+            "value": 8115
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 6,
+            "value": 7525
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 7,
+            "value": 7406
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 8,
+            "value": 7344
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 12,
+            "value": 6710
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 13,
+            "value": 6497
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 31,
+            "value": 5387
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 38,
+            "value": 4900
+          },
+          {
+            "name": "George Kittle",
+            "rank": 45,
+            "value": 4707
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8458,
+        "valueAtRank10": 7141,
+        "valueAtRank25": 5597,
+        "valueAtRank50": 4519,
+        "replacementTierCutoff": 192,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 4,
+        "totalPlayersValued": 1437
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 3,
+          "rankInPosition": 1,
+          "value": 8159,
+          "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+          "leagueName": "dynoBall Survivor S1:E3",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "rankInPosition": 5,
+          "value": 7344,
+          "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+          "leagueName": "dynoBall Survivor S1:E3",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 33,
+          "rankInPosition": 13,
+          "value": 5227,
+          "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+          "leagueName": "dynoBall Survivor S1:E3",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 19,
+          "rankInPosition": 8,
+          "value": 5874,
+          "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+          "leagueName": "dynoBall Survivor S1:E3",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 100,
+          "rankInPosition": 18,
+          "value": 3590,
+          "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+          "leagueName": "dynoBall Survivor S1:E3",
+          "idpOnly": false
+        }
+      ]
+    },
+    {
+      "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+      "leagueName": "Zeus League",
+      "format": {
+        "teams": 32,
+        "superFlex": false,
+        "idpStructure": "consolidated",
+        "idpSlots": 8,
+        "rosterPositions": {
+          "DB": 2,
+          "DL": 2,
+          "LB": 2,
+          "RB": 1,
+          "TE": 1,
+          "WR": 2,
+          "FLEX": 1,
+          "IDP_FLEX": 2,
+          "SUPERFLEX": 1
+        }
+      },
+      "top10Overall": [
+        {
+          "name": "Ja'Marr Chase",
+          "position": "WR",
+          "rank": 1,
+          "value": 8308
+        },
+        {
+          "name": "Bijan Robinson",
+          "position": "RB",
+          "rank": 2,
+          "value": 8269
+        },
+        {
+          "name": "Puka Nacua",
+          "position": "WR",
+          "rank": 3,
+          "value": 8139
+        },
+        {
+          "name": "Jahmyr Gibbs",
+          "position": "RB",
+          "rank": 4,
+          "value": 7976
+        },
+        {
+          "name": "Jaxon Smith-Njigba",
+          "position": "WR",
+          "rank": 5,
+          "value": 7817
+        },
+        {
+          "name": "Justin Jefferson",
+          "position": "WR",
+          "rank": 6,
+          "value": 7509
+        },
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 7,
+          "value": 7505
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "value": 7464
+        },
+        {
+          "name": "Amon-Ra St. Brown",
+          "position": "WR",
+          "rank": 9,
+          "value": 7463
+        },
+        {
+          "name": "Trey McBride",
+          "position": "TE",
+          "rank": 10,
+          "value": 7175
+        }
+      ],
+      "top5ByPosition": {
+        "QB": [
+          {
+            "name": "Josh Allen",
+            "rank": 7,
+            "value": 7505
+          },
+          {
+            "name": "Lamar Jackson",
+            "rank": 16,
+            "value": 6570
+          },
+          {
+            "name": "Joe Burrow",
+            "rank": 17,
+            "value": 6497
+          },
+          {
+            "name": "Jalen Hurts",
+            "rank": 38,
+            "value": 5527
+          },
+          {
+            "name": "Patrick Mahomes",
+            "rank": 67,
+            "value": 4943
+          }
+        ],
+        "RB": [
+          {
+            "name": "Bijan Robinson",
+            "rank": 2,
+            "value": 8269
+          },
+          {
+            "name": "Jahmyr Gibbs",
+            "rank": 4,
+            "value": 7976
+          },
+          {
+            "name": "De'Von Achane",
+            "rank": 12,
+            "value": 7013
+          },
+          {
+            "name": "Jonathan Taylor",
+            "rank": 14,
+            "value": 6786
+          },
+          {
+            "name": "James Cook",
+            "rank": 15,
+            "value": 6617
+          }
+        ],
+        "WR": [
+          {
+            "name": "Ja'Marr Chase",
+            "rank": 1,
+            "value": 8308
+          },
+          {
+            "name": "Puka Nacua",
+            "rank": 3,
+            "value": 8139
+          },
+          {
+            "name": "Jaxon Smith-Njigba",
+            "rank": 5,
+            "value": 7817
+          },
+          {
+            "name": "Justin Jefferson",
+            "rank": 6,
+            "value": 7509
+          },
+          {
+            "name": "CeeDee Lamb",
+            "rank": 8,
+            "value": 7464
+          }
+        ],
+        "TE": [
+          {
+            "name": "Trey McBride",
+            "rank": 10,
+            "value": 7175
+          },
+          {
+            "name": "Brock Bowers",
+            "rank": 11,
+            "value": 7100
+          },
+          {
+            "name": "Sam LaPorta",
+            "rank": 27,
+            "value": 6037
+          },
+          {
+            "name": "Tucker Kraft",
+            "rank": 39,
+            "value": 5486
+          },
+          {
+            "name": "George Kittle",
+            "rank": 41,
+            "value": 5371
+          }
+        ],
+        "LB": [
+          {
+            "name": "Zaire Franklin",
+            "rank": 85,
+            "value": 4672
+          },
+          {
+            "name": "Jeremiah Owusu-Koramoah",
+            "rank": 86,
+            "value": 4659
+          },
+          {
+            "name": "Foyesade Oluokun",
+            "rank": 87,
+            "value": 4656
+          },
+          {
+            "name": "E.J. Speed",
+            "rank": 88,
+            "value": 4654
+          },
+          {
+            "name": "Robert Spillane",
+            "rank": 89,
+            "value": 4654
+          }
+        ],
+        "EDR": [
+          {
+            "name": "Aidan Hutchinson",
+            "rank": 82,
+            "value": 4706
+          }
+        ]
+      },
+      "metrics": {
+        "maxValue": 8308,
+        "valueAtRank10": 7175,
+        "valueAtRank25": 6091,
+        "valueAtRank50": 5157,
+        "replacementTierCutoff": 448,
+        "countOfIDPInTop50": 0,
+        "countOfQBInTop25": 3,
+        "totalPlayersValued": 1681
+      },
+      "anchors": [
+        {
+          "name": "Josh Allen",
+          "position": "QB",
+          "rank": 7,
+          "rankInPosition": 1,
+          "value": 7505,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": false
+        },
+        {
+          "name": "CeeDee Lamb",
+          "position": "WR",
+          "rank": 8,
+          "rankInPosition": 5,
+          "value": 7464,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": false
+        },
+        {
+          "name": "Christian McCaffrey",
+          "position": "RB",
+          "rank": 37,
+          "rankInPosition": 13,
+          "value": 5546,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": false
+        },
+        {
+          "name": "Nico Collins",
+          "position": "WR",
+          "rank": 18,
+          "rankInPosition": 8,
+          "value": 6338,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": false
+        },
+        {
+          "name": "Travis Kelce",
+          "position": "TE",
+          "rank": 130,
+          "rankInPosition": 20,
+          "value": 4414,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": false
+        },
+        {
+          "name": "Micah Parsons",
+          "position": "EDR",
+          "rank": 119,
+          "rankInPosition": 3,
+          "value": 4498,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": true
+        },
+        {
+          "name": "Roquan Smith",
+          "position": "LB",
+          "rank": 90,
+          "rankInPosition": 6,
+          "value": 4653,
+          "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+          "leagueName": "Zeus League",
+          "idpOnly": true
+        }
+      ]
+    }
+  ],
+  "anchorComparison": {
+    "Josh Allen": [
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 7,
+        "rankInPosition": 1,
+        "value": 7505,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 3,
+        "rankInPosition": 1,
+        "value": 8159,
+        "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+        "leagueName": "dynoBall Survivor S1:E3",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 17,
+        "rankInPosition": 1,
+        "value": 5244,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 11,
+        "rankInPosition": 1,
+        "value": 6390,
+        "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+        "leagueName": "Heads Will Roll",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8823,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 9183,
+        "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+        "leagueName": "Real Man’s Football",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8669,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8951,
+        "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+        "leagueName": "The Yuk",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8679,
+        "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+        "leagueName": "NFL Contraction League",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8717,
+        "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+        "leagueName": "Chilly Willy Nut Dust",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 1,
+        "rankInPosition": 1,
+        "value": 8453,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": false
+      },
+      {
+        "name": "Josh Allen",
+        "position": "QB",
+        "rank": 13,
+        "rankInPosition": 1,
+        "value": 6486,
+        "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+        "leagueName": "The Empire Strikes Back",
+        "idpOnly": false
+      }
+    ],
+    "CeeDee Lamb": [
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 8,
+        "rankInPosition": 5,
+        "value": 7464,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 8,
+        "rankInPosition": 5,
+        "value": 7344,
+        "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+        "leagueName": "dynoBall Survivor S1:E3",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 6,
+        "rankInPosition": 4,
+        "value": 7622,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 8,
+        "rankInPosition": 6,
+        "value": 7521,
+        "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+        "leagueName": "Heads Will Roll",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 8,
+        "rankInPosition": 4,
+        "value": 7311,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 9,
+        "rankInPosition": 5,
+        "value": 7301,
+        "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+        "leagueName": "Real Man’s Football",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 9,
+        "rankInPosition": 5,
+        "value": 7374,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 9,
+        "rankInPosition": 5,
+        "value": 7347,
+        "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+        "leagueName": "The Yuk",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 8,
+        "rankInPosition": 4,
+        "value": 7318,
+        "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+        "leagueName": "NFL Contraction League",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 9,
+        "rankInPosition": 5,
+        "value": 7390,
+        "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+        "leagueName": "Chilly Willy Nut Dust",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 9,
+        "rankInPosition": 5,
+        "value": 7454,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": false
+      },
+      {
+        "name": "CeeDee Lamb",
+        "position": "WR",
+        "rank": 7,
+        "rankInPosition": 5,
+        "value": 7669,
+        "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+        "leagueName": "The Empire Strikes Back",
+        "idpOnly": false
+      }
+    ],
+    "Christian McCaffrey": [
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 37,
+        "rankInPosition": 13,
+        "value": 5546,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 33,
+        "rankInPosition": 13,
+        "value": 5227,
+        "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+        "leagueName": "dynoBall Survivor S1:E3",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 24,
+        "rankInPosition": 9,
+        "value": 4817,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 27,
+        "rankInPosition": 11,
+        "value": 4849,
+        "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+        "leagueName": "Heads Will Roll",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 33,
+        "rankInPosition": 10,
+        "value": 4703,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 37,
+        "rankInPosition": 10,
+        "value": 4568,
+        "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+        "leagueName": "Real Man’s Football",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 33,
+        "rankInPosition": 11,
+        "value": 5113,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 34,
+        "rankInPosition": 10,
+        "value": 4943,
+        "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+        "leagueName": "The Yuk",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 33,
+        "rankInPosition": 11,
+        "value": 5142,
+        "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+        "leagueName": "NFL Contraction League",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 35,
+        "rankInPosition": 13,
+        "value": 5207,
+        "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+        "leagueName": "Chilly Willy Nut Dust",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 42,
+        "rankInPosition": 12,
+        "value": 5484,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": false
+      },
+      {
+        "name": "Christian McCaffrey",
+        "position": "RB",
+        "rank": 24,
+        "rankInPosition": 10,
+        "value": 5327,
+        "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+        "leagueName": "The Empire Strikes Back",
+        "idpOnly": false
+      }
+    ],
+    "Nico Collins": [
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 18,
+        "rankInPosition": 8,
+        "value": 6338,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 19,
+        "rankInPosition": 8,
+        "value": 5874,
+        "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+        "leagueName": "dynoBall Survivor S1:E3",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 14,
+        "rankInPosition": 8,
+        "value": 5774,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 15,
+        "rankInPosition": 9,
+        "value": 5710,
+        "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+        "leagueName": "Heads Will Roll",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 19,
+        "rankInPosition": 8,
+        "value": 5534,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 24,
+        "rankInPosition": 9,
+        "value": 5329,
+        "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+        "leagueName": "Real Man’s Football",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 20,
+        "rankInPosition": 8,
+        "value": 5854,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 21,
+        "rankInPosition": 8,
+        "value": 5576,
+        "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+        "leagueName": "The Yuk",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 20,
+        "rankInPosition": 8,
+        "value": 5761,
+        "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+        "leagueName": "NFL Contraction League",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 20,
+        "rankInPosition": 8,
+        "value": 5877,
+        "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+        "leagueName": "Chilly Willy Nut Dust",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 20,
+        "rankInPosition": 8,
+        "value": 6289,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": false
+      },
+      {
+        "name": "Nico Collins",
+        "position": "WR",
+        "rank": 15,
+        "rankInPosition": 8,
+        "value": 6050,
+        "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+        "leagueName": "The Empire Strikes Back",
+        "idpOnly": false
+      }
+    ],
+    "Travis Kelce": [
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 130,
+        "rankInPosition": 20,
+        "value": 4414,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 100,
+        "rankInPosition": 18,
+        "value": 3590,
+        "leagueId": "f8876603-ec87-468c-ad2f-0213b5f7b0ce",
+        "leagueName": "dynoBall Survivor S1:E3",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 80,
+        "rankInPosition": 11,
+        "value": 2953,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 164,
+        "rankInPosition": 23,
+        "value": 1851,
+        "leagueId": "e1d8687c-bb95-4845-bacb-40c69b5985ac",
+        "leagueName": "Heads Will Roll",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 170,
+        "rankInPosition": 8,
+        "value": 2899,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 116,
+        "rankInPosition": 15,
+        "value": 2479,
+        "leagueId": "fb2c1c30-84ee-4c16-ae68-0fa417c4e28d",
+        "leagueName": "Real Man’s Football",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 125,
+        "rankInPosition": 16,
+        "value": 3661,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 93,
+        "rankInPosition": 13,
+        "value": 3126,
+        "leagueId": "04686685-1269-480d-a2f9-f72a649e30b6",
+        "leagueName": "The Yuk",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 82,
+        "rankInPosition": 9,
+        "value": 3528,
+        "leagueId": "144dc486-1fc0-44d2-bb65-c98ea6a53fe6",
+        "leagueName": "NFL Contraction League",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 93,
+        "rankInPosition": 11,
+        "value": 3510,
+        "leagueId": "60af15f6-20fb-4fdb-9385-736d1cd9114b",
+        "leagueName": "Chilly Willy Nut Dust",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 147,
+        "rankInPosition": 20,
+        "value": 4322,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": false
+      },
+      {
+        "name": "Travis Kelce",
+        "position": "TE",
+        "rank": 112,
+        "rankInPosition": 13,
+        "value": 2876,
+        "leagueId": "058d9b9a-5aac-486b-a109-4f53bcd966dc",
+        "leagueName": "The Empire Strikes Back",
+        "idpOnly": false
+      }
+    ],
+    "Micah Parsons": [
+      {
+        "name": "Micah Parsons",
+        "position": "EDR",
+        "rank": 119,
+        "rankInPosition": 3,
+        "value": 4498,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": true
+      },
+      {
+        "name": "Micah Parsons",
+        "position": "EDR",
+        "rank": 259,
+        "rankInPosition": 6,
+        "value": 1436,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": true
+      },
+      {
+        "name": "Micah Parsons",
+        "position": "EDR",
+        "rank": 49,
+        "rankInPosition": 6,
+        "value": 4273,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": true
+      },
+      {
+        "name": "Micah Parsons",
+        "position": "EDR",
+        "rank": 63,
+        "rankInPosition": 3,
+        "value": 4254,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": true
+      },
+      {
+        "name": "Micah Parsons",
+        "position": "EDR",
+        "rank": 119,
+        "rankInPosition": 3,
+        "value": 4530,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": true
+      }
+    ],
+    "Roquan Smith": [
+      {
+        "name": "Roquan Smith",
+        "position": "LB",
+        "rank": 90,
+        "rankInPosition": 6,
+        "value": 4653,
+        "leagueId": "3adc57b5-d822-40d7-90c1-52437543eab5",
+        "leagueName": "Zeus League",
+        "idpOnly": true
+      },
+      {
+        "name": "Roquan Smith",
+        "position": "LB",
+        "rank": 147,
+        "rankInPosition": 23,
+        "value": 2390,
+        "leagueId": "e1b4df6b-1bfd-49d8-9a17-ad680fe332dd",
+        "leagueName": "💥Boom or Bust💦",
+        "idpOnly": true
+      },
+      {
+        "name": "Roquan Smith",
+        "position": "LB",
+        "rank": 69,
+        "rankInPosition": 18,
+        "value": 4186,
+        "leagueId": "007415df-26e6-40d6-b8bc-b837b78e5ebc",
+        "leagueName": "Full Spectrum League",
+        "idpOnly": true
+      },
+      {
+        "name": "Roquan Smith",
+        "position": "LB",
+        "rank": 72,
+        "rankInPosition": 3,
+        "value": 4156,
+        "leagueId": "e6fe3ef5-6448-410a-b441-8e59cdcd43c9",
+        "leagueName": "DFL",
+        "idpOnly": true
+      },
+      {
+        "name": "Roquan Smith",
+        "position": "LB",
+        "rank": 86,
+        "rankInPosition": 3,
+        "value": 4666,
+        "leagueId": "382ae826-0ae2-428c-aab0-2d3b205d6cce",
+        "leagueName": "SuperSetSixteen",
+        "idpOnly": true
+      }
+    ]
+  }
+}

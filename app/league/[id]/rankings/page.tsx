@@ -142,6 +142,15 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
   // Apply filters
   let filteredValues = values;
 
+  // Exclude IDP players from non-IDP leagues
+  const hasIdp = settings?.idpStructure
+    && settings.idpStructure !== "none";
+  if (!hasIdp) {
+    filteredValues = filteredValues.filter(
+      (v) => v.player.positionGroup !== "defense",
+    );
+  }
+
   if (searchParams.position) {
     // Expand consolidated positions (e.g. "DL" → ["EDR", "IL", "DE", "DT"])
     // so granular player positions match the filter.

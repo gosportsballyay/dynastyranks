@@ -70,9 +70,10 @@ type ViewMode = "overall" | "detailed";
 
 interface TeamRankingsTableProps {
   rankings: TeamRanking[];
+  hasIdp?: boolean;
 }
 
-export function TeamRankingsTable({ rankings }: TeamRankingsTableProps) {
+export function TeamRankingsTable({ rankings, hasIdp = true }: TeamRankingsTableProps) {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     column: SortColumn;
@@ -123,8 +124,16 @@ export function TeamRankingsTable({ rankings }: TeamRankingsTableProps) {
     { key: "overall", label: "Overall" },
     { key: "starters", label: "Starters" },
     { key: "offense", label: "Offense" },
-    { key: "idp", label: "IDP" },
+    ...(hasIdp ? [{ key: "idp" as SortColumn, label: "IDP" }] : []),
   ];
+
+  const idpDetailCols: { key: SortColumn; label: string }[] = hasIdp
+    ? [
+        { key: "dl", label: "DL" },
+        { key: "lb", label: "LB" },
+        { key: "db", label: "DB" },
+      ]
+    : [];
 
   const detailedCols: { key: SortColumn; label: string }[] = [
     { key: "overall", label: "Overall" },
@@ -133,9 +142,7 @@ export function TeamRankingsTable({ rankings }: TeamRankingsTableProps) {
     { key: "rb", label: "RB" },
     { key: "wr", label: "WR" },
     { key: "te", label: "TE" },
-    { key: "dl", label: "DL" },
-    { key: "lb", label: "LB" },
-    { key: "db", label: "DB" },
+    ...idpDetailCols,
   ];
 
   const cols = viewMode === "overall" ? overallCols : detailedCols;

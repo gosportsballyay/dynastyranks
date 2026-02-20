@@ -203,7 +203,11 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     LB: "LB",
     DB: "DB", CB: "DB", S: "DB",
   };
-  const POS_GROUPS = ["QB", "RB", "WR", "TE", "DL", "LB", "DB"];
+  const leagueHasIdp = settings?.idpStructure
+    && settings.idpStructure !== "none";
+  const POS_GROUPS = leagueHasIdp
+    ? ["QB", "RB", "WR", "TE", "DL", "LB", "DB"]
+    : ["QB", "RB", "WR", "TE"];
 
   // Calculate team rankings
   const teamRankings: TeamRanking[] = leagueTeams.map((team) => {
@@ -222,7 +226,11 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       (r) => r.player.positionGroup === "defense",
     );
 
-    const overallValue = teamRoster.reduce(
+    // For non-IDP leagues, exclude defense from overall value
+    const valuedRoster = leagueHasIdp
+      ? teamRoster
+      : teamRoster.filter((r) => r.player.positionGroup !== "defense");
+    const overallValue = valuedRoster.reduce(
       (s, r) => s + (r.value?.value || 0), 0,
     );
     const starterValue = starterRoster.reduce(
@@ -517,7 +525,11 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
         </div>
 
         {teamRankings.length > 0 ? (
-          <TeamRankingsTable rankings={teamRankings} />
+          <TeamRankingsTable
+            rankings={teamRankings}
+            hasIdp={settings?.idpStructure !== "none"
+              && settings?.idpStructure !== undefined}
+          />
         ) : (
           <div className="px-6 py-12 text-center text-slate-400">
             <p>No roster data available yet.</p>

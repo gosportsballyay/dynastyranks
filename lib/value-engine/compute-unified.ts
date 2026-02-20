@@ -41,7 +41,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.0.0";
+export const ENGINE_VERSION = "3.1.0";
 
 /**
  * IDP position-group discount applied to consensus values.
@@ -304,6 +304,17 @@ export async function computeUnifiedValues(
       { points: number; player: (typeof players)[0] }
     >();
 
+    // Find the latest season any player has data for, used
+    // to detect missed-season absences (injury, holdout, etc.)
+    let latestDataSeason = 0;
+    for (const seasons of playerSeasonPoints.values()) {
+      for (const s of seasons) {
+        if (s.season > latestDataSeason) {
+          latestDataSeason = s.season;
+        }
+      }
+    }
+
     for (const player of players) {
       const seasons = playerSeasonPoints.get(player.id);
       if (!seasons || seasons.length === 0) continue;
@@ -351,6 +362,17 @@ export async function computeUnifiedValues(
       // Confidence scaling based on most recent season
       const confidence = Math.min(1, recent.gamesPlayed / 8);
       points *= confidence;
+
+      // Missed-season penalty: detect the latest season any
+      // player has data for, then penalize players who are
+      // missing that season. This catches injury absences
+      // regardless of offseason vs in-season timing.
+      if (recent.season < latestDataSeason && !isFA) {
+        const missedYears = latestDataSeason - recent.season;
+        // 0.4 for 1 missed year, 0.2 for 2 missed years
+        const missedPenalty = Math.max(0.2, 0.6 - missedYears * 0.2);
+        points *= missedPenalty;
+      }
 
       // FA discount — free agents are riskier / less valuable
       if (isFA) {
@@ -589,6 +611,25 @@ export async function computeUnifiedValues(
         consensusComponent = adjustedConsensus * CONSENSUS_WEIGHT;
         leagueSignalComponent = adjMedian * LEAGUE_SIGNAL_WEIGHT;
         finalValue = consensusComponent + leagueSignalComponent;
+
+        // Missed-season penalty: experienced players (have
+        // historical data) with 0 games in the most recent
+        // season get a steep discount. Consensus rankings
+        // are slow to adjust for injury/absence.
+        const seasonData = playerSeasonPoints.get(player.id);
+        if (seasonData && seasonData.length > 0) {
+          const mostRecent = [...seasonData].sort(
+            (a, b) => b.season - a.season,
+          )[0];
+          if (mostRecent.gamesPlayed === 0) {
+            finalValue *= 0.35;
+            lowConfidence = true;
+          } else if (mostRecent.gamesPlayed < 4) {
+            finalValue *= 0.55;
+            lowConfidence = true;
+          }
+        }
+
         valueSource =
           adjMedian > 0 ? "unified" : "consensus_only";
       } else if (consensusBase === 0 && leagueSignalVal > 0) {
