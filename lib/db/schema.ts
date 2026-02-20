@@ -118,6 +118,9 @@ export const leagues = pgTable(
     syncError: text("sync_error"),
     // User's selected team in this league (for "My Team" page)
     userTeamId: uuid("user_team_id"),
+    // Computation metadata
+    lastComputedAt: timestamp("last_computed_at"),
+    leagueConfigHash: varchar("league_config_hash", { length: 64 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -474,6 +477,7 @@ export const valueComputationLogs = pgTable("value_computation_logs", {
     .notNull()
     .references(() => leagues.id, { onDelete: "cascade" }),
   engineVersion: varchar("engine_version", { length: 50 }).notNull(),
+  projectionVersion: varchar("projection_version", { length: 50 }),
   inputsHash: varchar("inputs_hash", { length: 64 }).notNull(), // SHA256 of inputs
   playerCount: integer("player_count").notNull(),
   durationMs: integer("duration_ms").notNull(),

@@ -28,7 +28,12 @@ async function main() {
       await computeAggregatedValues(league.id);
       const result = await computeUnifiedValues(league.id);
       console.log(
-        `[OK] ${league.name} → ${result.playerCount} values (${result.durationMs}ms)`,
+        `[OK] ${league.name}\n` +
+          `     leagueId=${league.id}\n` +
+          `     engine=${result.engineVersion} ` +
+          `proj=${result.projectionVersion} ` +
+          `dataSeason=${result.latestDataSeason}\n` +
+          `     ${result.playerCount} values (${result.durationMs}ms)`,
       );
       success++;
     } catch (err) {

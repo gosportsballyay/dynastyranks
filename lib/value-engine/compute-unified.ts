@@ -42,6 +42,7 @@ import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
 export const ENGINE_VERSION = "3.1.0";
+export const PROJECTION_VERSION = "1.0.0";
 
 /**
  * IDP position-group discount applied to consensus values.
@@ -93,6 +94,10 @@ interface ComputeValuesResult {
   warnings: string[];
   errors: string[];
   durationMs: number;
+  engineVersion: string;
+  projectionVersion: string;
+  latestDataSeason: number;
+  leagueConfigHash: string | null;
 }
 
 type ValueSource =
@@ -199,6 +204,10 @@ export async function computeUnifiedValues(
         warnings,
         errors: ["No players in database"],
         durationMs: Date.now() - startTime,
+        engineVersion: ENGINE_VERSION,
+        projectionVersion: PROJECTION_VERSION,
+        latestDataSeason: 0,
+        leagueConfigHash: null,
       };
     }
 
@@ -826,12 +835,21 @@ export async function computeUnifiedValues(
     await db.insert(valueComputationLogs).values({
       leagueId,
       engineVersion: ENGINE_VERSION,
+      projectionVersion: PROJECTION_VERSION,
       inputsHash,
       playerCount: valuesList.length,
       durationMs: Date.now() - startTime,
       warnings: warnings.length > 0 ? warnings : null,
       errors: errors.length > 0 ? errors : null,
     });
+
+    await db
+      .update(leagues)
+      .set({
+        lastComputedAt: new Date(),
+        leagueConfigHash: inputsHash,
+      })
+      .where(eq(leagues.id, leagueId));
 
     console.log(
       `Unified engine: wrote ${valuesList.length} player values ` +
@@ -844,6 +862,10 @@ export async function computeUnifiedValues(
       warnings,
       errors,
       durationMs: Date.now() - startTime,
+      engineVersion: ENGINE_VERSION,
+      projectionVersion: PROJECTION_VERSION,
+      latestDataSeason,
+      leagueConfigHash: inputsHash,
     };
   } catch (error) {
     const msg =
@@ -855,6 +877,10 @@ export async function computeUnifiedValues(
       warnings,
       errors,
       durationMs: Date.now() - startTime,
+      engineVersion: ENGINE_VERSION,
+      projectionVersion: PROJECTION_VERSION,
+      latestDataSeason: 0,
+      leagueConfigHash: null,
     };
   }
 }
