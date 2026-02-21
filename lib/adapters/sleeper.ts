@@ -240,7 +240,7 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
             players.push({
               externalPlayerId: playerId,
               teamExternalId: teamId,
-              slotPosition: `START_${index}`,
+              slotPosition: "START",
             });
           }
         });
