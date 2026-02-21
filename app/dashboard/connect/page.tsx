@@ -128,7 +128,7 @@ function ConnectLeagueContent() {
         setShowTeamSelection(true);
       } else {
         // No teams found, just redirect
-        router.push(`/league/${id}/rankings`);
+        router.push(`/league/${id}/summary`);
         router.refresh();
       }
     } catch (err) {
@@ -202,7 +202,7 @@ function ConnectLeagueContent() {
       }
 
       // Redirect to the league
-      router.push(`/league/${leagueId}/rankings`);
+      router.push(`/league/${leagueId}/summary`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to select team");

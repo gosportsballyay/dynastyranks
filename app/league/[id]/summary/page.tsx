@@ -529,6 +529,7 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
             rankings={teamRankings}
             hasIdp={settings?.idpStructure !== "none"
               && settings?.idpStructure !== undefined}
+            leagueId={league.id}
           />
         ) : (
           <div className="px-6 py-12 text-center text-slate-400">

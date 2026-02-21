@@ -47,7 +47,7 @@ export function LeagueCard({ league }: LeagueCardProps) {
 
   return (
     <div className="relative rounded-xl bg-slate-800/50 p-6 ring-1 ring-slate-700 hover:ring-blue-500 transition-all">
-      <Link href={`/league/${league.id}/rankings`} className="block">
+      <Link href={`/league/${league.id}/summary`} className="block">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold text-white">{league.name}</h3>

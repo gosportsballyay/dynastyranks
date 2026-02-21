@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, Fragment } from "react";
+import Link from "next/link";
 
 interface RosterPlayer {
   name: string;
@@ -71,9 +72,10 @@ type ViewMode = "overall" | "detailed";
 interface TeamRankingsTableProps {
   rankings: TeamRanking[];
   hasIdp?: boolean;
+  leagueId: string;
 }
 
-export function TeamRankingsTable({ rankings, hasIdp = true }: TeamRankingsTableProps) {
+export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRankingsTableProps) {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
     column: SortColumn;
@@ -146,7 +148,7 @@ export function TeamRankingsTable({ rankings, hasIdp = true }: TeamRankingsTable
   ];
 
   const cols = viewMode === "overall" ? overallCols : detailedCols;
-  const colSpan = cols.length + 2; // Team + cols + Total Value
+  const colSpan = cols.length + 3; // Team + cols + Total Value + action
 
   return (
     <div>
@@ -182,6 +184,7 @@ export function TeamRankingsTable({ rankings, hasIdp = true }: TeamRankingsTable
               <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Total Value
               </th>
+              <th className="w-10 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -236,6 +239,28 @@ export function TeamRankingsTable({ rankings, hasIdp = true }: TeamRankingsTable
                     <span className="font-mono text-slate-300">
                       {team.overallValue.toLocaleString()}
                     </span>
+                  </td>
+                  <td className="pr-4 py-4">
+                    <Link
+                      href={`/league/${leagueId}/team?teamId=${team.teamId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-700 text-slate-400 hover:text-white hover:bg-slate-600 transition-colors"
+                      title="View team"
+                    >
+                      <svg
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+                        />
+                      </svg>
+                    </Link>
                   </td>
                 </tr>
 

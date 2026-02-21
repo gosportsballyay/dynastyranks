@@ -167,7 +167,7 @@ export default async function DashboardPage() {
             {userLeagues.map((league) => (
               <Link
                 key={league.id}
-                href={`/league/${league.id}/rankings`}
+                href={`/league/${league.id}/summary`}
                 className="block rounded-xl bg-slate-800/50 p-6 ring-1 ring-slate-700 hover:ring-blue-500 transition-all"
               >
                 <div className="flex items-start justify-between">

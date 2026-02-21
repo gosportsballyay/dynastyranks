@@ -23,9 +23,9 @@ export function Sidebar({ leagueId, collapsed, onToggle }: SidebarProps) {
 
   const navItems: NavItem[] = [
     {
-      href: `/league/${leagueId}/rankings`,
-      label: "Player Ranks",
-      icon: <ListIcon />,
+      href: `/league/${leagueId}/summary`,
+      label: "League Summary",
+      icon: <ChartIcon />,
     },
     {
       href: `/league/${leagueId}/team`,
@@ -33,9 +33,9 @@ export function Sidebar({ leagueId, collapsed, onToggle }: SidebarProps) {
       icon: <TeamIcon />,
     },
     {
-      href: `/league/${leagueId}/summary`,
-      label: "League Summary",
-      icon: <ChartIcon />,
+      href: `/league/${leagueId}/rankings`,
+      label: "Player Ranks",
+      icon: <ListIcon />,
     },
   ];
 
