@@ -18,7 +18,7 @@ import {
 
 interface PageProps {
   params: { id: string };
-  searchParams: { team?: string };
+  searchParams: { team?: string; teamId?: string };
 }
 
 export default async function MyTeamPage({
@@ -45,7 +45,7 @@ export default async function MyTeamPage({
     notFound();
   }
 
-  const viewTeamId = searchParams.team || league.userTeamId;
+  const viewTeamId = searchParams.teamId || searchParams.team || league.userTeamId;
 
   // No team param and no userTeamId — prompt user to pick a team
   if (!viewTeamId) {
