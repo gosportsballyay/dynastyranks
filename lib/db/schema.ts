@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   integer,
+  date,
   boolean,
   real,
   jsonb,
@@ -121,6 +122,11 @@ export const leagues = pgTable(
     // Computation metadata
     lastComputedAt: timestamp("last_computed_at"),
     leagueConfigHash: varchar("league_config_hash", { length: 64 }),
+    // Daily recompute cap
+    recomputeCountToday: integer("recompute_count_today")
+      .default(0)
+      .notNull(),
+    recomputeDate: date("recompute_date"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

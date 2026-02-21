@@ -64,6 +64,13 @@
       "when": 1771688438058,
       "tag": "0008_abandoned_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1771688989191,
+      "tag": "0009_dear_living_lightning",
+      "breakpoints": true
     }
   ]
 }

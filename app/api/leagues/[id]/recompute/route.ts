@@ -53,6 +53,29 @@ export async function POST(
       );
     }
 
+    // Per-league daily recompute cap (5/day)
+    const todayUTC = new Date().toISOString().slice(0, 10);
+    const isNewDay = league.recomputeDate !== todayUTC;
+    const currentCount = isNewDay ? 0 : league.recomputeCountToday;
+
+    if (currentCount >= 5) {
+      return NextResponse.json(
+        {
+          error:
+            "Daily recompute limit reached. Try again tomorrow.",
+        },
+        { status: 429 },
+      );
+    }
+
+    await db
+      .update(leagues)
+      .set({
+        recomputeCountToday: currentCount + 1,
+        recomputeDate: todayUTC,
+      })
+      .where(eq(leagues.id, league.id));
+
     const result = await computeUnifiedValues(league.id);
 
     if (!result.success) {
