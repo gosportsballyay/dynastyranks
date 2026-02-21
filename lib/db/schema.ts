@@ -487,6 +487,19 @@ export const valueComputationLogs = pgTable("value_computation_logs", {
 });
 
 /**
+ * Per-user API rate limits (sliding window counters).
+ */
+export const apiRateLimits = pgTable("api_rate_limits", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  key: varchar("key", { length: 50 }).notNull(),
+  windowStart: timestamp("window_start").notNull(),
+  count: integer("count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+/**
  * External Rankings (scraped from KTC, FantasyCalc, FantasyPros, etc.)
  */
 export const externalRankingSourceEnum = pgEnum("external_ranking_source", [

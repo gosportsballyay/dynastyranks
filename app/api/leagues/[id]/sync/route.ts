@@ -21,6 +21,7 @@ import {
 import { getPlayersByProviderIds } from "@/lib/player-mapping";
 import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
 import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { Provider } from "@/types";
 
 export async function POST(
@@ -31,6 +32,14 @@ export async function POST(
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { allowed } = await checkRateLimit(session.user.id, "sync", 5, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again shortly." },
+        { status: 429 },
+      );
     }
 
     const leagueId = params.id;

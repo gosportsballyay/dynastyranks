@@ -57,6 +57,13 @@
       "when": 1771626179972,
       "tag": "0007_dusty_umar",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771688438058,
+      "tag": "0008_abandoned_viper",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { leagues } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { computeUnifiedValues, ENGINE_VERSION } from "@/lib/value-engine";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /**
  * Recompute player values for a league.
@@ -21,6 +22,16 @@ export async function POST(
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 },
+      );
+    }
+
+    const { allowed } = await checkRateLimit(
+      session.user.id, "recompute", 10, 60,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again shortly." },
+        { status: 429 },
       );
     }
 

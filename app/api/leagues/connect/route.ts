@@ -20,6 +20,7 @@ import {
 import { getPlayersByProviderIds } from "@/lib/player-mapping";
 import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
 import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { Provider, AdapterLeague } from "@/types";
 
 interface ConnectRequest {
@@ -38,6 +39,14 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { allowed } = await checkRateLimit(session.user.id, "connect", 5, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again shortly." },
+        { status: 429 },
+      );
     }
 
     const body: ConnectRequest = await request.json();
