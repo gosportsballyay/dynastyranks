@@ -1,6 +1,13 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
+import { redirect, notFound } from "next/navigation";
+import { auth } from "@/lib/auth/config";
 import { DiagnosticsView } from "./diagnostics-view";
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 interface AnchorEntry {
   name: string;
@@ -54,7 +61,20 @@ export interface DiagnosticsData {
   anchorComparison: Record<string, AnchorEntry[]>;
 }
 
-export default function DiagnosticsPage() {
+export default async function DiagnosticsPage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+  if (
+    ADMIN_EMAILS.length > 0 &&
+    !ADMIN_EMAILS.includes(
+      (session.user.email ?? "").toLowerCase(),
+    )
+  ) {
+    notFound();
+  }
+
   const filePath = resolve(
     process.cwd(),
     "test-data/league-diagnostics.json",

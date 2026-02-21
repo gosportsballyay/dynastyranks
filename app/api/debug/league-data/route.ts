@@ -1,14 +1,20 @@
 /**
- * Debug API Route - League Data Extraction
+ * Debug-only endpoint — disabled in production.
  *
- * Fetches and returns raw league data from Fleaflicker or Sleeper
- * for verification purposes. No auth required.
+ * Fetches raw league data from Fleaflicker or Sleeper for
+ * verification. Requires auth + ADMIN_EMAILS allowlist.
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
 import { createFleaflickerAdapter } from "@/lib/adapters/fleaflicker";
 import { SleeperAdapter } from "@/lib/adapters/sleeper";
 import type { AdapterSettings, RawPayload } from "@/types";
+
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 interface DebugResponse {
   platform: string;
@@ -19,6 +25,32 @@ interface DebugResponse {
 }
 
 export async function GET(request: NextRequest) {
+  // debug-only endpoint — return 404 in production
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Not found" },
+      { status: 404 },
+    );
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+  if (
+    ADMIN_EMAILS.length > 0 &&
+    !ADMIN_EMAILS.includes(
+      (session.user.email ?? "").toLowerCase(),
+    )
+  ) {
+    return NextResponse.json(
+      { error: "Not found" },
+      { status: 404 },
+    );
+  }
   const searchParams = request.nextUrl.searchParams;
   const platform = searchParams.get("platform");
   const leagueId = searchParams.get("leagueId");

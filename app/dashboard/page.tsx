@@ -4,9 +4,12 @@ import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import { db } from "@/lib/db/client";
-import { leagues } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { LeagueCard } from "@/components/dashboard/league-card";
+import {
+  leagues,
+  leagueSettings,
+  valueComputationLogs,
+} from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -15,11 +18,76 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Fetch user's leagues
-  const userLeagues = await db
-    .select()
+  // Fetch user's leagues with settings for format detection
+  const leagueRows = await db
+    .select({
+      id: leagues.id,
+      name: leagues.name,
+      provider: leagues.provider,
+      season: leagues.season,
+      totalTeams: leagues.totalTeams,
+      syncStatus: leagues.syncStatus,
+      lastSyncedAt: leagues.lastSyncedAt,
+      lastComputedAt: leagues.lastComputedAt,
+      leagueConfigHash: leagues.leagueConfigHash,
+      idpStructure: leagueSettings.idpStructure,
+      rosterPositions: leagueSettings.rosterPositions,
+    })
     .from(leagues)
+    .leftJoin(
+      leagueSettings,
+      eq(leagueSettings.leagueId, leagues.id),
+    )
     .where(eq(leagues.userId, session.user.id));
+
+  // Fetch latest computation log per league for version info
+  const logRows = await db
+    .select({
+      leagueId: valueComputationLogs.leagueId,
+      engineVersion: valueComputationLogs.engineVersion,
+      projectionVersion: valueComputationLogs.projectionVersion,
+    })
+    .from(valueComputationLogs)
+    .orderBy(desc(valueComputationLogs.computedAt));
+
+  const logMap = new Map<
+    string,
+    { engineVersion: string; projectionVersion: string | null }
+  >();
+  for (const log of logRows) {
+    if (!logMap.has(log.leagueId)) {
+      logMap.set(log.leagueId, {
+        engineVersion: log.engineVersion,
+        projectionVersion: log.projectionVersion,
+      });
+    }
+  }
+
+  // Build enriched league list
+  const userLeagues = leagueRows.map((l) => {
+    const rp = (l.rosterPositions ?? {}) as Record<string, number>;
+    const hasSF =
+      (rp["SUPERFLEX"] ?? 0) > 0 ||
+      (rp["SUPER_FLEX"] ?? 0) > 0 ||
+      (rp["SF"] ?? 0) > 0 ||
+      (rp["QB"] ?? 0) >= 2;
+    const hasIdp =
+      !!l.idpStructure && l.idpStructure !== "none";
+    const log = logMap.get(l.id);
+
+    const formatParts: string[] = [
+      `${l.totalTeams}-team`,
+    ];
+    if (hasSF) formatParts.push("SF");
+    if (hasIdp) formatParts.push("IDP");
+
+    return {
+      ...l,
+      format: formatParts.join(" "),
+      engineVersion: log?.engineVersion ?? null,
+      projectionVersion: log?.projectionVersion ?? null,
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
@@ -109,7 +177,7 @@ export default async function DashboardPage() {
                     <p className="text-sm text-slate-400 mt-1">
                       {league.provider.charAt(0).toUpperCase() +
                         league.provider.slice(1)}{" "}
-                      &bull; {league.season} &bull; {league.totalTeams} teams
+                      &bull; {league.season} &bull; {league.format}
                     </p>
                   </div>
                   <span
@@ -132,12 +200,34 @@ export default async function DashboardPage() {
                           : "Pending"}
                   </span>
                 </div>
-                {league.lastSyncedAt && (
-                  <p className="text-xs text-slate-500 mt-4">
-                    Last synced:{" "}
-                    {new Date(league.lastSyncedAt).toLocaleDateString()}
-                  </p>
-                )}
+                <div className="mt-4 pt-3 border-t border-slate-700/50 text-xs text-slate-500 space-y-1">
+                  {league.lastComputedAt ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Last computed</span>
+                        <span className="text-slate-400">
+                          {new Date(league.lastComputedAt).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" },
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Engine</span>
+                        <span className="text-slate-400 font-mono">
+                          v{league.engineVersion ?? "?"}
+                          {league.projectionVersion
+                            ? ` / proj v${league.projectionVersion}`
+                            : ""}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-slate-600">
+                      Not yet computed
+                    </div>
+                  )}
+                </div>
               </Link>
             ))}
           </div>
