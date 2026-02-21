@@ -10,6 +10,7 @@ import {
   valueComputationLogs,
 } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { FeedbackButton } from "@/components/feedback-button";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -233,6 +234,7 @@ export default async function DashboardPage() {
           </div>
         )}
       </main>
+      <FeedbackButton />
     </div>
   );
 }

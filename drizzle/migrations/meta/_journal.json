@@ -71,6 +71,13 @@
       "when": 1771688989191,
       "tag": "0009_dear_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1771689347286,
+      "tag": "0010_fearless_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }

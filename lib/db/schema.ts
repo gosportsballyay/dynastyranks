@@ -616,6 +616,19 @@ export const playerPositionOverrides = pgTable(
 );
 
 /**
+ * User Feedback
+ */
+export const userFeedback = pgTable("user_feedback", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  leagueId: varchar("league_id", { length: 255 }),
+  engineVersion: varchar("engine_version", { length: 20 }),
+  message: text("message").notNull(),
+  page: varchar("page", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/**
  * Relations
  */
 export const usersRelations = relations(users, ({ many }) => ({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
+import { FeedbackButton } from "@/components/feedback-button";
 
 interface League {
   id: string;
@@ -103,6 +104,7 @@ export function LeagueLayout({
       >
         <div className="p-6">{children}</div>
       </main>
+      <FeedbackButton leagueId={currentLeagueId} />
     </div>
   );
 }
