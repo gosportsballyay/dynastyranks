@@ -1,5 +1,11 @@
 import { describe, test, expect } from "vitest";
-import { calculateVORP, calculateFantasyPoints, getPercentilePoints } from "../vorp";
+import {
+  calculateVORP,
+  calculateFantasyPoints,
+  getPercentilePoints,
+  scoreGame,
+  type ScoringRule,
+} from "../vorp";
 
 describe("calculateVORP", () => {
   const createPointsArray = (count: number, startPoints: number, decrementPerPlayer: number) => {
@@ -219,59 +225,54 @@ describe("calculateFantasyPoints", () => {
     ).toThrow("Non-canonical scoring rule keys: bad_key");
   });
 
-  test("calculates bonus thresholds", () => {
-    const projections = {
-      rush_yd: 1400,
-    };
-
-    const scoringRules = {
-      rush_yd: 0.1,
-    };
-
-    const bonusThresholds = {
-      rush_yd: [
-        { min: 100, max: 149, bonus: 3 },
-        { min: 150, bonus: 5 },
-      ],
-    };
-
-    const pointsWithBonus = calculateFantasyPoints(
-      projections,
-      scoringRules,
-      undefined,
-      bonusThresholds,
-      17
-    );
-
-    const pointsWithoutBonus = calculateFantasyPoints(projections, scoringRules);
-
-    expect(pointsWithBonus).toBeGreaterThan(pointsWithoutBonus);
-  });
-
-  test("handles gamesPlayed parameter", () => {
-    const projections = { rush_yd: 800 };
+  test("no bonuses without gameLogs (fallback path)", () => {
+    const projections = { rush_yd: 1400 };
     const scoringRules = { rush_yd: 0.1 };
     const bonusThresholds = {
-      rush_yd: [{ min: 100, bonus: 3 }],
+      rush_yd: [{ min: 100, max: 149, bonus: 3 }],
     };
-
-    const pointsIn8 = calculateFantasyPoints(
+    const pts = calculateFantasyPoints(
       projections,
       scoringRules,
       undefined,
       bonusThresholds,
-      8
+      17,
     );
+    // Fallback path: base scoring only, bonuses skipped
+    expect(pts).toBeCloseTo(140, 1);
+  });
 
-    const pointsIn17 = calculateFantasyPoints(
-      projections,
-      scoringRules,
-      undefined,
-      bonusThresholds,
-      17
+  test("deterministic bonus from gameLogs + structuredRules", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "rush_yd", points: 0.1, isBonus: false },
+      { statKey: "rush_yd", points: 3, isBonus: true,
+        boundLower: 100 },
+    ];
+    const gameLogs = {
+      1: { rush_yd: 120 },  // hits bonus
+      2: { rush_yd: 80 },   // misses
+      3: { rush_yd: 150 },  // hits bonus
+    };
+    // Per-game: (120*0.1+3) + (80*0.1) + (150*0.1+3) = 41
+    const pts = calculateFantasyPoints(
+      { rush_yd: 350 }, {}, undefined, undefined, 3,
+      gameLogs, rules, "RB",
     );
+    expect(pts).toBeCloseTo(41, 1);
+  });
 
-    expect(pointsIn8).toBeGreaterThan(pointsIn17);
+  test("structuredRules without gameLogs skips bonuses", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "rush_yd", points: 0.1, isBonus: false },
+      { statKey: "rush_yd", points: 3, isBonus: true,
+        boundLower: 100 },
+    ];
+    const pts = calculateFantasyPoints(
+      { rush_yd: 1400 }, {}, undefined, undefined, 17,
+      null, rules, "RB",
+    );
+    // Base scoring only (bonus rules filtered out): 1400 * 0.1 = 140
+    expect(pts).toBeCloseTo(140, 1);
   });
 });
 
@@ -376,5 +377,66 @@ describe("invariants", () => {
 
     expect(Number.isFinite(points)).toBe(true);
     expect(points).toBeGreaterThan(0);
+  });
+});
+
+describe("scoreGame", () => {
+  test("base scoring: stat * points", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "pass_yd", points: 0.04, isBonus: false },
+      { statKey: "pass_td", points: 4, isBonus: false },
+    ];
+    const pts = scoreGame(
+      { pass_yd: 300, pass_td: 3 }, rules, "QB",
+    );
+    expect(pts).toBeCloseTo(24, 1); // 300*0.04 + 3*4
+  });
+
+  test("forEvery: floor division", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "pass_cmp", points: 1, forEvery: 4,
+        isBonus: false },
+    ];
+    expect(scoreGame({ pass_cmp: 23 }, rules, "QB")).toBe(5);
+  });
+
+  test("applyTo filters by position", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "tackle_solo", points: 2, isBonus: false,
+        applyTo: ["LB", "DL", "DB"] },
+    ];
+    expect(scoreGame({ tackle_solo: 5 }, rules, "LB")).toBe(10);
+    expect(scoreGame({ tackle_solo: 5 }, rules, "WR")).toBe(0);
+  });
+
+  test("bonus awarded when stat in range", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "tackle_solo", points: 2, isBonus: true,
+        boundLower: 6, boundUpper: 8 },
+    ];
+    expect(scoreGame({ tackle_solo: 7 }, rules, "LB")).toBe(2);
+  });
+
+  test("bonus skipped below threshold", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "tackle_solo", points: 2, isBonus: true,
+        boundLower: 6 },
+    ];
+    expect(scoreGame({ tackle_solo: 4 }, rules, "LB")).toBe(0);
+  });
+
+  test("bonus with upper bound - above max = 0", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "rush_yd", points: 3, isBonus: true,
+        boundLower: 100, boundUpper: 149 },
+    ];
+    expect(scoreGame({ rush_yd: 160 }, rules, "RB")).toBe(0);
+  });
+
+  test("empty stats returns 0", () => {
+    const rules: ScoringRule[] = [
+      { statKey: "pass_yd", points: 0.04, isBonus: false },
+    ];
+    expect(scoreGame({}, rules, "QB")).toBe(0);
   });
 });

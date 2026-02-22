@@ -742,6 +742,7 @@ async function processBothCSVsText(
       team: string;
       gamesPlayed: Set<number>; // Track unique weeks to avoid double-counting
       stats: Record<string, number>;
+      gameLogs: Record<number, Record<string, number>>;
     }
   >();
 
@@ -799,6 +800,7 @@ async function processBothCSVsText(
         team,
         gamesPlayed: new Set(),
         stats: {},
+        gameLogs: {},
       });
     }
 
@@ -814,10 +816,23 @@ async function processBothCSVsText(
           player.gamesPlayed.add(w);
         }
       }
+      // PBP-aggregated data has no weekly granularity — gameLogs stays empty
     } else {
-      // Weekly data: add actual week number
+      // Weekly data: add actual week number and capture per-game stats
       const week = parseInt(row.week || "0");
-      if (week > 0) player.gamesPlayed.add(week);
+      if (week > 0) {
+        player.gamesPlayed.add(week);
+        if (!player.gameLogs[week]) player.gameLogs[week] = {};
+        for (const [nflverseCol, ourCol] of Object.entries(
+          offenseMapping.mapping,
+        )) {
+          const value = parseFloat(row[nflverseCol] || "0");
+          if (!isNaN(value) && value !== 0) {
+            player.gameLogs[week][ourCol] =
+              (player.gameLogs[week][ourCol] || 0) + value;
+          }
+        }
+      }
     }
 
     player.team = team;
@@ -884,13 +899,27 @@ async function processBothCSVsText(
             team,
             gamesPlayed: new Set(),
             stats: {},
+            gameLogs: {},
           });
         }
 
         const player = playerStats.get(playerId)!;
         // Track games played by week number to avoid double-counting
         const week = parseInt(row.week || "0");
-        if (week > 0) player.gamesPlayed.add(week);
+        if (week > 0) {
+          player.gamesPlayed.add(week);
+          // Capture per-game defense stats
+          if (!player.gameLogs[week]) player.gameLogs[week] = {};
+          for (const [nflverseCol, ourCol] of Object.entries(
+            defenseMapping.mapping,
+          )) {
+            const value = parseFloat(row[nflverseCol] || "0");
+            if (!isNaN(value) && value !== 0) {
+              player.gameLogs[week][ourCol] =
+                (player.gameLogs[week][ourCol] || 0) + value;
+            }
+          }
+        }
         // Update position if it's more specific
         if (isDefensivePosition(position) && !isDefensivePosition(player.position)) {
           player.position = position;
@@ -931,6 +960,7 @@ async function processBothCSVsText(
     season: number;
     gamesPlayed: number;
     stats: Record<string, number>;
+    gameLogs: Record<number, Record<string, number>> | null;
     source: string;
   }> = [];
 
@@ -957,6 +987,9 @@ async function processBothCSVsText(
           season: targetSeason,
           gamesPlayed: player.gamesPlayed.size,
           stats: player.stats,
+          gameLogs: Object.keys(player.gameLogs).length > 0
+            ? player.gameLogs
+            : null,
           source: "nflverse",
         });
       }

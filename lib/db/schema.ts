@@ -171,6 +171,20 @@ export const leagueSettings = pgTable("league_settings", {
   irSlots: integer("ir_slots").default(0).notNull(),
   // Additional settings metadata
   metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+  // Normalized scoring rule objects from platform API.
+  // Preserves forEvery, isBonus, bounds, applyTo — used by
+  // scoreGame() for deterministic per-game scoring.
+  structuredRules: jsonb("structured_rules").$type<
+    Array<{
+      statKey: string;
+      points: number;
+      forEvery?: number;
+      isBonus: boolean;
+      boundLower?: number;
+      boundUpper?: number;
+      applyTo?: string[];
+    }>
+  >(),
   // Version for deterministic reruns
   version: integer("version").default(1).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -361,6 +375,11 @@ export const historicalStats = pgTable(
     gamesPlayed: integer("games_played"),
     // Raw stat totals: {"pass_yd": 4500, "pass_td": 35, "rush_yd": 200, ...}
     stats: jsonb("stats").notNull().$type<Record<string, number>>(),
+    // Per-game stat breakdowns keyed by week number.
+    // Null when per-game data was unavailable at seed time.
+    gameLogs: jsonb("game_logs").$type<
+      Record<number, Record<string, number>>
+    >(),
     // Source of the data
     source: varchar("source", { length: 50 }).notNull(), // "dynastyprocess", "nflfastr"
     fetchedAt: timestamp("fetched_at").defaultNow().notNull(),

@@ -9,7 +9,7 @@
 import { db } from "@/lib/db/client";
 import { historicalStats, canonicalPlayers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { calculateFantasyPoints } from "./vorp";
+import { calculateFantasyPoints, type ScoringRule } from "./vorp";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
 export interface LastSeasonResult {
@@ -25,6 +25,7 @@ export interface ComputeLastSeasonOptions {
   scoringRules: Record<string, number>;
   positionScoringOverrides?: Record<string, Record<string, number>>;
   bonusThresholds?: Record<string, Array<{ min: number; max?: number; bonus: number }>>;
+  structuredRules?: ScoringRule[] | null;
   season?: number;
 }
 
@@ -95,7 +96,12 @@ export function isOffseason(): boolean {
 export async function computeLastSeasonPoints(
   options: ComputeLastSeasonOptions
 ): Promise<Map<string, LastSeasonResult>> {
-  const { scoringRules, positionScoringOverrides, bonusThresholds } = options;
+  const {
+    scoringRules,
+    positionScoringOverrides,
+    bonusThresholds,
+    structuredRules,
+  } = options;
   const season = options.season ?? getMostRecentCompletedSeason();
 
   // Fetch all historical stats for the season joined with player info
@@ -134,13 +140,16 @@ export async function computeLastSeasonPoints(
     const gamesPlayed = stat.gamesPlayed ?? 17;
 
     // Calculate fantasy points using the same function as projections
-    // Note: For historical data, bonus thresholds use the actual games played
     const points = calculateFantasyPoints(
       normalizeStatKeys(stat.stats as Record<string, number>),
       scoringRules,
       overrides,
       bonusThresholds,
-      gamesPlayed
+      gamesPlayed,
+      (stat.gameLogs as
+        Record<number, Record<string, number>> | null) ?? null,
+      structuredRules ?? null,
+      player.position,
     );
 
     playerResults.push({
