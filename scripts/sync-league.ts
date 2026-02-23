@@ -80,6 +80,10 @@ async function main() {
     console.log("Fetching league settings from provider...");
     const settings = await adapter.getLeagueSettings(league.externalLeagueId);
 
+    // Extract structuredRules from metadata for dedicated DB column
+    const metadataObj = settings.metadata as Record<string, unknown> | undefined;
+    const structuredRules = metadataObj?.structuredRules ?? null;
+
     // Store settings
     console.log("Storing settings in database...");
     await db.insert(schema.leagueSettings).values({
@@ -94,6 +98,7 @@ async function main() {
       taxiSlots: settings.taxiSlots,
       irSlots: settings.irSlots,
       metadata: settings.metadata,
+      structuredRules: structuredRules as typeof schema.leagueSettings.$inferInsert.structuredRules,
     });
 
     // Store raw payloads
