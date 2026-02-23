@@ -275,19 +275,19 @@ export function TradeCalculator({
       )}
 
       {/* Analysis panels */}
-      {hasAssets && fairness && team1 && team2 && (
+      {hasAssets && fairness && (
         <div className="space-y-4">
           <FairnessPanel
             fairness={fairness}
-            team1Name={team1.name}
-            team2Name={team2.name}
+            team1Name={team1?.name ?? "Side A"}
+            team2Name={team2?.name ?? "Side B"}
           />
 
           {divergence && (
             <MarketPanel
               divergence={divergence}
-              team1Name={team1.name}
-              team2Name={team2.name}
+              team1Name={team1?.name ?? "Side A"}
+              team2Name={team2?.name ?? "Side B"}
             />
           )}
 
