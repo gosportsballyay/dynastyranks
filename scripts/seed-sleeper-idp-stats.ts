@@ -1,10 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
- * Seed IDP Stats from Sleeper API
+ * Seed Stats from Sleeper API
  *
- * Fetches weekly defensive player stats from Sleeper's public API and merges
- * them into the historical_stats table. This supplements the PBP-sourced offense
- * stats with IDP stats (tackles, sacks, INTs, etc.) that aren't available in PBP.
+ * Fetches weekly player stats (offense + IDP + kicking) from Sleeper's
+ * public API and stores them in historical_stats with per-game gameLogs.
+ *
+ * Sleeper provides official NFL stats for ALL players, which are the
+ * same data feed used by Fleaflicker and other platforms.
  *
  * Usage:
  *   npx tsx scripts/seed-sleeper-idp-stats.ts --season 2025
@@ -17,14 +19,43 @@ dotenv.config({ path: ".env.local" });
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import * as schema from "../lib/db/schema";
 
 const SLEEPER_API_BASE = "https://api.sleeper.app/v1";
-const RATE_LIMIT_MS = 100; // Be nice to Sleeper's API
+const RATE_LIMIT_MS = 100;
 
-// Map Sleeper stat keys to our canonical stat keys
-const SLEEPER_TO_OUR_KEYS: Record<string, string> = {
+/**
+ * Map Sleeper stat keys to our canonical stat keys.
+ * Only keys listed here are extracted; everything else is ignored.
+ */
+const SLEEPER_TO_CANONICAL: Record<string, string> = {
+  // Passing
+  pass_att: "pass_att",
+  pass_cmp: "pass_cmp",
+  pass_yd: "pass_yd",
+  pass_td: "pass_td",
+  pass_int: "int",
+  pass_2pt: "pass_2pt",
+  pass_sack: "pass_sack",
+  pass_fd: "pass_fd",
+  // Rushing
+  rush_att: "rush_att",
+  rush_yd: "rush_yd",
+  rush_td: "rush_td",
+  rush_2pt: "rush_2pt",
+  rush_fd: "rush_fd",
+  // Receiving
+  rec: "rec",
+  rec_tgt: "rec_tgt",
+  rec_yd: "rec_yd",
+  rec_td: "rec_td",
+  rec_2pt: "rec_2pt",
+  rec_fd: "rec_fd",
+  // Fumbles
+  fum: "fum",
+  fum_lost: "fum_lost",
+  // IDP
   idp_tkl: "tackle",
   idp_tkl_solo: "tackle_solo",
   idp_tkl_ast: "tackle_assist",
@@ -40,10 +71,25 @@ const SLEEPER_TO_OUR_KEYS: Record<string, string> = {
   idp_td: "def_td",
   idp_safe: "safety",
   idp_blk_kick: "blk_kick",
+  // Kicking
+  fgm: "fg",
+  fgm_0_19: "fg_0_19",
+  fgm_20_29: "fg_20_29",
+  fgm_30_39: "fg_30_39",
+  fgm_40_49: "fg_40_49",
+  fgm_50_59: "fg_50_59",
+  fgm_60p: "fg_60_plus",
+  fgmiss: "fg_miss",
+  xpm: "xp",
+  xpmiss: "xp_miss",
+  // Returns
+  kr_yd: "kr_yd",
+  kr_td: "kr_td",
+  pr_yd: "pr_yd",
+  pr_td: "pr_td",
 };
 
-// IDP stat keys to check if player has any IDP stats
-const IDP_STAT_KEYS = Object.keys(SLEEPER_TO_OUR_KEYS);
+const MAPPED_KEYS = Object.keys(SLEEPER_TO_CANONICAL);
 
 interface SleeperPlayer {
   player_id: string;
@@ -64,34 +110,32 @@ interface AggregatedPlayerStats {
   sleeperId: string;
   weeksPlayed: Set<number>;
   stats: Record<string, number>;
+  gameLogs: Record<number, Record<string, number>>;
 }
 
-/**
- * Sleep for rate limiting
- */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Fetch JSON from Sleeper API with rate limiting
- */
 async function fetchSleeper<T>(endpoint: string): Promise<T> {
   await sleep(RATE_LIMIT_MS);
   const url = `${SLEEPER_API_BASE}${endpoint}`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Sleeper API error: ${response.status} for ${url}`);
+    throw new Error(
+      `Sleeper API error: ${response.status} for ${url}`,
+    );
   }
   return response.json();
 }
 
-/**
- * Fetch Sleeper player database
- */
-async function fetchSleeperPlayers(): Promise<Map<string, SleeperPlayer>> {
+async function fetchSleeperPlayers(): Promise<
+  Map<string, SleeperPlayer>
+> {
   console.log("Fetching Sleeper player database...");
-  const players = await fetchSleeper<Record<string, SleeperPlayer>>("/players/nfl");
+  const players = await fetchSleeper<
+    Record<string, SleeperPlayer>
+  >("/players/nfl");
 
   const playerMap = new Map<string, SleeperPlayer>();
   for (const [id, player] of Object.entries(players)) {
@@ -108,62 +152,72 @@ async function fetchSleeperPlayers(): Promise<Map<string, SleeperPlayer>> {
   return playerMap;
 }
 
-/**
- * Fetch weekly stats for a specific week
- */
-async function fetchWeeklyStats(season: number, week: number): Promise<SleeperWeeklyStats> {
-  return fetchSleeper<SleeperWeeklyStats>(`/stats/nfl/regular/${season}/${week}`);
+async function fetchWeeklyStats(
+  season: number,
+  week: number,
+): Promise<SleeperWeeklyStats> {
+  return fetchSleeper<SleeperWeeklyStats>(
+    `/stats/nfl/regular/${season}/${week}`,
+  );
 }
 
 /**
- * Check if a player has any IDP stats in their weekly data
+ * Extract mapped stats from weekly data and convert to canonical keys.
+ * Returns null if the player has no meaningful stats this week.
  */
-function hasIdpStats(stats: Record<string, number | undefined>): boolean {
-  return IDP_STAT_KEYS.some((key) => stats[key] !== undefined && stats[key] !== 0);
-}
+function extractStats(
+  weeklyStats: Record<string, number | undefined>,
+): Record<string, number> | null {
+  const result: Record<string, number> = {};
+  let hasAny = false;
 
-/**
- * Extract IDP stats from weekly stats and convert to our keys
- */
-function extractIdpStats(weeklyStats: Record<string, number | undefined>): Record<string, number> {
-  const idpStats: Record<string, number> = {};
-
-  for (const [sleeperKey, ourKey] of Object.entries(SLEEPER_TO_OUR_KEYS)) {
+  for (const sleeperKey of MAPPED_KEYS) {
     const value = weeklyStats[sleeperKey];
     if (value !== undefined && value !== 0) {
-      idpStats[ourKey] = value;
+      const canonicalKey = SLEEPER_TO_CANONICAL[sleeperKey];
+      result[canonicalKey] =
+        (result[canonicalKey] || 0) + value;
+      hasAny = true;
     }
   }
 
-  return idpStats;
+  return hasAny ? result : null;
 }
 
 /**
- * Aggregate weekly stats into season totals
+ * Aggregate weekly stats into season totals with gameLogs.
+ * Skips team-level entries (IDs starting with "TEAM_").
  */
 function aggregateSeasonStats(
-  allWeeklyStats: Map<number, SleeperWeeklyStats>
+  allWeeklyStats: Map<number, SleeperWeeklyStats>,
 ): Map<string, AggregatedPlayerStats> {
   const aggregated = new Map<string, AggregatedPlayerStats>();
 
   for (const [week, weekStats] of allWeeklyStats) {
     for (const [playerId, stats] of Object.entries(weekStats)) {
-      if (!hasIdpStats(stats)) continue;
+      // Skip team aggregates
+      if (playerId.startsWith("TEAM_")) continue;
+      // Skip players with no game played
+      if (!stats.gp || stats.gp === 0) continue;
+
+      const extracted = extractStats(stats);
+      if (!extracted) continue;
 
       if (!aggregated.has(playerId)) {
         aggregated.set(playerId, {
           sleeperId: playerId,
           weeksPlayed: new Set(),
           stats: {},
+          gameLogs: {},
         });
       }
 
       const player = aggregated.get(playerId)!;
       player.weeksPlayed.add(week);
+      player.gameLogs[week] = extracted;
 
-      // Aggregate IDP stats
-      const idpStats = extractIdpStats(stats);
-      for (const [key, value] of Object.entries(idpStats)) {
+      // Aggregate season totals
+      for (const [key, value] of Object.entries(extracted)) {
         player.stats[key] = (player.stats[key] || 0) + value;
       }
     }
@@ -174,10 +228,8 @@ function aggregateSeasonStats(
 
 /**
  * Build mapping from Sleeper player_id to canonical_player_id.
- *
- * Uses two strategies:
- * 1. Direct sleeperId match (most reliable)
- * 2. gsis_id match (fallback for players without sleeperId)
+ * Strategy 1: Direct sleeperId match (primary)
+ * Strategy 2: gsis_id match (fallback)
  */
 function buildPlayerMapping(
   sleeperPlayers: Map<string, SleeperPlayer>,
@@ -187,14 +239,24 @@ function buildPlayerMapping(
     sleeperId: string | null;
     name: string;
     position: string;
-  }>
-): Map<string, { canonicalId: string; name: string; position: string }> {
-  const mapping = new Map<string, { canonicalId: string; name: string; position: string }>();
+  }>,
+): Map<
+  string,
+  { canonicalId: string; name: string; position: string }
+> {
+  const mapping = new Map<
+    string,
+    { canonicalId: string; name: string; position: string }
+  >();
 
-  // Build sleeperId -> canonical mapping (primary)
-  const sleeperIdToCanonical = new Map<string, { canonicalId: string; name: string; position: string }>();
-  // Build gsis_id -> canonical mapping (fallback)
-  const gsisToCanonical = new Map<string, { canonicalId: string; name: string; position: string }>();
+  const sleeperIdToCanonical = new Map<
+    string,
+    { canonicalId: string; name: string; position: string }
+  >();
+  const gsisToCanonical = new Map<
+    string,
+    { canonicalId: string; name: string; position: string }
+  >();
 
   for (const player of canonicalPlayers) {
     const entry = {
@@ -214,15 +276,14 @@ function buildPlayerMapping(
   let matchedByGsis = 0;
 
   for (const [sleeperId, sleeperPlayer] of sleeperPlayers) {
-    // Strategy 1: Direct sleeperId match
-    const bySleeperMatch = sleeperIdToCanonical.get(sleeperId);
+    const bySleeperMatch =
+      sleeperIdToCanonical.get(sleeperId);
     if (bySleeperMatch) {
       mapping.set(sleeperId, bySleeperMatch);
       matchedBySleeperId++;
       continue;
     }
 
-    // Strategy 2: gsis_id match (fallback)
     if (sleeperPlayer.gsis_id) {
       const trimmedGsisId = sleeperPlayer.gsis_id.trim();
       const byGsisMatch = gsisToCanonical.get(trimmedGsisId);
@@ -235,7 +296,7 @@ function buildPlayerMapping(
 
   console.log(
     `  Matched by sleeperId: ${matchedBySleeperId}, ` +
-    `by gsis_id: ${matchedByGsis}`
+      `by gsis_id: ${matchedByGsis}`,
   );
 
   return mapping;
@@ -251,7 +312,7 @@ async function main() {
   }
 
   console.log("=".repeat(60));
-  console.log("SEED SLEEPER IDP STATS");
+  console.log("SEED SLEEPER STATS (offense + IDP + kicking)");
   console.log("=".repeat(60));
   console.log(`Season: ${season}`);
   console.log();
@@ -278,53 +339,74 @@ async function main() {
       position: schema.canonicalPlayers.position,
     })
     .from(schema.canonicalPlayers);
-  console.log(`  Loaded ${canonicalPlayers.length} canonical players`);
+  console.log(
+    `  Loaded ${canonicalPlayers.length} canonical players`,
+  );
 
   // 3. Build player mapping
   console.log("Building player mapping...");
-  const playerMapping = buildPlayerMapping(sleeperPlayers, canonicalPlayers);
-  console.log(`  Mapped ${playerMapping.size} players (Sleeper -> Canonical)`);
+  const playerMapping = buildPlayerMapping(
+    sleeperPlayers,
+    canonicalPlayers,
+  );
+  console.log(
+    `  Mapped ${playerMapping.size} players (Sleeper -> Canonical)`,
+  );
 
   // 4. Fetch all 18 weeks of stats
   console.log(`\nFetching weekly stats for ${season}...`);
   const allWeeklyStats = new Map<number, SleeperWeeklyStats>();
 
   for (let week = 1; week <= 18; week++) {
-    process.stdout.write(`  Week ${week.toString().padStart(2)}...`);
+    process.stdout.write(
+      `  Week ${week.toString().padStart(2)}...`,
+    );
     try {
       const weekStats = await fetchWeeklyStats(season, week);
       const playerCount = Object.keys(weekStats).length;
       allWeeklyStats.set(week, weekStats);
       console.log(` ${playerCount} players`);
-    } catch (error) {
-      console.log(` ❌ Failed (may not exist yet)`);
+    } catch {
+      console.log(` skipped (not available)`);
     }
   }
 
   if (allWeeklyStats.size === 0) {
-    console.error("\n❌ No weekly stats found for this season");
+    console.error("\nNo weekly stats found for this season");
     process.exit(1);
   }
 
-  console.log(`\n  Fetched ${allWeeklyStats.size} weeks of data`);
+  console.log(
+    `\n  Fetched ${allWeeklyStats.size} weeks of data`,
+  );
 
-  // 5. Aggregate season stats
+  // 5. Aggregate season stats with gameLogs
   console.log("\nAggregating season stats...");
   const seasonStats = aggregateSeasonStats(allWeeklyStats);
-  console.log(`  Found ${seasonStats.size} players with IDP stats`);
+  console.log(
+    `  Found ${seasonStats.size} players with stats`,
+  );
 
-  // 6. Load existing historical stats for this season (batch lookup)
-  console.log("\nLoading existing historical stats for season...");
+  // 6. Load existing historical stats for this season
+  console.log(
+    "\nLoading existing historical stats for season...",
+  );
   const existingStats = await db
     .select()
     .from(schema.historicalStats)
     .where(eq(schema.historicalStats.season, season));
 
-  const existingByCanonicalId = new Map<string, typeof existingStats[0]>();
+  const existingByCanonicalId = new Map<
+    string,
+    (typeof existingStats)[0]
+  >();
   for (const row of existingStats) {
     existingByCanonicalId.set(row.canonicalPlayerId, row);
   }
-  console.log(`  Found ${existingStats.length} existing rows for season ${season}`);
+  console.log(
+    `  Found ${existingStats.length} existing rows for ` +
+      `season ${season}`,
+  );
 
   // 7. Prepare updates/inserts
   console.log("\nPreparing database updates...");
@@ -335,8 +417,15 @@ async function main() {
   let inserted = 0;
 
   const unmatchedPlayers: string[] = [];
-  const toUpdate: Array<{ id: string; stats: Record<string, number>; gamesPlayed: number }> = [];
-  const toInsert: Array<typeof schema.historicalStats.$inferInsert> = [];
+  const toUpdate: Array<{
+    id: string;
+    stats: Record<string, number>;
+    gamesPlayed: number;
+    gameLogs: Record<number, Record<string, number>>;
+  }> = [];
+  const toInsert: Array<
+    typeof schema.historicalStats.$inferInsert
+  > = [];
 
   for (const [sleeperId, playerStats] of seasonStats) {
     const canonical = playerMapping.get(sleeperId);
@@ -345,34 +434,37 @@ async function main() {
       unmatched++;
       const sleeperPlayer = sleeperPlayers.get(sleeperId);
       if (sleeperPlayer && unmatchedPlayers.length < 20) {
-        unmatchedPlayers.push(`${sleeperPlayer.full_name} (${sleeperPlayer.position})`);
+        unmatchedPlayers.push(
+          `${sleeperPlayer.full_name} ` +
+            `(${sleeperPlayer.position})`,
+        );
       }
       continue;
     }
 
     matched++;
 
-    // Check if player already has a row for this season
-    const existingRow = existingByCanonicalId.get(canonical.canonicalId);
+    const existingRow = existingByCanonicalId.get(
+      canonical.canonicalId,
+    );
 
     if (existingRow) {
-      // Merge IDP stats into existing row
-      const mergedStats = { ...existingRow.stats as Record<string, number>, ...playerStats.stats };
-      const gamesPlayed = Math.max(existingRow.gamesPlayed || 0, playerStats.weeksPlayed.size);
-
+      // Overwrite stats and add gameLogs
       toUpdate.push({
         id: existingRow.id,
-        stats: mergedStats,
-        gamesPlayed,
+        stats: playerStats.stats,
+        gamesPlayed: playerStats.weeksPlayed.size,
+        gameLogs: playerStats.gameLogs,
       });
       updated++;
     } else {
-      // Insert new row for pure IDP player
+      // Insert new row
       toInsert.push({
         canonicalPlayerId: canonical.canonicalId,
         season: season,
         gamesPlayed: playerStats.weeksPlayed.size,
         stats: playerStats.stats,
+        gameLogs: playerStats.gameLogs,
         source: "sleeper",
       });
       inserted++;
@@ -382,7 +474,11 @@ async function main() {
   // Execute updates in batches
   console.log(`\nExecuting ${toUpdate.length} updates...`);
   const UPDATE_BATCH_SIZE = 10;
-  for (let i = 0; i < toUpdate.length; i += UPDATE_BATCH_SIZE) {
+  for (
+    let i = 0;
+    i < toUpdate.length;
+    i += UPDATE_BATCH_SIZE
+  ) {
     const batch = toUpdate.slice(i, i + UPDATE_BATCH_SIZE);
     await Promise.all(
       batch.map((item) =>
@@ -391,21 +487,36 @@ async function main() {
           .set({
             stats: item.stats,
             gamesPlayed: item.gamesPlayed,
+            gameLogs: item.gameLogs,
           })
-          .where(eq(schema.historicalStats.id, item.id))
-      )
+          .where(eq(schema.historicalStats.id, item.id)),
+      ),
     );
-    process.stdout.write(`  Updated ${Math.min(i + UPDATE_BATCH_SIZE, toUpdate.length)}/${toUpdate.length}\r`);
+    process.stdout.write(
+      `  Updated ${Math.min(
+        i + UPDATE_BATCH_SIZE,
+        toUpdate.length,
+      )}/${toUpdate.length}\r`,
+    );
   }
   console.log();
 
   // Execute inserts in batches
   console.log(`Executing ${toInsert.length} inserts...`);
   const INSERT_BATCH_SIZE = 100;
-  for (let i = 0; i < toInsert.length; i += INSERT_BATCH_SIZE) {
+  for (
+    let i = 0;
+    i < toInsert.length;
+    i += INSERT_BATCH_SIZE
+  ) {
     const batch = toInsert.slice(i, i + INSERT_BATCH_SIZE);
     await db.insert(schema.historicalStats).values(batch);
-    process.stdout.write(`  Inserted ${Math.min(i + INSERT_BATCH_SIZE, toInsert.length)}/${toInsert.length}\r`);
+    process.stdout.write(
+      `  Inserted ${Math.min(
+        i + INSERT_BATCH_SIZE,
+        toInsert.length,
+      )}/${toInsert.length}\r`,
+    );
   }
   console.log();
 
@@ -413,38 +524,59 @@ async function main() {
   console.log("\n" + "=".repeat(60));
   console.log("SUMMARY");
   console.log("=".repeat(60));
-  console.log(`  Players with IDP stats: ${seasonStats.size}`);
-  console.log(`  Matched to canonical:   ${matched}`);
-  console.log(`  Unmatched:              ${unmatched}`);
-  console.log(`  Updated (merged):       ${updated}`);
-  console.log(`  Inserted (new):         ${inserted}`);
+  console.log(
+    `  Players with stats: ${seasonStats.size}`,
+  );
+  console.log(
+    `  Matched to canonical:   ${matched}`,
+  );
+  console.log(
+    `  Unmatched:              ${unmatched}`,
+  );
+  console.log(
+    `  Updated (overwritten):  ${updated}`,
+  );
+  console.log(
+    `  Inserted (new):         ${inserted}`,
+  );
 
   if (unmatchedPlayers.length > 0) {
     console.log(`\n  Unmatched examples:`);
-    unmatchedPlayers.slice(0, 10).forEach((p) => console.log(`    - ${p}`));
+    unmatchedPlayers.slice(0, 10).forEach((p) =>
+      console.log(`    - ${p}`),
+    );
     if (unmatchedPlayers.length > 10) {
-      console.log(`    ... and ${unmatchedPlayers.length - 10} more`);
+      console.log(
+        `    ... and ${unmatchedPlayers.length - 10} more`,
+      );
     }
   }
 
-  // Position breakdown of inserted players
-  console.log("\n  IDP stats by position:");
+  // Position breakdown
+  console.log("\n  Stats by position:");
   const byPosition: Record<string, number> = {};
   for (const [sleeperId] of seasonStats) {
     const canonical = playerMapping.get(sleeperId);
     if (canonical) {
-      byPosition[canonical.position] = (byPosition[canonical.position] || 0) + 1;
+      byPosition[canonical.position] =
+        (byPosition[canonical.position] || 0) + 1;
     }
   }
 
   Object.entries(byPosition)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
+    .slice(0, 15)
     .forEach(([pos, count]) => {
       console.log(`    ${pos}: ${count}`);
     });
 
-  console.log("\n✓ Done");
+  // gameLogs coverage
+  const withGameLogs = toUpdate.length + toInsert.length;
+  console.log(
+    `\n  gameLogs stored for ${withGameLogs} players`,
+  );
+
+  console.log("\nDone");
 }
 
 main().catch((error) => {

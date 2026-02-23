@@ -10,10 +10,11 @@ const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql, { schema });
 
 async function diagnose() {
-  // 1. Find Devin White
+  // 1. Find player (pass name as CLI arg or default)
+  const searchName = process.argv[2] || "Schwesinger";
   const [player] = await db.select()
     .from(schema.canonicalPlayers)
-    .where(like(schema.canonicalPlayers.name, "%Devin White%"))
+    .where(like(schema.canonicalPlayers.name, `%${searchName}%`))
     .limit(1);
 
   if (!player) { console.log("Player not found"); return; }
@@ -290,7 +291,7 @@ async function diagnose() {
       .limit(20);
 
     for (const lb of topLBs) {
-      const marker = lb.name.includes("Devin White") ? " <<<" : "";
+      const marker = lb.name.includes(searchName) ? " <<<" : "";
       console.log(
         `    LB${String(lb.rankInPosition).padStart(3)}: ` +
         `${lb.name.padEnd(25)} age=${String(lb.age ?? "?").padStart(2)} ` +
