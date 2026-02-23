@@ -18,6 +18,9 @@ interface League {
   teams: number;
 }
 
+const yahooEnabled =
+  process.env.NEXT_PUBLIC_YAHOO_ENABLED === "true";
+
 function ConnectLeagueContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -382,18 +385,22 @@ function ConnectLeagueContent() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (!yahooEnabled) return;
                       setProvider("yahoo");
                       setError(null);
                     }}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      provider === "yahoo"
-                        ? "border-blue-500 bg-blue-500/10"
-                        : "border-slate-700 hover:border-slate-600"
+                    disabled={!yahooEnabled}
+                    className={`p-4 rounded-lg border-2 transition-all relative ${
+                      !yahooEnabled
+                        ? "border-slate-700 opacity-60 cursor-not-allowed"
+                        : provider === "yahoo"
+                          ? "border-blue-500 bg-blue-500/10"
+                          : "border-slate-700 hover:border-slate-600"
                     }`}
                   >
                     <div className="text-lg font-semibold text-white">Yahoo</div>
                     <div className="text-sm text-slate-400 mt-1">
-                      Connect with OAuth
+                      {yahooEnabled ? "Connect with OAuth" : "Coming Soon"}
                     </div>
                   </button>
                 </div>

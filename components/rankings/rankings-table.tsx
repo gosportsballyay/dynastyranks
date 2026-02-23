@@ -191,7 +191,7 @@ export function RankingsTable({
   }) => (
     <th
       onClick={() => handleSort(column)}
-      className={`py-3 px-4 font-medium text-slate-400 cursor-pointer hover:text-white transition-colors select-none bg-slate-900 ${className}`}
+      className={`py-3 px-2 sm:px-4 font-medium text-slate-400 cursor-pointer hover:text-white transition-colors select-none bg-slate-900 ${className}`}
     >
       {children}
       <SortIndicator column={column} />
@@ -225,21 +225,22 @@ export function RankingsTable({
           </button>
         ))}
       </div>
+      <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-16 z-20">
+          <thead className="sticky top-0 z-20">
             <tr className="border-b border-slate-700 text-left bg-slate-900">
               <SortableHeader column="rank">Rank</SortableHeader>
               <SortableHeader column="name">Player</SortableHeader>
               <SortableHeader column="position">Pos</SortableHeader>
-              <SortableHeader column="team">Team</SortableHeader>
-              <SortableHeader column="age">Age</SortableHeader>
+              <SortableHeader column="team" className="hidden sm:table-cell">Team</SortableHeader>
+              <SortableHeader column="age" className="hidden sm:table-cell">Age</SortableHeader>
               <SortableHeader column="lastSeason" className="text-right">
                 Last Szn
               </SortableHeader>
               <SortableHeader column="value" className="text-right">Value</SortableHeader>
-              <SortableHeader column="vorp" className="text-right">VORP</SortableHeader>
+              <SortableHeader column="vorp" className="text-right hidden sm:table-cell">VORP</SortableHeader>
               <SortableHeader column="tier">Tier</SortableHeader>
-              <SortableHeader column="owner">Team</SortableHeader>
+              <SortableHeader column="owner">Owner</SortableHeader>
             </tr>
           </thead>
           <tbody>
@@ -253,7 +254,7 @@ export function RankingsTable({
                     getHighlightClass(v) || (index % 2 === 0 ? "bg-slate-800/30" : "")
                   } hover:bg-slate-700/50`}
                 >
-                  <td className="py-3 px-4 text-slate-300">
+                  <td className="py-3 px-2 sm:px-4 text-slate-300">
                     <span className="font-medium">#{v.rank}</span>
                     {groupFilter === "offense" && v.offenseRank != null && (
                       <span className="text-xs text-slate-400 ml-2">OFF{v.offenseRank}</span>
@@ -262,39 +263,39 @@ export function RankingsTable({
                       <span className="text-xs text-slate-400 ml-2">IDP{v.idpRank}</span>
                     )}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-2 sm:px-4">
                     <div className="font-medium text-white">{v.player.name}</div>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-2 sm:px-4">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPositionColor(v.player.position)}`}
                     >
                       {v.player.position}{v.rankInPosition}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-slate-400">
+                  <td className="py-3 px-2 sm:px-4 text-slate-400 hidden sm:table-cell">
                     {v.player.nflTeam || "-"}
                   </td>
-                  <td className="py-3 px-4 text-slate-400">
+                  <td className="py-3 px-2 sm:px-4 text-slate-400 hidden sm:table-cell">
                     {v.player.age || "-"}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono text-amber-400">
+                  <td className="py-3 px-2 sm:px-4 text-right font-mono text-amber-400">
                     {v.lastSeasonPoints ? v.lastSeasonPoints.toFixed(1) : "-"}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono text-green-400">
+                  <td className="py-3 px-2 sm:px-4 text-right font-mono text-green-400">
                     {v.value.toFixed(1)}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono text-slate-300">
+                  <td className="py-3 px-2 sm:px-4 text-right font-mono text-slate-300 hidden sm:table-cell">
                     +{v.vorp.toFixed(1)}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-2 sm:px-4">
                     <span
                       className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${getTierColor(v.tier)}`}
                     >
                       {v.tier}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-2 sm:px-4">
                     {v.owner ? (
                       <span
                         className="text-slate-300"
@@ -318,6 +319,7 @@ export function RankingsTable({
             ))}
           </tbody>
         </table>
+      </div>
     </div>
   );
 }

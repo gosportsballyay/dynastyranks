@@ -10,6 +10,12 @@ export const metadata: Metadata = {
     "Custom dynasty rankings and trade values for YOUR league settings. The only tool that truly understands IDP, custom scoring, and unique roster configurations.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: {

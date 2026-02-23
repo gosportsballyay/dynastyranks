@@ -8,6 +8,9 @@ export default function Home() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <span className="text-xl font-bold text-white">DynastyRanks</span>
+              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/30">
+                Beta
+              </span>
             </div>
             <div />
           </div>
@@ -132,7 +135,7 @@ export default function Home() {
       <footer className="border-t border-slate-700 bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="text-center text-slate-400">
-            <p>&copy; 2025 DynastyRanks. All rights reserved.</p>
+            <p>&copy; 2026 DynastyRanks. All rights reserved.</p>
             <div className="mt-4 flex justify-center gap-6">
               <Link href="/privacy" className="hover:text-white transition-colors">
                 Privacy Policy

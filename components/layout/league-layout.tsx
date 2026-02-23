@@ -102,7 +102,7 @@ export function LeagueLayout({
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
         }`}
       >
-        <div className="p-6">{children}</div>
+        <div className="px-3 py-4 sm:px-4 sm:py-5 md:p-6">{children}</div>
       </main>
       <FeedbackButton leagueId={currentLeagueId} />
     </div>
