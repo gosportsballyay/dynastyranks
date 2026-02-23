@@ -272,6 +272,10 @@ async function syncLeagueData(
     console.warn("League settings warnings:", validation.warnings);
   }
 
+  // Extract structuredRules from metadata for dedicated DB column
+  const metadataObj = settings.metadata as Record<string, unknown> | undefined;
+  const structuredRules = metadataObj?.structuredRules ?? null;
+
   // Store settings
   await db.insert(leagueSettings).values({
     leagueId,
@@ -285,6 +289,7 @@ async function syncLeagueData(
     taxiSlots: settings.taxiSlots,
     irSlots: settings.irSlots,
     metadata: settings.metadata,
+    structuredRules: structuredRules as typeof leagueSettings.$inferInsert.structuredRules,
   });
 
   // Fetch teams

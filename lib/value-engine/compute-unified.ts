@@ -19,7 +19,7 @@ import {
   aggregatedValues,
 } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
-import { calculateFantasyPoints } from "./vorp";
+import { calculateFantasyPoints, type ScoringRule } from "./vorp";
 import { calculateStarterDemand } from "./replacement-level";
 import {
   getAgeCurveMultiplier,
@@ -74,19 +74,6 @@ const IDP_POSITIONS = new Set([
  * near starters.
  */
 const NO_CONSENSUS_PENALTY = 0.55;
-
-const POSITION_BOUNDS: Record<string, { min: number; max: number }> = {
-  QB: { min: 50, max: 500 },
-  RB: { min: 20, max: 450 },
-  WR: { min: 20, max: 450 },
-  TE: { min: 15, max: 350 },
-  LB: { min: 30, max: 350 },
-  EDR: { min: 25, max: 350 },
-  CB: { min: 20, max: 300 },
-  S: { min: 25, max: 300 },
-  IL: { min: 20, max: 250 },
-  DB: { min: 20, max: 300 },
-};
 
 interface ComputeValuesResult {
   success: boolean;
@@ -155,6 +142,9 @@ export async function computeUnifiedValues(
     )?.bonusThresholds as
       | Record<string, Array<{ min: number; max?: number; bonus: number }>>
       | undefined;
+
+    const structuredRules =
+      (settings.structuredRules as ScoringRule[] | null) ?? null;
 
     // --- Compute dynamic blend weights ---
     const complexity = computeFormatComplexity({
@@ -230,6 +220,7 @@ export async function computeUnifiedValues(
       positionScoringOverrides:
         settings.positionScoringOverrides ?? undefined,
       bonusThresholds,
+      structuredRules,
     });
 
     // --- Target season + projections mode ---
@@ -256,6 +247,7 @@ export async function computeUnifiedValues(
         season: number;
         stats: Record<string, number>;
         gamesPlayed: number;
+        gameLogs: Record<number, Record<string, number>> | null;
       }>
     >();
     for (const stat of allHistorical) {
@@ -266,6 +258,8 @@ export async function computeUnifiedValues(
         season: stat.season,
         stats: stat.stats as Record<string, number>,
         gamesPlayed: stat.gamesPlayed ?? 17,
+        gameLogs: (stat.gameLogs as
+          Record<number, Record<string, number>> | null) ?? null,
       });
       historicalByPlayer.set(stat.canonicalPlayerId, existing);
     }
@@ -296,6 +290,10 @@ export async function computeUnifiedValues(
           normalizedScoringRules,
           settings.positionScoringOverrides?.[player.position],
           bonusThresholds,
+          h.gamesPlayed,
+          h.gameLogs,
+          structuredRules,
+          player.position,
         );
         seasonPts.push({
           season: h.season,
@@ -360,12 +358,6 @@ export async function computeUnifiedValues(
           player.age + 1,
         );
         points *= ageFactor;
-      }
-
-      // Clamp to position bounds
-      const bounds = POSITION_BOUNDS[player.position];
-      if (bounds && points > bounds.max) {
-        points = bounds.max;
       }
 
       // Confidence scaling based on most recent season
@@ -1107,16 +1099,32 @@ export function computeSmoothedProjection(
   const weights = [0.6, 0.3, 0.1];
   let total = 0;
 
+  let seasonsFound = 0;
+  let singleSeasonProrated = 0;
   for (let i = 0; i < 3; i++) {
-    const seasonYear = targetSeason - 1 - i;
+    const seasonYear = targetSeason - i;
     const season = seasons.find((s) => s.season === seasonYear);
 
     if (season && season.gamesPlayed > 0) {
       const prorated =
         (season.points / season.gamesPlayed) * 17;
       total += prorated * weights[i];
+      seasonsFound++;
+      singleSeasonProrated = prorated;
     }
     // Missing season or 0 GP → adds 0
+  }
+
+  // Rookies: single season should not be diluted by
+  // treating nonexistent prior seasons as zero production.
+  // 10% stability discount for unproven track record.
+  if (seasonsFound === 1) {
+    return singleSeasonProrated * 0.90;
+  }
+
+  // Two-season players: mild 3% stability discount.
+  if (seasonsFound === 2) {
+    total *= 0.97;
   }
 
   return total;

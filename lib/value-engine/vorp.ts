@@ -170,14 +170,73 @@ export interface BonusThreshold {
 }
 
 /**
+ * Normalized scoring rule from platform API.
+ * Self-contained: each rule knows its stat, points, bonus status,
+ * bounds, and which positions it applies to.
+ */
+export interface ScoringRule {
+  statKey: string;
+  points: number;
+  forEvery?: number;
+  isBonus: boolean;
+  boundLower?: number;
+  boundUpper?: number;
+  applyTo?: string[];  // undefined = all positions
+}
+
+/**
+ * Score a single game deterministically using structured rules.
+ *
+ * Each rule is self-contained: base scoring uses stat * points (or
+ * floor(stat / forEvery) * points), bonus rules check per-game stat
+ * against bounds. Position filtering via applyTo.
+ */
+export function scoreGame(
+  gameStats: Record<string, number>,
+  rules: ScoringRule[],
+  playerPosition: string,
+): number {
+  let points = 0;
+
+  for (const rule of rules) {
+    if (rule.applyTo && !rule.applyTo.includes(playerPosition)) {
+      continue;
+    }
+
+    const statValue = gameStats[rule.statKey] || 0;
+
+    if (!rule.isBonus) {
+      if (rule.forEvery) {
+        points +=
+          Math.floor(statValue / rule.forEvery) * rule.points;
+      } else {
+        points += statValue * rule.points;
+      }
+    } else {
+      if (
+        statValue >= (rule.boundLower ?? 0) &&
+        (rule.boundUpper == null || statValue <= rule.boundUpper)
+      ) {
+        points += rule.points;
+      }
+    }
+  }
+
+  return points;
+}
+
+/**
  * Calculate points for a player given projections and scoring rules.
  * Supports bonus thresholds for yardage milestones.
  *
  * @param projections - Season-level stat projections
  * @param scoringRules - Per-stat point values
  * @param positionOverrides - Position-specific scoring overrides
- * @param bonusThresholds - Optional threshold bonuses (e.g., 300+ passing yards)
+ * @param bonusThresholds - Optional threshold bonuses (legacy, unused when structuredRules present)
  * @param gamesPlayed - Number of games for per-game calculation (default: 17)
+ * @param gameLogs - Per-game stat breakdowns keyed by week number (for deterministic bonus scoring)
+ * @param structuredRules - Normalized scoring rules from platform API
+ * @param playerPosition - Player position for applyTo filtering
  */
 export function calculateFantasyPoints(
   projections: Partial<Record<CanonicalStatKey, number>>,
@@ -186,8 +245,33 @@ export function calculateFantasyPoints(
   bonusThresholds?: Partial<
     Record<CanonicalStatKey, BonusThreshold[]>
   >,
-  gamesPlayed: number = 17
+  gamesPlayed: number = 17,
+  gameLogs?: Record<number, Record<string, number>> | null,
+  structuredRules?: ScoringRule[] | null,
+  playerPosition?: string,
 ): number {
+  // Path 1: gameLogs + structuredRules → deterministic per-game scoring
+  if (gameLogs && structuredRules && structuredRules.length > 0) {
+    let total = 0;
+    for (const weekStats of Object.values(gameLogs)) {
+      total += scoreGame(
+        weekStats,
+        structuredRules,
+        playerPosition ?? "",
+      );
+    }
+    return total;
+  }
+
+  // Path 2: structuredRules but no gameLogs → base scoring from
+  // season totals, skip bonus rules (no per-game data to evaluate)
+  if (structuredRules && structuredRules.length > 0) {
+    const baseRules = structuredRules.filter((r) => !r.isBonus);
+    const proj = projections as Record<string, number>;
+    return scoreGame(proj, baseRules, playerPosition ?? "");
+  }
+
+  // Path 3: No structuredRules (Sleeper, legacy) → original logic
   // Validate scoring rule keys are canonical
   const unknownRuleKeys = Object.keys(scoringRules)
     .filter((k) => !VALID_STAT_KEYS.has(k));
@@ -230,84 +314,10 @@ export function calculateFantasyPoints(
     }
   }
 
-  // Apply threshold bonuses (per-game bonuses)
-  if (bonusThresholds && gamesPlayed > 0) {
-    const threshMap = bonusThresholds as Record<string, BonusThreshold[]>;
-    for (const [stat, thresholds] of Object.entries(threshMap)) {
-      const seasonTotal = proj[stat] || 0;
-      const perGame = seasonTotal / gamesPlayed;
-
-      for (const { min, max, bonus } of thresholds) {
-        // Estimate how many games would hit this threshold
-        // Using a simplified model: if per-game avg exceeds threshold, count games
-        const gamesHittingBonus = estimateBonusGames(perGame, min, max, gamesPlayed);
-        points += bonus * gamesHittingBonus;
-      }
-    }
-  }
+  // Bonuses skipped in fallback path — deterministic scoring requires
+  // per-game data which is only available via gameLogs + structuredRules.
 
   return points;
-}
-
-/**
- * Estimate how many games a player hits a bonus threshold.
- * Uses a simplified variance model based on per-game average.
- *
- * @param perGameAvg - Average stat value per game
- * @param min - Minimum threshold
- * @param max - Maximum threshold (undefined = no upper bound)
- * @param totalGames - Total games in season
- */
-function estimateBonusGames(
-  perGameAvg: number,
-  min: number,
-  max: number | undefined,
-  totalGames: number
-): number {
-  // If average is well below threshold, unlikely to hit bonus
-  if (perGameAvg < min * 0.7) {
-    return 0;
-  }
-
-  // If average exceeds threshold, estimate how many games hit it
-  // Using coefficient of variation ~0.3 for fantasy football stats
-  const cv = 0.3;
-  const stdDev = perGameAvg * cv;
-
-  // Estimate probability of exceeding min threshold (simplified normal approximation)
-  const zScore = (min - perGameAvg) / stdDev;
-  let probExceedsMin = 1 - normalCDF(zScore);
-
-  // If there's a max, calculate probability of being within range
-  if (max !== undefined) {
-    const zScoreMax = (max - perGameAvg) / stdDev;
-    const probBelowMax = normalCDF(zScoreMax);
-    probExceedsMin = probBelowMax - normalCDF(zScore);
-  }
-
-  // Expected games hitting this bonus
-  return Math.max(0, probExceedsMin * totalGames);
-}
-
-/**
- * Standard normal CDF approximation
- */
-function normalCDF(x: number): number {
-  // Approximation using error function
-  const a1 = 0.254829592;
-  const a2 = -0.284496736;
-  const a3 = 1.421413741;
-  const a4 = -1.453152027;
-  const a5 = 1.061405429;
-  const p = 0.3275911;
-
-  const sign = x < 0 ? -1 : 1;
-  x = Math.abs(x) / Math.sqrt(2);
-
-  const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-
-  return 0.5 * (1.0 + sign * y);
 }
 
 /**

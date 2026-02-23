@@ -8,7 +8,11 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { calculateFantasyPoints, type BonusThreshold } from "../vorp";
+import {
+  calculateFantasyPoints,
+  type BonusThreshold,
+  type ScoringRule,
+} from "../vorp";
 import { calculateStarterDemand } from "../replacement-level";
 import { computeEffectiveBaseline } from "../effective-baseline";
 import { computeLeagueSignal } from "../league-signal";
@@ -80,21 +84,86 @@ function computeTestValues(
         ["QB", "RB", "WR", "TE"].includes(p.position),
       );
 
-  // Step 1: Calculate fantasy points for each player
-  const playerPoints = relevantPlayers.map((player) => {
-    const posOverrides =
-      settings.positionScoringOverrides?.[player.position];
-    const bonuses = (
-      settings.metadata?.bonusThresholds as
-        | Record<string, BonusThreshold[]>
-        | undefined
-    );
+  // Build structuredRules from scoring rules + position overrides +
+  // bonus thresholds so the integration test exercises the
+  // deterministic path
+  const bonusThresholds = settings.metadata?.bonusThresholds as
+    | Record<string, BonusThreshold[]>
+    | undefined;
+  const testStructuredRules: ScoringRule[] = [];
 
+  // Base scoring rules (apply to all positions)
+  for (const [statKey, pts] of Object.entries(settings.scoringRules)) {
+    if (pts !== undefined) {
+      testStructuredRules.push({
+        statKey,
+        points: pts as number,
+        isBonus: false,
+      });
+    }
+  }
+
+  // Position-specific overrides: for each overridden stat+position,
+  // add a rule scoped to that position. The override replaces the
+  // general rule, so we also need to exclude the general rule for
+  // that position. We handle this by adding a "negative" general
+  // rule for the position and a positive override rule.
+  if (settings.positionScoringOverrides) {
+    for (const [pos, overrides] of Object.entries(
+      settings.positionScoringOverrides,
+    )) {
+      for (const [statKey, pts] of Object.entries(overrides)) {
+        if (pts === undefined) continue;
+        const generalPts =
+          (settings.scoringRules as Record<string, number>)[statKey] ?? 0;
+        // Subtract general rule for this position
+        if (generalPts !== 0) {
+          testStructuredRules.push({
+            statKey,
+            points: -generalPts,
+            isBonus: false,
+            applyTo: [pos],
+          });
+        }
+        // Add override rule for this position
+        testStructuredRules.push({
+          statKey,
+          points: pts as number,
+          isBonus: false,
+          applyTo: [pos],
+        });
+      }
+    }
+  }
+
+  if (bonusThresholds) {
+    for (const [statKey, thresholds] of Object.entries(bonusThresholds)) {
+      for (const t of thresholds) {
+        testStructuredRules.push({
+          statKey,
+          points: t.bonus,
+          isBonus: true,
+          boundLower: t.min,
+          boundUpper: t.max,
+        });
+      }
+    }
+  }
+
+  // Step 1: Calculate fantasy points for each player
+  // Uses structuredRules path 2 (season totals, no gameLogs)
+  // which applies base scoring but skips bonuses — same as production
+  // behavior for projection-based scoring
+  const playerPoints = relevantPlayers.map((player) => {
     const pts = calculateFantasyPoints(
       player.projections,
       settings.scoringRules,
-      posOverrides,
-      bonuses,
+      undefined,
+      undefined,
+      17,
+      null,
+      testStructuredRules,
+      player.position,
     );
 
     return { player, fantasyPoints: pts };
@@ -390,28 +459,25 @@ describe("Value Engine Integration", () => {
     });
   });
 
-  describe("Test 6: Bonus scoring rewards volume", () => {
-    it("high-volume RB gains more than low-volume RB", () => {
-      // RB1 projects 1400 rush yd (should hit 100yd bonuses often)
-      // RB16 projects 400 rush yd (rarely hits 100yd bonus)
+  describe("Test 6: Bonus scoring with season totals (no gameLogs)", () => {
+    it("bonus config produces same base points as normal (no per-game data)", () => {
+      // Without gameLogs, bonus rules are skipped — deterministic scoring
+      // requires per-game data to evaluate thresholds. Base scoring is identical.
       const rb1Bonus = findPlayer(resultsBonus, "RB1");
       const rb1Normal = findPlayer(results1qb, "RB1");
-      const rb16Bonus = findPlayer(resultsBonus, "RB16");
-      const rb16Normal = findPlayer(results1qb, "RB16");
-
-      const rb1Gain = rb1Bonus.fantasyPoints - rb1Normal.fantasyPoints;
-      const rb16Gain = rb16Bonus.fantasyPoints - rb16Normal.fantasyPoints;
-      expect(rb1Gain).toBeGreaterThan(rb16Gain);
+      expect(rb1Bonus.fantasyPoints).toBeCloseTo(
+        rb1Normal.fantasyPoints,
+        0,
+      );
     });
 
-    it("value gap RB1-RB20 is larger with bonuses", () => {
-      const gapBonus =
-        findPlayer(resultsBonus, "RB1").value -
-        findPlayer(resultsBonus, "RB20").value;
-      const gapNormal =
-        findPlayer(results1qb, "RB1").value -
-        findPlayer(results1qb, "RB20").value;
-      expect(gapBonus).toBeGreaterThan(gapNormal);
+    it("bonus config values match normal config (base scoring only)", () => {
+      const rb20Bonus = findPlayer(resultsBonus, "RB20");
+      const rb20Normal = findPlayer(results1qb, "RB20");
+      expect(rb20Bonus.fantasyPoints).toBeCloseTo(
+        rb20Normal.fantasyPoints,
+        0,
+      );
     });
   });
 

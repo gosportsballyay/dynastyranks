@@ -136,6 +136,21 @@ league config). This is a first-class design constraint, not a fallback:
 Do NOT re-introduce consensus-dependent assumptions for IDP positions.
 The `signal_primary` valueSource exists specifically for this case.
 
+### Scoring Design Constraint: Deterministic Per-Game Scoring
+
+All fantasy point calculations MUST be deterministic:
+- Per-game bonus thresholds are evaluated against actual per-game stats
+  from the `gameLogs` column on `historicalStats`, NOT estimated from
+  season averages.
+- When per-game data is unavailable (projections, missing gameLogs),
+  bonuses are simply not scored. Do NOT introduce probabilistic
+  estimation or CV-based modeling.
+- The `scoreGame()` function in `vorp.ts` is the canonical per-game
+  scorer. All bonus evaluation goes through it.
+- This applies to ALL platforms (Fleaflicker, Sleeper, ESPN, Yahoo).
+  Platform scoring rules (from FetchLeagueRules or equivalent API)
+  must drive scoring -- never hardcode multipliers.
+
 ---
 
 ## Conventions
@@ -144,3 +159,12 @@ The `signal_primary` valueSource exists specifically for this case.
 - FilterChip pattern for URL-based filter state (no client state for filters)
 - Parallel Promise.all for independent DB queries
 - Value engine is league-specific: every value considers scoring, roster, league size
+
+### After any value engine change
+Player values are pre-computed and stored in the database — they do NOT
+recalculate on page load. After modifying any file in `lib/value-engine/`,
+you **must** recompute all leagues for the changes to be reflected on the site:
+
+```bash
+export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/recompute-all-leagues.ts
+```

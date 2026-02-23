@@ -12,6 +12,7 @@
  */
 
 import { BaseAdapter } from "./base";
+import type { ScoringRule } from "@/lib/value-engine/vorp";
 import type {
   LeagueProviderAdapter,
   AdapterConfig,
@@ -244,8 +245,12 @@ export class FleaflickerAdapter
     }
 
     // Parse scoring rules with position-specific handling and bonus thresholds
-    const { scoringRules, positionScoringOverrides, bonusThresholds } =
-      this.parseScoringRules(rulesWithGroups);
+    const {
+      scoringRules,
+      positionScoringOverrides,
+      bonusThresholds,
+      structuredRules,
+    } = this.parseScoringRules(rulesWithGroups);
 
     // Detect IDP structure
     const idpStructure = this.determineIdpStructure(rosterPositions, positionMappings);
@@ -269,6 +274,8 @@ export class FleaflickerAdapter
         numBench: rules.numBench,
         bonusThresholds:
           Object.keys(bonusThresholds).length > 0 ? bonusThresholds : undefined,
+        structuredRules:
+          structuredRules.length > 0 ? structuredRules : undefined,
       },
     };
   }
@@ -528,13 +535,18 @@ export class FleaflickerAdapter
     scoringRules: Record<string, number>;
     positionScoringOverrides: Record<string, Record<string, number>>;
     bonusThresholds: Record<string, Array<{ min: number; max?: number; bonus: number }>>;
+    structuredRules: ScoringRule[];
   } {
     const scoringRules: Record<string, number> = {};
     const positionScoringOverrides: Record<string, Record<string, number>> = {};
     const bonusThresholds: Record<string, Array<{ min: number; max?: number; bonus: number }>> = {};
+    const structuredRules: ScoringRule[] = [];
 
     for (const { rule, groupLabel } of rulesWithGroups) {
       const statKey = this.deriveStatKey(rule, groupLabel);
+      const applyTo = (!rule.applyToAll && rule.applyTo?.length)
+        ? rule.applyTo.map(p => p.toUpperCase())
+        : undefined;
 
       // Handle bonus threshold rules (e.g., +6 for 400-449 passing yards)
       if (rule.isBonus && rule.boundLower !== undefined) {
@@ -545,6 +557,16 @@ export class FleaflickerAdapter
           min: rule.boundLower,
           max: rule.boundUpper,
           bonus: rule.points.value,
+        });
+
+        // Also add to structuredRules for deterministic scoring
+        structuredRules.push({
+          statKey,
+          points: rule.points.value,
+          isBonus: true,
+          boundLower: rule.boundLower,
+          boundUpper: rule.boundUpper,
+          applyTo,
         });
         continue; // Don't add bonus rules to per-stat scoring
       }
@@ -557,6 +579,14 @@ export class FleaflickerAdapter
         // This is a flat per-occurrence rule (e.g., 6 pts per TD)
         // Only add if it's truly per-occurrence (forEvery === 1 or not set)
       }
+
+      // Add to structuredRules (base scoring)
+      structuredRules.push({
+        statKey,
+        points,
+        isBonus: false,
+        applyTo,
+      });
 
       // Determine if position-specific or general
       const isPositionSpecific =
@@ -580,7 +610,12 @@ export class FleaflickerAdapter
       }
     }
 
-    return { scoringRules, positionScoringOverrides, bonusThresholds };
+    return {
+      scoringRules,
+      positionScoringOverrides,
+      bonusThresholds,
+      structuredRules,
+    };
   }
 
   /**

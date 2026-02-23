@@ -78,6 +78,13 @@
       "when": 1771689347286,
       "tag": "0010_fearless_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771727529812,
+      "tag": "0011_loose_patch",
+      "breakpoints": true
     }
   ]
 }
