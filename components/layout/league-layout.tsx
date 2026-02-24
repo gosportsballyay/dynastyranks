@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { FeedbackButton } from "@/components/feedback-button";
+import { BetaBanner } from "./beta-banner";
 
 interface League {
   id: string;
@@ -102,7 +103,10 @@ export function LeagueLayout({
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
         }`}
       >
-        <div className="px-3 py-4 sm:px-4 sm:py-5 md:p-6">{children}</div>
+        <div className="px-3 py-4 sm:px-4 sm:py-5 md:p-6">
+          <BetaBanner />
+          {children}
+        </div>
       </main>
       <FeedbackButton leagueId={currentLeagueId} />
     </div>

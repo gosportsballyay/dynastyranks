@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 const MODE_OPTIONS: Array<{
   value: string;
@@ -64,8 +65,9 @@ export function ValuationEmphasisControl({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-500 uppercase tracking-wider">
+      <span className="text-xs text-slate-500 uppercase tracking-wider flex items-center gap-1">
         Emphasis:
+        <HelpTooltip text="Controls how player values blend market consensus with your league's specific scoring. Auto mode selects the best blend." />
       </span>
       {MODE_OPTIONS.map((opt) => (
         <button
