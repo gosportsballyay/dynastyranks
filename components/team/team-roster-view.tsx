@@ -29,6 +29,8 @@ export interface RosterPlayer {
   consensusValue: number | null;
   tier: number;
   lastSeasonPoints: number | null;
+  flexEligibility?: string[];
+  flexRanks?: Record<string, number>;
 }
 
 export interface TeamOption {
@@ -382,6 +384,8 @@ function RosterSection({
                         leagueValue={player.value}
                         tier={player.tier}
                         lastSeasonPoints={player.lastSeasonPoints}
+                        flexEligibility={player.flexEligibility}
+                        flexRanks={player.flexRanks}
                       />
                     </td>
                   </tr>

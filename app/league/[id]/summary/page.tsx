@@ -27,6 +27,8 @@ import {
   type TeamTier,
   type TeamNeedsResult,
 } from "@/lib/value-engine/team-needs";
+import { computeOptimalStarters } from "@/lib/utils/compute-optimal-lineup";
+import { leagueFormatString } from "@/lib/utils/league-format";
 
 interface PageProps {
   params: { id: string };
@@ -171,7 +173,14 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
           <div>
             <h1 className="text-2xl font-bold text-white">League Summary</h1>
             <p className="text-slate-400 mt-1">
-              {league.name} &bull; {league.totalTeams} teams &bull;{" "}
+              {league.name} &bull;{" "}
+              {leagueFormatString({
+                totalTeams: league.totalTeams,
+                rosterPositions: (settings?.rosterPositions ?? {}) as Record<string, number>,
+                idpStructure: settings?.idpStructure ?? null,
+                scoringRules: (settings?.scoringRules ?? {}) as Record<string, number>,
+              })}{" "}
+              &bull;{" "}
               {league.provider.charAt(0).toUpperCase() + league.provider.slice(1)}
             </p>
           </div>
@@ -216,9 +225,24 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     );
 
     // Calculate values by category
-    const starterRoster = teamRoster.filter(
-      (r) => r.roster.slotPosition === "START",
-    );
+    const starterIds = settings
+      ? computeOptimalStarters(
+          teamRoster.map((r) => ({
+            id: r.player.id,
+            position: r.player.position,
+            positionGroup: r.player.positionGroup,
+            value: r.value?.value || 0,
+            slot: r.roster.slotPosition || "BN",
+          })),
+          settings.rosterPositions,
+          settings.flexRules,
+          settings.positionMappings,
+        )
+      : new Set(
+          teamRoster
+            .filter((r) => r.roster.slotPosition === "START")
+            .map((r) => r.player.id),
+        );
     const offenseRoster = teamRoster.filter(
       (r) => r.player.positionGroup === "offense",
     );
@@ -233,9 +257,9 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     const overallValue = valuedRoster.reduce(
       (s, r) => s + (r.value?.value || 0), 0,
     );
-    const starterValue = starterRoster.reduce(
-      (s, r) => s + (r.value?.value || 0), 0,
-    );
+    const starterValue = teamRoster
+      .filter((r) => starterIds.has(r.player.id))
+      .reduce((s, r) => s + (r.value?.value || 0), 0);
     const offenseValue = offenseRoster.reduce(
       (s, r) => s + (r.value?.value || 0), 0,
     );
@@ -272,7 +296,7 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     const slotVal = (slots: string[]) => roster
       .filter((p) => slots.includes(p.slot))
       .reduce((s, p) => s + p.value, 0);
-    const benchValue = slotVal(["BN", "TAXI", "IR"]);
+    const benchValue = overallValue - starterValue;
     const taxiValue = slotVal(["TAXI"]);
     const irValue = slotVal(["IR"]);
 
@@ -501,7 +525,14 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
         <div>
           <h1 className="text-2xl font-bold text-white">League Summary</h1>
           <p className="text-slate-400 mt-1">
-            {league.name} &bull; {league.totalTeams} teams &bull;{" "}
+            {league.name} &bull;{" "}
+            {leagueFormatString({
+              totalTeams: league.totalTeams,
+              rosterPositions: (settings?.rosterPositions ?? {}) as Record<string, number>,
+              idpStructure: settings?.idpStructure ?? null,
+              scoringRules: (settings?.scoringRules ?? {}) as Record<string, number>,
+            })}{" "}
+            &bull;{" "}
             {league.provider.charAt(0).toUpperCase() + league.provider.slice(1)}
           </p>
         </div>

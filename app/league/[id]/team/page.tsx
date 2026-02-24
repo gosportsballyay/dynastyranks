@@ -13,7 +13,7 @@ import {
   historicalStats,
   aggregatedValues,
 } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 import {
   TeamRosterView,
@@ -167,9 +167,14 @@ export default async function MyTeamPage({
     );
   }
 
-  // Fetch roster, settings, history, and consensus in parallel
-  const [rosterData, settingsResult, historyRows, consensusRows] =
-    await Promise.all([
+  // Fetch roster, settings, history, consensus, and league values in parallel
+  const [
+    rosterData,
+    settingsResult,
+    historyRows,
+    consensusRows,
+    allValues,
+  ] = await Promise.all([
       db
         .select({
           roster: rosters,
@@ -205,6 +210,19 @@ export default async function MyTeamPage({
         })
         .from(aggregatedValues)
         .where(eq(aggregatedValues.leagueId, league.id)),
+      db
+        .select({
+          id: playerValues.id,
+          position: canonicalPlayers.position,
+          canonicalPlayerId: playerValues.canonicalPlayerId,
+        })
+        .from(playerValues)
+        .innerJoin(
+          canonicalPlayers,
+          eq(playerValues.canonicalPlayerId, canonicalPlayers.id),
+        )
+        .where(eq(playerValues.leagueId, league.id))
+        .orderBy(desc(playerValues.value)),
     ]);
 
   const [settings] = settingsResult;
@@ -245,6 +263,21 @@ export default async function MyTeamPage({
     consensusMap.set(row.canonicalPlayerId, row.aggregatedValue);
   }
 
+  // Build flex rank maps from league-wide values
+  const flexRankMaps = new Map<string, Map<string, number>>();
+  for (const rule of settings?.flexRules ?? []) {
+    const eligibleSet = new Set(rule.eligible);
+    const rankMap = new Map<string, number>();
+    let counter = 0;
+    for (const v of allValues) {
+      if (eligibleSet.has(v.position)) {
+        counter++;
+        rankMap.set(v.id, counter);
+      }
+    }
+    flexRankMaps.set(rule.slot, rankMap);
+  }
+
   const roster: RosterPlayer[] = rosterData.map((r) => ({
     playerId: r.player.id,
     playerName: r.player.name,
@@ -266,6 +299,18 @@ export default async function MyTeamPage({
     consensusValue: consensusMap.get(r.player.id) ?? null,
     tier: r.value?.tier ?? 10,
     lastSeasonPoints: r.value?.lastSeasonPoints ?? null,
+    flexEligibility: (settings?.flexRules ?? [])
+      .filter((rule) => rule.eligible.includes(r.player.position))
+      .map((rule) => rule.slot),
+    flexRanks: Object.fromEntries(
+      (settings?.flexRules ?? [])
+        .filter((rule) => rule.eligible.includes(r.player.position))
+        .map((rule): [string, number] => [
+          rule.slot,
+          flexRankMaps.get(rule.slot)?.get(r.value?.id ?? "") ?? 0,
+        ])
+        .filter(([, rank]) => rank > 0),
+    ),
   }));
 
   return (

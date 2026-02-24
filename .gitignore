@@ -44,3 +44,4 @@ next-env.d.ts
 # Data files
 *.xlsx
 *.rtf
+.worktrees/

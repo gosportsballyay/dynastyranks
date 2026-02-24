@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation";
 
+interface FlexRule {
+  slot: string;
+  eligible: string[];
+}
+
 interface PositionDropdownProps {
   leagueId: string;
   currentPosition?: string;
@@ -9,12 +14,24 @@ interface PositionDropdownProps {
   currentParams: Record<string, string | undefined>;
   availablePositions: string[];
   idpStructure?: "none" | "consolidated" | "granular" | "mixed";
+  flexRules?: FlexRule[];
 }
 
 // Group positions into categories
 const OFFENSE_POSITIONS = ["QB", "RB", "WR", "TE", "K"];
 const IDP_CONSOLIDATED = ["DL", "LB", "DB"];
 const IDP_GRANULAR = ["EDR", "IL", "LB", "CB", "S"];
+
+/** Human-readable labels for flex slot names. */
+const FLEX_LABELS: Record<string, string> = {
+  FLEX: "Flex",
+  SUPERFLEX: "Superflex",
+  SUPER_FLEX: "Superflex",
+  SF: "Superflex",
+  IDP_FLEX: "IDP Flex",
+  WRRB_FLEX: "WR/RB Flex",
+  REC_FLEX: "Rec Flex",
+};
 
 export function PositionDropdown({
   leagueId,
@@ -23,6 +40,7 @@ export function PositionDropdown({
   currentParams,
   availablePositions,
   idpStructure = "none",
+  flexRules = [],
 }: PositionDropdownProps) {
   const router = useRouter();
 
@@ -75,15 +93,24 @@ export function PositionDropdown({
   // IDP positions based on structure
   let idpOptions: string[] = [];
   if (idpStructure === "consolidated") {
-    idpOptions = IDP_CONSOLIDATED.filter((p) => availablePositions.includes(p));
+    idpOptions = IDP_CONSOLIDATED.filter((p) =>
+      availablePositions.includes(p)
+    );
   } else if (idpStructure === "granular" || idpStructure === "mixed") {
-    idpOptions = IDP_GRANULAR.filter((p) => availablePositions.includes(p));
+    idpOptions = IDP_GRANULAR.filter((p) =>
+      availablePositions.includes(p)
+    );
   } else {
-    // Just show whatever IDP positions are available
+    // Show whatever non-offense positions are available
     idpOptions = availablePositions.filter(
       (p) => !OFFENSE_POSITIONS.includes(p)
     );
   }
+
+  // Flex slots with >1 eligible position are worth showing
+  const flexOptions = flexRules.filter(
+    (r) => r.eligible.length > 1,
+  );
 
   return (
     <select
@@ -105,6 +132,17 @@ export function PositionDropdown({
           </option>
         ))}
       </optgroup>
+
+      {flexOptions.length > 0 && (
+        <optgroup label="Flex Slots">
+          {flexOptions.map((rule) => (
+            <option key={rule.slot} value={rule.slot}>
+              {FLEX_LABELS[rule.slot] ?? rule.slot}
+              {" "}({rule.eligible.join("/")})
+            </option>
+          ))}
+        </optgroup>
+      )}
 
       {idpOptions.length > 0 && (
         <optgroup label="IDP">

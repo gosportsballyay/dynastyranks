@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { getAgeTier } from "@/lib/value-engine/age-curves";
 
 export interface PlayerDetailProps {
@@ -24,6 +25,8 @@ export interface PlayerDetailProps {
   leagueValue: number;
   tier: number;
   lastSeasonPoints: number | null;
+  flexEligibility?: string[];
+  flexRanks?: Record<string, number>;
 }
 
 /** Dot separator for bio band items. */
@@ -107,6 +110,8 @@ export function PlayerDetailDropdown({
   leagueValue,
   tier,
   lastSeasonPoints,
+  flexEligibility = [],
+  flexRanks = {},
 }: PlayerDetailProps) {
   const ageTier = age != null
     ? getAgeTier(position, age)
@@ -227,6 +232,21 @@ export function PlayerDetailDropdown({
             <dd className="text-white font-mono text-right">
               {tier}
             </dd>
+            {flexEligibility.map((slot) => {
+              const r = flexRanks[slot];
+              if (!r) return null;
+              const label = slot === "SUPERFLEX" || slot === "SUPER_FLEX"
+                ? "Superflex"
+                : slot.charAt(0) + slot.slice(1).toLowerCase();
+              return (
+                <Fragment key={slot}>
+                  <dt className="text-slate-500">{label}</dt>
+                  <dd className="text-white font-mono text-right">
+                    #{r}
+                  </dd>
+                </Fragment>
+              );
+            })}
           </dl>
         </div>
 

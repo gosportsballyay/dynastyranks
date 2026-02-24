@@ -51,6 +51,8 @@ interface PlayerValue {
     gamesPlayed: number;
   }>;
   consensusAggValue: number | null;
+  flexEligibility?: string[];
+  flexRanks?: Record<string, number>;
 }
 
 type SortColumn = "rank" | "name" | "position" | "team" | "age" | "value" | "vorp" | "tier" | "owner" | "lastSeason";
@@ -69,6 +71,7 @@ interface RankingsTableProps {
   groupFilter?: string;
   sortMode?: string;
   userTeamId?: string | null;
+  flexFilter?: string | null;
 }
 
 export function RankingsTable({
@@ -77,6 +80,7 @@ export function RankingsTable({
   groupFilter,
   sortMode,
   userTeamId,
+  flexFilter,
 }: RankingsTableProps) {
   type HighlightMode = "none" | "mine" | "other" | "fa";
 
@@ -119,9 +123,14 @@ export function RankingsTable({
 
       switch (sortColumn) {
         case "rank":
-          // Sort by position rank when position is filtered,
+          // Sort by flex rank when flex filter active,
+          // position rank when position is filtered,
           // overall rank otherwise
-          if (positionFilter) {
+          if (flexFilter) {
+            const aFlex = a.flexRanks?.[flexFilter] ?? 9999;
+            const bFlex = b.flexRanks?.[flexFilter] ?? 9999;
+            comparison = aFlex - bFlex;
+          } else if (positionFilter) {
             comparison = a.rankInPosition - b.rankInPosition;
           } else {
             comparison = a.rank - b.rank;
@@ -258,12 +267,25 @@ export function RankingsTable({
                   } hover:bg-slate-700/50`}
                 >
                   <td className="py-3 px-2 sm:px-4 text-slate-300">
-                    <span className="font-medium">#{v.rank}</span>
-                    {groupFilter === "offense" && v.offenseRank != null && (
-                      <span className="text-xs text-slate-400 ml-2">OFF{v.offenseRank}</span>
-                    )}
-                    {groupFilter === "defense" && v.idpRank != null && (
-                      <span className="text-xs text-slate-400 ml-2">IDP{v.idpRank}</span>
+                    {flexFilter && v.flexRanks?.[flexFilter] ? (
+                      <>
+                        <span className="font-medium">
+                          #{v.flexRanks[flexFilter]}
+                        </span>
+                        <span className="text-xs text-slate-500 ml-1.5">
+                          (#{v.rank})
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium">#{v.rank}</span>
+                        {groupFilter === "offense" && v.offenseRank != null && (
+                          <span className="text-xs text-slate-400 ml-2">OFF{v.offenseRank}</span>
+                        )}
+                        {groupFilter === "defense" && v.idpRank != null && (
+                          <span className="text-xs text-slate-400 ml-2">IDP{v.idpRank}</span>
+                        )}
+                      </>
                     )}
                   </td>
                   <td className="py-3 px-2 sm:px-4">
@@ -332,6 +354,8 @@ export function RankingsTable({
                         leagueValue={v.value}
                         tier={v.tier}
                         lastSeasonPoints={v.lastSeasonPoints ?? null}
+                        flexEligibility={v.flexEligibility}
+                        flexRanks={v.flexRanks}
                       />
                     </td>
                   </tr>
