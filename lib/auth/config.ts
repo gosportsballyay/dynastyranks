@@ -101,9 +101,3 @@ declare module "next-auth" {
     name?: string | null;
   }
 }
-
-declare module "@auth/core/jwt" {
-  interface JWT {
-    id: string;
-  }
-}
