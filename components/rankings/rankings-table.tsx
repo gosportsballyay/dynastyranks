@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, Fragment } from "react";
+import { PlayerDetailDropdown } from "@/components/player-detail-dropdown";
 
 interface PlayerValue {
   id: string;
@@ -18,22 +19,13 @@ interface PlayerValue {
   positionGroup: string;
   projectionSource: string;
   uncertainty: string;
-  // Last season data (proof layer)
   lastSeasonPoints?: number | null;
   lastSeasonRankOverall?: number | null;
   lastSeasonRankPosition?: number | null;
   dataSource?: string | null;
-  // Unified engine fields
   consensusValue?: number | null;
-  ktcValue?: number | null;
-  fcValue?: number | null;
-  dpValue?: number | null;
-  fpValue?: number | null;
-  consensusComponent?: number | null;
-  leagueSignalComponent?: number | null;
   lowConfidence?: boolean | null;
   valueSource?: string | null;
-  eligibilityPosition?: string | null;
   player: {
     id: string;
     name: string;
@@ -41,6 +33,11 @@ interface PlayerValue {
     positionGroup: string;
     nflTeam: string | null;
     age: number | null;
+    injuryStatus: string | null;
+    draftRound: number | null;
+    draftPick: number | null;
+    rookieYear: number | null;
+    yearsExperience: number | null;
   };
   owner?: string | null;
   ownerName?: string | null;
@@ -48,6 +45,12 @@ interface PlayerValue {
   isFreeAgent: boolean;
   offenseRank?: number | null;
   idpRank?: number | null;
+  seasonLines: Array<{
+    season: number;
+    points: number;
+    gamesPlayed: number;
+  }>;
+  consensusAggValue: number | null;
 }
 
 type SortColumn = "rank" | "name" | "position" | "team" | "age" | "value" | "vorp" | "tier" | "owner" | "lastSeason";
@@ -311,7 +314,25 @@ export function RankingsTable({
                 {expandedRow === v.id && (
                   <tr className="bg-slate-900/50">
                     <td colSpan={10} className="py-4 px-4">
-                      <ValueBreakdown value={v} positionFilter={positionFilter} />
+                      <PlayerDetailDropdown
+                        injuryStatus={v.player.injuryStatus}
+                        draftRound={v.player.draftRound}
+                        draftPick={v.player.draftPick}
+                        rookieYear={v.player.rookieYear}
+                        yearsExperience={v.player.yearsExperience}
+                        position={v.player.position}
+                        age={v.player.age}
+                        seasonLines={v.seasonLines}
+                        projectedPoints={v.projectedPoints}
+                        rank={v.rank}
+                        rankInPosition={v.rankInPosition}
+                        positionLabel={`${v.player.position}${v.rankInPosition}`}
+                        vorp={v.vorp}
+                        consensusValue={v.consensusAggValue}
+                        leagueValue={v.value}
+                        tier={v.tier}
+                        lastSeasonPoints={v.lastSeasonPoints ?? null}
+                      />
                     </td>
                   </tr>
                 )}
@@ -320,182 +341,6 @@ export function RankingsTable({
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-function ValueBreakdown({ value, positionFilter }: { value: PlayerValue; positionFilter?: string }) {
-  const hasConsensusBreakdown =
-    value.ktcValue != null ||
-    value.fcValue != null ||
-    value.dpValue != null ||
-    value.fpValue != null;
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-      {/* Low confidence badge */}
-      {value.lowConfidence && (
-        <div className="col-span-full">
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">
-            Low Confidence
-          </span>
-          <span className="text-slate-500 text-xs ml-2">
-            Limited consensus data available
-          </span>
-        </div>
-      )}
-
-      {/* Consensus Breakdown */}
-      {hasConsensusBreakdown && (
-        <>
-          <div>
-            <div className="text-blue-400 mb-1">Consensus Value</div>
-            <div className="text-white font-mono">
-              {value.consensusValue ?? "-"}
-            </div>
-          </div>
-          <div>
-            <div className="text-blue-400 mb-1">KTC</div>
-            <div className="text-white font-mono">
-              {value.ktcValue ?? "-"}
-            </div>
-          </div>
-          <div>
-            <div className="text-blue-400 mb-1">FantasyCalc</div>
-            <div className="text-white font-mono">
-              {value.fcValue ?? "-"}
-            </div>
-          </div>
-          <div>
-            <div className="text-blue-400 mb-1">DynastyProcess</div>
-            <div className="text-white font-mono">
-              {value.dpValue ?? "-"}
-            </div>
-          </div>
-          {value.fpValue != null && (
-            <div>
-              <div className="text-blue-400 mb-1">FantasyPros</div>
-              <div className="text-white font-mono">
-                {value.fpValue}
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Blend Components */}
-      {value.consensusComponent != null && value.consensusComponent > 0 && (
-        <>
-          <div>
-            <div className="text-purple-400 mb-1">
-              Consensus ({(() => {
-                const total =
-                  (value.consensusComponent ?? 0) +
-                  (value.leagueSignalComponent ?? 0);
-                return total > 0
-                  ? Math.round(
-                      ((value.consensusComponent ?? 0) / total) *
-                        100,
-                    )
-                  : 70;
-              })()}%)
-            </div>
-            <div className="text-white font-mono">
-              {value.consensusComponent.toFixed(0)}
-            </div>
-          </div>
-          <div>
-            <div className="text-purple-400 mb-1">
-              League Signal ({(() => {
-                const total =
-                  (value.consensusComponent ?? 0) +
-                  (value.leagueSignalComponent ?? 0);
-                const consPct =
-                  total > 0
-                    ? Math.round(
-                        ((value.consensusComponent ?? 0) / total) *
-                          100,
-                      )
-                    : 70;
-                return 100 - consPct;
-              })()}%)
-            </div>
-            <div className="text-white font-mono">
-              {(value.leagueSignalComponent ?? 0).toFixed(0)}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Last Season Section */}
-      {value.lastSeasonPoints !== null && value.lastSeasonPoints !== undefined && (
-        <>
-          <div>
-            <div className="text-amber-500 mb-1">Last Season Points</div>
-            <div className="text-white font-mono">
-              {value.lastSeasonPoints.toFixed(1)}
-            </div>
-          </div>
-          <div>
-            <div className="text-amber-500 mb-1">Last Season Rank</div>
-            <div className="text-white font-mono">
-              #{positionFilter
-                ? value.lastSeasonRankPosition ?? "-"
-                : value.lastSeasonRankOverall ?? "-"}
-              {!positionFilter && value.lastSeasonRankPosition && (
-                <span className="text-slate-400 text-xs ml-1">
-                  ({value.player.position}{value.lastSeasonRankPosition})
-                </span>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-      <div>
-        <div className="text-slate-500 mb-1">Projected Points</div>
-        <div className="text-white font-mono">
-          {value.projectedPoints.toFixed(1)}
-        </div>
-      </div>
-      <div>
-        <div className="text-slate-500 mb-1">Replacement Level</div>
-        <div className="text-white font-mono">
-          {value.replacementPoints.toFixed(1)}
-        </div>
-      </div>
-      <div>
-        <div className="text-slate-500 mb-1">Scarcity Multiplier</div>
-        <div className="text-white font-mono">
-          {value.scarcityMultiplier.toFixed(2)}x
-        </div>
-      </div>
-      <div>
-        <div className="text-slate-500 mb-1">Age Curve</div>
-        <div className="text-white font-mono">
-          {value.ageCurveMultiplier.toFixed(2)}x
-        </div>
-      </div>
-      <div>
-        <div className="text-slate-500 mb-1">Position Rank</div>
-        <div className="text-white font-mono">
-          {value.player.position}
-          {value.rankInPosition}
-        </div>
-      </div>
-      <div>
-        <div className="text-slate-500 mb-1">Value Source</div>
-        <div className="text-white capitalize">
-          {value.valueSource?.replace(/_/g, " ") || value.dataSource?.replace("_", " ") || value.projectionSource.replace("_", " ")}
-        </div>
-      </div>
-      {value.eligibilityPosition && (
-        <div>
-          <div className="text-slate-500 mb-1">Eligibility Position</div>
-          <div className="text-white">
-            {value.eligibilityPosition}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

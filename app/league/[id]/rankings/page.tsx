@@ -11,8 +11,11 @@ import {
   canonicalPlayers,
   rosters,
   teams,
+  historicalStats,
+  aggregatedValues,
 } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
+import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 import {
   computeUnifiedValues,
   ENGINE_VERSION,
@@ -74,8 +77,15 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     notFound();
   }
 
-  // Parallel fetch: settings, values, teams, and rosters
-  const [settingsResult, valuesResult, leagueTeams, rosterData] = await Promise.all([
+  // Parallel fetch: settings, values, teams, rosters, history, consensus
+  const [
+    settingsResult,
+    valuesResult,
+    leagueTeams,
+    rosterData,
+    historyRows,
+    consensusRows,
+  ] = await Promise.all([
     db.select().from(leagueSettings).where(eq(leagueSettings.leagueId, league.id)).limit(1),
     db
       .select({ value: playerValues, player: canonicalPlayers })
@@ -92,10 +102,56 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       .from(rosters)
       .innerJoin(teams, eq(rosters.teamId, teams.id))
       .where(eq(teams.leagueId, league.id)),
+    db
+      .select()
+      .from(historicalStats)
+      .where(inArray(historicalStats.season, [2025, 2024, 2023])),
+    db
+      .select({
+        canonicalPlayerId: aggregatedValues.canonicalPlayerId,
+        aggregatedValue: aggregatedValues.aggregatedValue,
+      })
+      .from(aggregatedValues)
+      .where(eq(aggregatedValues.leagueId, league.id)),
   ]);
 
   const [settings] = settingsResult;
   let values = valuesResult;
+
+  // Build scoring rules for historical stats
+  const scoringRules = (settings?.scoringRules ?? {}) as Record<string, number>;
+
+  // Build history map: playerId -> season lines
+  const historyMap = new Map<
+    string,
+    Array<{ season: number; points: number; gamesPlayed: number }>
+  >();
+  for (const row of historyRows) {
+    const stats = normalizeStatKeys(
+      row.stats as Record<string, number>,
+    );
+    let points = 0;
+    for (const [key, val] of Object.entries(stats)) {
+      if (scoringRules[key]) points += val * scoringRules[key];
+    }
+    const entry = {
+      season: row.season,
+      points,
+      gamesPlayed: row.gamesPlayed ?? 0,
+    };
+    const existing = historyMap.get(row.canonicalPlayerId);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      historyMap.set(row.canonicalPlayerId, [entry]);
+    }
+  }
+
+  // Build consensus map: playerId -> aggregatedValue
+  const consensusMap = new Map<string, number>();
+  for (const row of consensusRows) {
+    consensusMap.set(row.canonicalPlayerId, row.aggregatedValue);
+  }
 
   // If no values yet, compute them with unified engine
   if (values.length === 0 && settings) {
@@ -277,6 +333,8 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       isFreeAgent: !ownership,
       offenseRank: offenseRankMap.get(v.value.id) ?? null,
       idpRank: idpRankMap.get(v.value.id) ?? null,
+      seasonLines: historyMap.get(v.player.id) ?? [],
+      consensusAggValue: consensusMap.get(v.player.id) ?? null,
     };
   });
 

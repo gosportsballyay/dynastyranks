@@ -5,12 +5,16 @@ import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db/client";
 import {
   leagues,
+  leagueSettings,
   teams,
   rosters,
   playerValues,
   canonicalPlayers,
+  historicalStats,
+  aggregatedValues,
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
+import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 import {
   TeamRosterView,
   type RosterPlayer,
@@ -163,26 +167,83 @@ export default async function MyTeamPage({
     );
   }
 
-  // Fetch roster with player values
-  const rosterData = await db
-    .select({
-      roster: rosters,
-      player: canonicalPlayers,
-      value: playerValues,
-    })
-    .from(rosters)
-    .innerJoin(
-      canonicalPlayers,
-      eq(rosters.canonicalPlayerId, canonicalPlayers.id)
-    )
-    .leftJoin(
-      playerValues,
-      and(
-        eq(playerValues.canonicalPlayerId, canonicalPlayers.id),
-        eq(playerValues.leagueId, league.id)
-      )
-    )
-    .where(eq(rosters.teamId, viewedTeam.id));
+  // Fetch roster, settings, history, and consensus in parallel
+  const [rosterData, settingsResult, historyRows, consensusRows] =
+    await Promise.all([
+      db
+        .select({
+          roster: rosters,
+          player: canonicalPlayers,
+          value: playerValues,
+        })
+        .from(rosters)
+        .innerJoin(
+          canonicalPlayers,
+          eq(rosters.canonicalPlayerId, canonicalPlayers.id),
+        )
+        .leftJoin(
+          playerValues,
+          and(
+            eq(playerValues.canonicalPlayerId, canonicalPlayers.id),
+            eq(playerValues.leagueId, league.id),
+          ),
+        )
+        .where(eq(rosters.teamId, viewedTeam.id)),
+      db
+        .select()
+        .from(leagueSettings)
+        .where(eq(leagueSettings.leagueId, league.id))
+        .limit(1),
+      db
+        .select()
+        .from(historicalStats)
+        .where(inArray(historicalStats.season, [2025, 2024, 2023])),
+      db
+        .select({
+          canonicalPlayerId: aggregatedValues.canonicalPlayerId,
+          aggregatedValue: aggregatedValues.aggregatedValue,
+        })
+        .from(aggregatedValues)
+        .where(eq(aggregatedValues.leagueId, league.id)),
+    ]);
+
+  const [settings] = settingsResult;
+  const scoringRules = (settings?.scoringRules ?? {}) as Record<
+    string,
+    number
+  >;
+
+  // Build history map: playerId -> season lines
+  const historyMap = new Map<
+    string,
+    Array<{ season: number; points: number; gamesPlayed: number }>
+  >();
+  for (const row of historyRows) {
+    const stats = normalizeStatKeys(
+      row.stats as Record<string, number>,
+    );
+    let points = 0;
+    for (const [key, val] of Object.entries(stats)) {
+      if (scoringRules[key]) points += val * scoringRules[key];
+    }
+    const entry = {
+      season: row.season,
+      points,
+      gamesPlayed: row.gamesPlayed ?? 0,
+    };
+    const existing = historyMap.get(row.canonicalPlayerId);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      historyMap.set(row.canonicalPlayerId, [entry]);
+    }
+  }
+
+  // Build consensus map: playerId -> aggregatedValue
+  const consensusMap = new Map<string, number>();
+  for (const row of consensusRows) {
+    consensusMap.set(row.canonicalPlayerId, row.aggregatedValue);
+  }
 
   const roster: RosterPlayer[] = rosterData.map((r) => ({
     playerId: r.player.id,
@@ -193,6 +254,18 @@ export default async function MyTeamPage({
     value: r.value?.value || 0,
     rankInPosition: r.value?.rankInPosition ?? null,
     slot: r.roster.slotPosition || "BN",
+    injuryStatus: r.player.injuryStatus,
+    draftRound: r.player.draftRound,
+    draftPick: r.player.draftPick,
+    rookieYear: r.player.rookieYear,
+    yearsExperience: r.player.yearsExperience,
+    seasonLines: historyMap.get(r.player.id) ?? [],
+    projectedPoints: r.value?.projectedPoints ?? 0,
+    rank: r.value?.rank ?? 0,
+    vorp: r.value?.vorp ?? 0,
+    consensusValue: consensusMap.get(r.player.id) ?? null,
+    tier: r.value?.tier ?? 10,
+    lastSeasonPoints: r.value?.lastSeasonPoints ?? null,
   }));
 
   return (
