@@ -165,11 +165,11 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
         </select>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-900/50 sticky top-16 z-20">
+      <div>
+        <table className="w-full text-xs sm:text-sm">
+          <thead className="sticky top-16 z-20">
             <tr>
-              <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
                 Team
               </th>
               {cols.map((col) => (
@@ -181,10 +181,10 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                   onSort={handleSort}
                 />
               ))}
-              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell">
+              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell bg-slate-900">
                 Total Value
               </th>
-              <th className="w-8 sm:w-10 py-2 sm:py-3 hidden sm:table-cell" />
+              <th className="w-8 sm:w-10 py-2 sm:py-3 hidden sm:table-cell bg-slate-900" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">

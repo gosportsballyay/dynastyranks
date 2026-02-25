@@ -548,8 +548,8 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       </div>
 
       {/* Team Rankings Table */}
-      <div className="bg-slate-800/50 rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-700">
+      <div className="bg-slate-800/50 rounded-lg overflow-clip">
+        <div className="px-3 py-3 sm:px-6 sm:py-4 border-b border-slate-700">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-white">Team Power Rankings</h2>
             <HelpTooltip text="Teams ranked by total roster value based on your league's scoring, roster rules, and player projections." />

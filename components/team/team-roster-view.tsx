@@ -118,10 +118,10 @@ export function TeamRosterView({
   return (
     <div>
       {/* Header with dropdown */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-3 sm:mb-6">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1">
+            <h1 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
               Team Roster
               <HelpTooltip text="Roster organized by slot. Values reflect your league's scoring rules and positional scarcity." />
             </h1>
@@ -297,7 +297,7 @@ function RosterSection({
   );
 
   return (
-    <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+    <div className="bg-slate-800/50 rounded-lg overflow-clip">
       <div className="px-3 py-2 sm:px-6 sm:py-3 border-b border-slate-700 flex items-center justify-between">
         <h2 className="font-semibold text-white text-sm sm:text-base">{title}</h2>
         <span className="text-xs sm:text-sm text-slate-400">
@@ -305,9 +305,9 @@ function RosterSection({
         </span>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-slate-900/50 sticky top-16 z-20">
+      <div>
+        <table className="w-full text-xs sm:text-sm">
+          <thead className="sticky top-16 z-20">
             <tr>
               <SortableHeader column="name" className="text-left">
                 Player

@@ -238,10 +238,10 @@ export function RankingsTable({
           </button>
         ))}
       </div>
-      <div className="overflow-x-auto">
+      <div>
         <table className="w-full text-xs sm:text-sm">
           <thead className="sticky top-16 z-20">
-            <tr className="border-b border-slate-700 text-left bg-slate-900">
+            <tr className="border-b border-slate-700 text-left">
               <SortableHeader column="rank">Rank</SortableHeader>
               <SortableHeader column="name">Player</SortableHeader>
               <SortableHeader column="position">Pos</SortableHeader>

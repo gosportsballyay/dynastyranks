@@ -396,8 +396,8 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-3 sm:mb-6">
+        <h1 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
           Player Rankings
           <HelpTooltip
             text="Players ranked by dynasty value for your league. Values combine market consensus, your league's scoring, age curves, and positional scarcity."
@@ -423,7 +423,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       )}
 
       {/* Filters Row */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 sm:mb-6">
         {/* Position Dropdown */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500 uppercase tracking-wider">
