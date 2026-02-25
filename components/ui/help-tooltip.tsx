@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 
 interface HelpTooltipProps {
-  text: string;
+  text: React.ReactNode;
+  learnMoreHref?: string;
 }
 
 /**
  * Small (?) icon with tooltip on hover (desktop) or click (mobile).
  */
-export function HelpTooltip({ text }: HelpTooltipProps) {
+export function HelpTooltip({ text, learnMoreHref }: HelpTooltipProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -29,7 +30,10 @@ export function HelpTooltip({ text }: HelpTooltipProps) {
     <div ref={ref} className="relative inline-block">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         className="inline-flex items-center justify-center w-4 h-4
@@ -48,6 +52,15 @@ export function HelpTooltip({ text }: HelpTooltipProps) {
             leading-relaxed"
         >
           {text}
+          {learnMoreHref && (
+            <a
+              href={learnMoreHref}
+              className="block mt-1 text-blue-400
+                hover:text-blue-300 text-xs"
+            >
+              Learn more &rarr;
+            </a>
+          )}
           <div
             className="absolute top-full left-1/2 -translate-x-1/2
               -mt-px w-0 h-0 border-x-[6px] border-x-transparent

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import Link from "next/link";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { db } from "@/lib/db/client";
 import {
   leagues,
@@ -396,7 +397,13 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white">Player Rankings</h1>
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          Player Rankings
+          <HelpTooltip
+            text="Players ranked by dynasty value for your league. Values combine market consensus, your league's scoring, age curves, and positional scarcity."
+            learnMoreHref="/how-it-works#value-pipeline"
+          />
+        </h1>
         <div className="flex items-center gap-4">
           {/* Search Box */}
           <SearchInput

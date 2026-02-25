@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { TradeDivergenceResult } from "@/lib/trade-engine";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 interface MarketPanelProps {
   divergence: TradeDivergenceResult;
@@ -37,8 +38,12 @@ export function MarketPanel({
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between"
       >
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1">
           Market Comparison
+          <HelpTooltip
+            text="How your league values this trade vs. market consensus. Large gaps may indicate league-specific advantages."
+            learnMoreHref="/how-it-works#consensus"
+          />
         </h3>
         <span className="text-slate-500 text-xs">
           {expanded ? "▼" : "▶"}

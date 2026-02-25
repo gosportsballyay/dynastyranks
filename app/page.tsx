@@ -73,6 +73,12 @@ export default function Home() {
           />
         </div>
 
+        <p className="mt-12 text-center text-slate-400">
+          Want to understand the math?{" "}
+          <Link href="/how-it-works" className="text-blue-400 hover:text-blue-300">
+            See how it works &rarr;
+          </Link>
+        </p>
       </div>
 
       <footer className="border-t border-slate-700 bg-slate-900">
@@ -85,6 +91,9 @@ export default function Home() {
               </Link>
               <Link href="/terms" className="hover:text-white transition-colors">
                 Terms of Service
+              </Link>
+              <Link href="/how-it-works" className="hover:text-white transition-colors">
+                How It Works
               </Link>
             </div>
           </div>

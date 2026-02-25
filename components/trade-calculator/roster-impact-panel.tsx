@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { RosterImpactResult } from "@/lib/trade-engine";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { LineupComparison } from "./lineup-comparison";
 
 interface RosterImpactPanelProps {
@@ -15,8 +16,9 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
   if (loading) {
     return (
       <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-5">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1">
           Roster Impact (Your Team)
+          <HelpTooltip text="Projects how this trade changes your optimal lineup. 1-Year and 3-Year show dynasty value trajectory." />
         </h3>
         <div className="flex items-center justify-center py-6">
           <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />

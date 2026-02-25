@@ -2,6 +2,7 @@
 
 import { useState, useMemo, Fragment } from "react";
 import { PlayerDetailDropdown } from "@/components/player-detail-dropdown";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 interface PlayerValue {
   id: string;
@@ -249,9 +250,30 @@ export function RankingsTable({
               <SortableHeader column="lastSeason" className="text-right">
                 Last Szn
               </SortableHeader>
-              <SortableHeader column="value" className="text-right">Value</SortableHeader>
-              <SortableHeader column="vorp" className="text-right hidden sm:table-cell">VORP</SortableHeader>
-              <SortableHeader column="tier">Tier</SortableHeader>
+              <SortableHeader column="value" className="text-right">
+                <span className="inline-flex items-center gap-1">
+                  Value
+                  <HelpTooltip
+                    text="Composite dynasty value blending market consensus with your league's signal. Higher = more valuable."
+                    learnMoreHref="/how-it-works#value-pipeline"
+                  />
+                </span>
+              </SortableHeader>
+              <SortableHeader column="vorp" className="text-right hidden sm:table-cell">
+                <span className="inline-flex items-center gap-1">
+                  VORP
+                  <HelpTooltip
+                    text="Value Over Replacement Player — how much better than the best freely available player at this position."
+                    learnMoreHref="/how-it-works#vorp"
+                  />
+                </span>
+              </SortableHeader>
+              <SortableHeader column="tier">
+                <span className="inline-flex items-center gap-1">
+                  Tier
+                  <HelpTooltip text="Players grouped into value tiers. Tier 1 = elite. Helps identify fair trade partners." />
+                </span>
+              </SortableHeader>
               <SortableHeader column="owner">Owner</SortableHeader>
             </tr>
           </thead>

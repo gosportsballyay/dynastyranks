@@ -1,6 +1,7 @@
 "use client";
 
 import type { FairnessResult } from "@/lib/trade-engine";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 interface FairnessPanelProps {
   fairness: FairnessResult;
@@ -73,8 +74,12 @@ export function FairnessPanel({
 
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-5">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1">
         Structural Fairness
+        <HelpTooltip
+          text="Compares total dynasty value of each side. Adjusts for roster cost and consolidation premium."
+          learnMoreHref="/how-it-works#trade-analysis"
+        />
       </h3>
 
       {/* Value totals */}

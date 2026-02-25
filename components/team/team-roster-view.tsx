@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Fragment, useMemo, useState } from "react";
 import { PlayerDetailDropdown } from "@/components/player-detail-dropdown";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 
 export interface RosterPlayer {
   playerId: string;
@@ -120,8 +121,9 @@ export function TeamRosterView({
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
               Team Roster
+              <HelpTooltip text="Roster organized by slot. Values reflect your league's scoring rules and positional scarcity." />
             </h1>
             <select
               value={currentTeamId}
