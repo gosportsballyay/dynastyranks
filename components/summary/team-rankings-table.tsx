@@ -166,10 +166,10 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-slate-900/50">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-900/50 sticky top-16 z-20">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                 Team
               </th>
               {cols.map((col) => (
@@ -181,10 +181,10 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                   onSort={handleSort}
                 />
               ))}
-              <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell">
                 Total Value
               </th>
-              <th className="w-10 py-3" />
+              <th className="w-8 sm:w-10 py-2 sm:py-3 hidden sm:table-cell" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -200,34 +200,34 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                     team.isCurrentUser ? "bg-blue-900/20" : ""
                   } ${expandedTeam === team.teamId ? "bg-slate-700/30" : ""}`}
                 >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-slate-500 w-6">
+                  <td className="px-2 py-2 sm:px-6 sm:py-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-sm sm:text-lg font-bold text-slate-500 w-5 sm:w-6 shrink-0">
                         {team.overallRank}
                       </span>
-                      <div>
-                        <div className="font-medium text-white flex items-center gap-2">
-                          {team.teamName}
+                      <div className="min-w-0">
+                        <div className="font-medium text-white flex items-center gap-1 sm:gap-2 flex-wrap">
+                          <span className="truncate">{team.teamName}</span>
                           {team.isCurrentUser && (
-                            <span className="text-xs text-blue-400">
+                            <span className="text-[10px] sm:text-xs text-blue-400">
                               (You)
                             </span>
                           )}
                           {team.teamTier && (
                             <TierBadge tier={team.teamTier} />
                           )}
-                          <span className="text-slate-500 text-sm">
+                          <span className="text-slate-500 text-xs sm:text-sm">
                             {expandedTeam === team.teamId ? "▼" : "▶"}
                           </span>
                         </div>
-                        <div className="text-sm text-slate-400">
+                        <div className="text-xs sm:text-sm text-slate-400 truncate">
                           {team.ownerName}
                         </div>
                       </div>
                     </div>
                   </td>
                   {cols.map((col) => (
-                    <td key={col.key} className="px-6 py-4 text-center">
+                    <td key={col.key} className="px-1 py-2 sm:px-6 sm:py-4 text-center">
                       <RankCell
                         team={team}
                         column={col.key}
@@ -235,12 +235,12 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                       />
                     </td>
                   ))}
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-2 py-2 sm:px-6 sm:py-4 text-right hidden sm:table-cell">
                     <span className="font-mono text-slate-300">
                       {team.overallValue.toLocaleString()}
                     </span>
                   </td>
-                  <td className="pr-4 py-4">
+                  <td className="pr-2 sm:pr-4 py-2 sm:py-4 hidden sm:table-cell">
                     <Link
                       href={`/league/${leagueId}/team?teamId=${team.teamId}`}
                       onClick={(e) => e.stopPropagation()}
@@ -334,7 +334,7 @@ function SortableHeader({
   return (
     <th
       onClick={() => onSort(column)}
-      className={`px-6 py-3 ${alignClass} text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200 select-none`}
+      className={`px-1 py-2 sm:px-6 sm:py-3 ${alignClass} text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200 select-none bg-slate-900`}
     >
       {label}
       {arrow && (
@@ -639,7 +639,7 @@ function RankBadge({
 
   return (
     <span
-      className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${colorClass}`}
+      className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium ${colorClass}`}
     >
       {rank}
     </span>

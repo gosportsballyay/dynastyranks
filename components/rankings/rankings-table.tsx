@@ -239,8 +239,8 @@ export function RankingsTable({
         ))}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 z-20">
+        <table className="w-full text-xs sm:text-sm">
+          <thead className="sticky top-16 z-20">
             <tr className="border-b border-slate-700 text-left bg-slate-900">
               <SortableHeader column="rank">Rank</SortableHeader>
               <SortableHeader column="name">Player</SortableHeader>
@@ -274,7 +274,7 @@ export function RankingsTable({
                   <HelpTooltip text="Players grouped into value tiers. Tier 1 = elite. Helps identify fair trade partners." />
                 </span>
               </SortableHeader>
-              <SortableHeader column="owner">Owner</SortableHeader>
+              <SortableHeader column="owner" className="hidden md:table-cell">Owner</SortableHeader>
             </tr>
           </thead>
           <tbody>
@@ -342,7 +342,7 @@ export function RankingsTable({
                       {v.tier}
                     </span>
                   </td>
-                  <td className="py-3 px-2 sm:px-4">
+                  <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
                     {v.owner ? (
                       <span
                         className="text-slate-300"
