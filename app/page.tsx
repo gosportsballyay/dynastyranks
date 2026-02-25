@@ -73,63 +73,6 @@ export default function Home() {
           />
         </div>
 
-        <div className="mt-24 rounded-2xl bg-slate-800/50 p-8">
-          <h2 className="text-center text-2xl font-bold text-white">
-            Why Other Tools Get It Wrong
-          </h2>
-          <div className="mt-8 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="py-4 pr-8 font-medium text-slate-300">
-                    Feature
-                  </th>
-                  <th className="py-4 px-8 font-medium text-blue-400">
-                    DynastyRanks
-                  </th>
-                  <th className="py-4 px-8 font-medium text-slate-400">
-                    KeepTradeCut
-                  </th>
-                  <th className="py-4 px-8 font-medium text-slate-400">
-                    DynastyDaddy
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-slate-300">
-                <tr className="border-b border-slate-700/50">
-                  <td className="py-4 pr-8">League-Specific Values</td>
-                  <td className="py-4 px-8 text-green-400">Yes</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                </tr>
-                <tr className="border-b border-slate-700/50">
-                  <td className="py-4 pr-8">Full IDP Support</td>
-                  <td className="py-4 px-8 text-green-400">Yes</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                </tr>
-                <tr className="border-b border-slate-700/50">
-                  <td className="py-4 pr-8">Custom Scoring</td>
-                  <td className="py-4 px-8 text-green-400">Full</td>
-                  <td className="py-4 px-8 text-yellow-400">Limited</td>
-                  <td className="py-4 px-8 text-yellow-400">Limited</td>
-                </tr>
-                <tr className="border-b border-slate-700/50">
-                  <td className="py-4 pr-8">Position-Specific Scoring</td>
-                  <td className="py-4 px-8 text-green-400">Yes</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                  <td className="py-4 px-8 text-red-400">No</td>
-                </tr>
-                <tr>
-                  <td className="py-4 pr-8">Superflex / TEP</td>
-                  <td className="py-4 px-8 text-green-400">Automatic</td>
-                  <td className="py-4 px-8 text-yellow-400">Toggle</td>
-                  <td className="py-4 px-8 text-yellow-400">Toggle</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
       <footer className="border-t border-slate-700 bg-slate-900">

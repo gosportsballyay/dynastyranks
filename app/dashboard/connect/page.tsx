@@ -237,7 +237,7 @@ function ConnectLeagueContent() {
       case "sleeper":
         return "Your Sleeper username";
       case "fleaflicker":
-        return "e.g., 333258";
+        return "e.g., 123456";
       case "espn":
         return "e.g., 12345678";
       case "yahoo":

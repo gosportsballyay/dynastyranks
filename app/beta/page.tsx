@@ -84,7 +84,7 @@ export default function BetaAccessPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">
-            Invite only. Contact us for access.
+            Invite only.
           </p>
         </div>
       </div>
