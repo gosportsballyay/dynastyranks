@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { FeedbackButton } from "@/components/feedback-button";
@@ -25,10 +26,15 @@ export function LeagueLayout({
   userEmail,
   children,
 }: LeagueLayoutProps) {
+  const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Close mobile menu on route change or resize
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   useEffect(() => {
     function handleResize() {
       if (window.innerWidth >= 1024) {
@@ -93,6 +99,7 @@ export function LeagueLayout({
             leagueId={currentLeagueId}
             collapsed={false}
             onToggle={() => setMobileMenuOpen(false)}
+            mobile
           />
         </div>
       </div>

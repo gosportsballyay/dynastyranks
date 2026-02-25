@@ -8,6 +8,7 @@ interface SidebarProps {
   leagueId: string;
   collapsed: boolean;
   onToggle: () => void;
+  mobile?: boolean;
 }
 
 interface NavItem {
@@ -18,7 +19,7 @@ interface NavItem {
   badge?: string;
 }
 
-export function Sidebar({ leagueId, collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ leagueId, collapsed, onToggle, mobile }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems: NavItem[] = [
@@ -69,19 +70,25 @@ export function Sidebar({ leagueId, collapsed, onToggle }: SidebarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-slate-900 border-r border-slate-700 transition-all duration-300 z-40 ${
-        collapsed ? "w-16" : "w-56"
+      className={`${
+        mobile
+          ? "w-56 h-[calc(100vh-4rem)] bg-slate-900 border-r border-slate-700"
+          : `fixed left-0 top-16 h-[calc(100vh-4rem)] bg-slate-900 border-r border-slate-700 transition-all duration-300 z-40 ${
+              collapsed ? "w-16" : "w-56"
+            }`
       }`}
     >
       <div className="flex flex-col h-full">
-        {/* Toggle button */}
-        <button
-          onClick={onToggle}
-          className="absolute -right-3 top-6 w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-600 transition-colors"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-        </button>
+        {/* Toggle button - desktop only */}
+        {!mobile && (
+          <button
+            onClick={onToggle}
+            className="absolute -right-3 top-6 w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-600 transition-colors"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </button>
+        )}
 
         {/* Main nav */}
         <nav className="flex-1 py-4 px-2 space-y-1">
