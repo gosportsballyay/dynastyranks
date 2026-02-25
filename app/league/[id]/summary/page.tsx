@@ -522,9 +522,9 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-3 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">League Summary</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-white">League Summary</h1>
           <p className="text-slate-400 mt-1">
             {league.name} &bull;{" "}
             {leagueFormatString({

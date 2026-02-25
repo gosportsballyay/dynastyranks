@@ -27,6 +27,12 @@
   border-color: var(--color-border);
 }
 
+html,
+body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);

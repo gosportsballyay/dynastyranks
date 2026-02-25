@@ -57,18 +57,19 @@ export function Header({
     <header className="fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-700 z-50">
       <div className="h-full px-4 flex items-center justify-between">
         {/* Left side: Menu button + Logo */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {showMenuButton && (
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
+              className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors shrink-0"
             >
               <MenuIcon />
             </button>
           )}
 
-          <Link href="/dashboard" className="text-xl font-bold text-white hover:text-blue-400 transition-colors">
-            DynastyRanks
+          <Link href="/dashboard" className="font-bold text-white hover:text-blue-400 transition-colors shrink-0">
+            <span className="text-xl hidden sm:inline">DynastyRanks</span>
+            <span className="text-lg sm:hidden">DR</span>
           </Link>
 
           {/* League Switcher */}
@@ -79,7 +80,7 @@ export function Header({
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
               >
                 <span className="hidden sm:inline text-slate-500">League:</span>
-                <span className="font-medium truncate max-w-[150px] sm:max-w-[200px]">
+                <span className="font-medium truncate max-w-[100px] sm:max-w-[150px] md:max-w-[200px]">
                   {currentLeague.name}
                 </span>
                 <ChevronDownIcon />

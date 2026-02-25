@@ -118,9 +118,9 @@ export function TeamRosterView({
   return (
     <div>
       {/* Header with dropdown */}
-      <div className="flex items-center justify-between mb-3 sm:mb-6">
-        <div>
-          <div className="flex items-center gap-2 sm:gap-3 mb-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 sm:mb-6">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
             <h1 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
               Team Roster
               <HelpTooltip text="Roster organized by slot. Values reflect your league's scoring rules and positional scarcity." />
@@ -131,7 +131,8 @@ export function TeamRosterView({
               className="bg-slate-700 text-white text-sm rounded-lg
                 px-3 py-1.5 border border-slate-600
                 hover:border-slate-500 focus:border-blue-500
-                focus:outline-none transition-colors cursor-pointer"
+                focus:outline-none transition-colors cursor-pointer
+                max-w-[200px] sm:max-w-none"
             >
               {allTeams.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -142,12 +143,12 @@ export function TeamRosterView({
               ))}
             </select>
           </div>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-400 mt-1 text-sm sm:text-base">
             {teamName} &bull; {ownerName}
           </p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-white">
+        <div className="text-left sm:text-right shrink-0">
+          <div className="text-xl sm:text-2xl font-bold text-white">
             {totalValue.toLocaleString()}
           </div>
           <div className="text-sm text-slate-400">Total Value</div>

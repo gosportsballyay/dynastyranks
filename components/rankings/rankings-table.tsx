@@ -220,7 +220,7 @@ export function RankingsTable({
 
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700">
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700/50">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-slate-700/50">
         <span className="text-xs text-slate-500 uppercase tracking-wider">
           Highlight:
         </span>
