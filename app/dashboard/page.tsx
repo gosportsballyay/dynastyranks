@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { FeedbackButton } from "@/components/feedback-button";
+import { leagueFormatString } from "@/lib/utils/league-format";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -33,6 +34,7 @@ export default async function DashboardPage() {
       leagueConfigHash: leagues.leagueConfigHash,
       idpStructure: leagueSettings.idpStructure,
       rosterPositions: leagueSettings.rosterPositions,
+      scoringRules: leagueSettings.scoringRules,
     })
     .from(leagues)
     .leftJoin(
@@ -66,25 +68,16 @@ export default async function DashboardPage() {
 
   // Build enriched league list
   const userLeagues = leagueRows.map((l) => {
-    const rp = (l.rosterPositions ?? {}) as Record<string, number>;
-    const hasSF =
-      (rp["SUPERFLEX"] ?? 0) > 0 ||
-      (rp["SUPER_FLEX"] ?? 0) > 0 ||
-      (rp["SF"] ?? 0) > 0 ||
-      (rp["QB"] ?? 0) >= 2;
-    const hasIdp =
-      !!l.idpStructure && l.idpStructure !== "none";
     const log = logMap.get(l.id);
-
-    const formatParts: string[] = [
-      `${l.totalTeams}-team`,
-    ];
-    if (hasSF) formatParts.push("SF");
-    if (hasIdp) formatParts.push("IDP");
 
     return {
       ...l,
-      format: formatParts.join(" "),
+      format: leagueFormatString({
+        totalTeams: l.totalTeams,
+        rosterPositions: (l.rosterPositions ?? {}) as Record<string, number>,
+        idpStructure: l.idpStructure ?? null,
+        scoringRules: (l.scoringRules ?? {}) as Record<string, number>,
+      }),
       engineVersion: log?.engineVersion ?? null,
       projectionVersion: log?.projectionVersion ?? null,
     };

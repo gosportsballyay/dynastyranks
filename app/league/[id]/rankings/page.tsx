@@ -11,8 +11,11 @@ import {
   canonicalPlayers,
   rosters,
   teams,
+  historicalStats,
+  aggregatedValues,
 } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
+import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 import {
   computeUnifiedValues,
   ENGINE_VERSION,
@@ -74,8 +77,15 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     notFound();
   }
 
-  // Parallel fetch: settings, values, teams, and rosters
-  const [settingsResult, valuesResult, leagueTeams, rosterData] = await Promise.all([
+  // Parallel fetch: settings, values, teams, rosters, history, consensus
+  const [
+    settingsResult,
+    valuesResult,
+    leagueTeams,
+    rosterData,
+    historyRows,
+    consensusRows,
+  ] = await Promise.all([
     db.select().from(leagueSettings).where(eq(leagueSettings.leagueId, league.id)).limit(1),
     db
       .select({ value: playerValues, player: canonicalPlayers })
@@ -92,10 +102,56 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       .from(rosters)
       .innerJoin(teams, eq(rosters.teamId, teams.id))
       .where(eq(teams.leagueId, league.id)),
+    db
+      .select()
+      .from(historicalStats)
+      .where(inArray(historicalStats.season, [2025, 2024, 2023])),
+    db
+      .select({
+        canonicalPlayerId: aggregatedValues.canonicalPlayerId,
+        aggregatedValue: aggregatedValues.aggregatedValue,
+      })
+      .from(aggregatedValues)
+      .where(eq(aggregatedValues.leagueId, league.id)),
   ]);
 
   const [settings] = settingsResult;
   let values = valuesResult;
+
+  // Build scoring rules for historical stats
+  const scoringRules = (settings?.scoringRules ?? {}) as Record<string, number>;
+
+  // Build history map: playerId -> season lines
+  const historyMap = new Map<
+    string,
+    Array<{ season: number; points: number; gamesPlayed: number }>
+  >();
+  for (const row of historyRows) {
+    const stats = normalizeStatKeys(
+      row.stats as Record<string, number>,
+    );
+    let points = 0;
+    for (const [key, val] of Object.entries(stats)) {
+      if (scoringRules[key]) points += val * scoringRules[key];
+    }
+    const entry = {
+      season: row.season,
+      points,
+      gamesPlayed: row.gamesPlayed ?? 0,
+    };
+    const existing = historyMap.get(row.canonicalPlayerId);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      historyMap.set(row.canonicalPlayerId, [entry]);
+    }
+  }
+
+  // Build consensus map: playerId -> aggregatedValue
+  const consensusMap = new Map<string, number>();
+  for (const row of consensusRows) {
+    consensusMap.set(row.canonicalPlayerId, row.aggregatedValue);
+  }
 
   // If no values yet, compute them with unified engine
   if (values.length === 0 && settings) {
@@ -151,21 +207,41 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     );
   }
 
-  if (searchParams.position) {
-    // Expand consolidated positions (e.g. "DL" → ["EDR", "IL", "DE", "DT"])
-    // so granular player positions match the filter.
-    const filterPos = searchParams.position.toUpperCase();
-    const granularSet = new Set(
-      settings?.positionMappings?.[filterPos]?.map((p) => p.toUpperCase())
-        ?? [filterPos],
-    );
-    // Always include the filter position itself (handles identity
-    // mappings like LB→LB and non-IDP positions).
-    granularSet.add(filterPos);
+  // Check if position filter matches a flex slot
+  const flexSlotNames = new Set(
+    (settings?.flexRules ?? []).map((r) => r.slot),
+  );
+  const activeFlexRule = searchParams.position
+    ? (settings?.flexRules ?? []).find(
+        (r) => r.slot === searchParams.position!.toUpperCase(),
+      )
+    : null;
 
-    filteredValues = filteredValues.filter((v) =>
-      granularSet.has(v.player.position.toUpperCase()),
-    );
+  if (searchParams.position) {
+    if (activeFlexRule) {
+      // Flex slot filter: show all players eligible for this slot
+      const eligibleSet = new Set(
+        activeFlexRule.eligible.map((p) => p.toUpperCase()),
+      );
+      filteredValues = filteredValues.filter((v) =>
+        eligibleSet.has(v.player.position.toUpperCase()),
+      );
+    } else {
+      // Expand consolidated positions (e.g. "DL" → ["EDR", "IL", "DE", "DT"])
+      // so granular player positions match the filter.
+      const filterPos = searchParams.position.toUpperCase();
+      const granularSet = new Set(
+        settings?.positionMappings?.[filterPos]?.map((p) => p.toUpperCase())
+          ?? [filterPos],
+      );
+      // Always include the filter position itself (handles identity
+      // mappings like LB→LB and non-IDP positions).
+      granularSet.add(filterPos);
+
+      filteredValues = filteredValues.filter((v) =>
+        granularSet.has(v.player.position.toUpperCase()),
+      );
+    }
   }
 
   if (searchParams.group) {
@@ -195,6 +271,12 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     );
   }
 
+  // Capture position-eligible pool (after IDP filter, before user filters)
+  // so the dropdown only shows positions that exist in this league type.
+  const positionPool = hasIdp
+    ? values
+    : values.filter((v) => v.player.positionGroup !== "defense");
+
   // Get unique positions for filter, mapping granular → consolidated
   // when the league uses consolidated IDP (DL/LB/DB instead of
   // EDR/IL/CB/S).
@@ -204,7 +286,9 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       : {};
   const positions = [
     ...new Set(
-      values.map((v) => reverseMapping[v.player.position] ?? v.player.position),
+      positionPool.map(
+        (v) => reverseMapping[v.player.position] ?? v.player.position,
+      ),
     ),
   ].sort();
 
@@ -260,6 +344,21 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     }
   }
 
+  // Compute flex rank maps from full sorted values
+  const flexRankMaps = new Map<string, Map<string, number>>();
+  for (const rule of settings?.flexRules ?? []) {
+    const eligibleSet = new Set(rule.eligible);
+    const rankMap = new Map<string, number>();
+    let counter = 0;
+    for (const v of values) {
+      if (eligibleSet.has(v.player.position)) {
+        counter++;
+        rankMap.set(v.value.id, counter);
+      }
+    }
+    flexRankMaps.set(rule.slot, rankMap);
+  }
+
   // Extract current valuation mode from settings metadata
   const currentValuationMode =
     ((settings?.metadata as Record<string, unknown> | null)
@@ -277,6 +376,20 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       isFreeAgent: !ownership,
       offenseRank: offenseRankMap.get(v.value.id) ?? null,
       idpRank: idpRankMap.get(v.value.id) ?? null,
+      seasonLines: historyMap.get(v.player.id) ?? [],
+      consensusAggValue: consensusMap.get(v.player.id) ?? null,
+      flexEligibility: (settings?.flexRules ?? [])
+        .filter((r) => r.eligible.includes(v.player.position))
+        .map((r) => r.slot),
+      flexRanks: Object.fromEntries(
+        (settings?.flexRules ?? [])
+          .filter((r) => r.eligible.includes(v.player.position))
+          .map((r): [string, number] => [
+            r.slot,
+            flexRankMaps.get(r.slot)?.get(v.value.id) ?? 0,
+          ])
+          .filter(([, rank]) => rank > 0),
+      ),
     };
   });
 
@@ -316,6 +429,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
             currentParams={searchParams}
             availablePositions={positions}
             idpStructure={settings?.idpStructure}
+            flexRules={settings?.flexRules}
           />
         </div>
 
@@ -370,6 +484,7 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
         groupFilter={searchParams.group}
         sortMode={sortMode}
         userTeamId={league.userTeamId}
+        flexFilter={activeFlexRule?.slot ?? null}
       />
     </div>
   );

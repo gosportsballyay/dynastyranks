@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
+import { PlayerDetailDropdown } from "@/components/player-detail-dropdown";
 
 export interface RosterPlayer {
   playerId: string;
@@ -12,6 +13,24 @@ export interface RosterPlayer {
   value: number;
   rankInPosition: number | null;
   slot: string;
+  injuryStatus: string | null;
+  draftRound: number | null;
+  draftPick: number | null;
+  rookieYear: number | null;
+  yearsExperience: number | null;
+  seasonLines: Array<{
+    season: number;
+    points: number;
+    gamesPlayed: number;
+  }>;
+  projectedPoints: number;
+  rank: number;
+  vorp: number;
+  consensusValue: number | null;
+  tier: number;
+  lastSeasonPoints: number | null;
+  flexEligibility?: string[];
+  flexRanks?: Record<string, number>;
 }
 
 export interface TeamOption {
@@ -198,7 +217,10 @@ function RosterSection({
   players: RosterPlayer[];
 }) {
   const [sortState, setSortState] = useState<SectionSortState>(
-    DEFAULT_SORT
+    DEFAULT_SORT,
+  );
+  const [expandedRow, setExpandedRow] = useState<string | null>(
+    null,
   );
 
   const handleSort = (column: SortColumn) => {
@@ -307,33 +329,68 @@ function RosterSection({
           </thead>
           <tbody className="divide-y divide-slate-700/50">
             {sorted.map((player) => (
-              <tr
-                key={player.playerId}
-                className="hover:bg-slate-700/30 transition-colors"
-              >
-                <td className="px-6 py-3">
-                  <span className="font-medium text-white">
-                    {player.playerName}
-                  </span>
-                </td>
-                <td className="px-6 py-3">
-                  <PositionBadge
-                    position={player.position}
-                    rankInPosition={player.rankInPosition}
-                  />
-                </td>
-                <td className="px-6 py-3 text-slate-400">
-                  {player.nflTeam || "-"}
-                </td>
-                <td className="px-6 py-3 text-center text-slate-400">
-                  {player.age || "-"}
-                </td>
-                <td className="px-6 py-3 text-right">
-                  <span className="font-mono text-slate-300">
-                    {player.value.toLocaleString()}
-                  </span>
-                </td>
-              </tr>
+              <Fragment key={player.playerId}>
+                <tr
+                  onClick={() =>
+                    setExpandedRow(
+                      expandedRow === player.playerId
+                        ? null
+                        : player.playerId,
+                    )
+                  }
+                  className="hover:bg-slate-700/30 transition-colors cursor-pointer"
+                >
+                  <td className="px-6 py-3">
+                    <span className="font-medium text-white">
+                      {player.playerName}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3">
+                    <PositionBadge
+                      position={player.position}
+                      rankInPosition={player.rankInPosition}
+                    />
+                  </td>
+                  <td className="px-6 py-3 text-slate-400">
+                    {player.nflTeam || "-"}
+                  </td>
+                  <td className="px-6 py-3 text-center text-slate-400">
+                    {player.age || "-"}
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    <span className="font-mono text-slate-300">
+                      {player.value.toLocaleString()}
+                    </span>
+                  </td>
+                </tr>
+                {expandedRow === player.playerId && (
+                  <tr className="bg-slate-900/50">
+                    <td colSpan={5} className="py-4 px-6">
+                      <PlayerDetailDropdown
+                        injuryStatus={player.injuryStatus}
+                        draftRound={player.draftRound}
+                        draftPick={player.draftPick}
+                        rookieYear={player.rookieYear}
+                        yearsExperience={player.yearsExperience}
+                        position={player.position}
+                        age={player.age}
+                        seasonLines={player.seasonLines}
+                        projectedPoints={player.projectedPoints}
+                        rank={player.rank}
+                        rankInPosition={player.rankInPosition ?? 0}
+                        positionLabel={`${player.position}${player.rankInPosition ?? ""}`}
+                        vorp={player.vorp}
+                        consensusValue={player.consensusValue}
+                        leagueValue={player.value}
+                        tier={player.tier}
+                        lastSeasonPoints={player.lastSeasonPoints}
+                        flexEligibility={player.flexEligibility}
+                        flexRanks={player.flexRanks}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>

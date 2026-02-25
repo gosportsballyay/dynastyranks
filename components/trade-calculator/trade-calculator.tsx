@@ -14,6 +14,7 @@ import {
   computeFairness,
   computeMarketDivergence,
 } from "@/lib/trade-engine/trade-analysis";
+import { HelpTooltip } from "@/components/ui/help-tooltip";
 import { TradeSide } from "./trade-side";
 import { FairnessPanel } from "./fairness-panel";
 import { MarketPanel } from "./market-panel";
@@ -277,6 +278,12 @@ export function TradeCalculator({
       {/* Analysis panels */}
       {hasAssets && fairness && (
         <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-sm font-medium text-slate-400">
+              Trade Analysis
+            </span>
+            <HelpTooltip text="Compares total dynasty value of each side. Accounts for positional scarcity, age curves, and your league's scoring." />
+          </div>
           <FairnessPanel
             fairness={fairness}
             team1Name={team1?.name ?? "Side A"}

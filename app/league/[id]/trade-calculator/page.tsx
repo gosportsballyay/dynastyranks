@@ -22,6 +22,7 @@ import {
   type LeagueConfig,
 } from "@/lib/trade-engine";
 import { TradeCalculator } from "@/components/trade-calculator/trade-calculator";
+import { leagueFormatString } from "@/lib/utils/league-format";
 
 interface PageProps {
   params: { id: string };
@@ -266,7 +267,15 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Trade Calculator</h1>
         <p className="text-slate-400 mt-1">
-          {league.name} &bull; {league.totalTeams} teams
+          {league.name} &bull;{" "}
+          {leagueFormatString({
+            totalTeams: league.totalTeams,
+            rosterPositions: (settings?.rosterPositions ?? {}) as Record<string, number>,
+            idpStructure: settings?.idpStructure ?? null,
+            scoringRules: (settings?.scoringRules ?? {}) as Record<string, number>,
+          })}{" "}
+          &bull;{" "}
+          {league.provider.charAt(0).toUpperCase() + league.provider.slice(1)}
         </p>
       </div>
 

@@ -42,6 +42,9 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
   `export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/<script>.ts`
 - Key scripts: `run-rankings-pipeline.sh`, `recompute-all-leagues.ts`,
   `diagnose-player.ts`, `seed-sleeper-idp-stats.ts`
+- `IDPShow Dynasty Data 022326.csv` — Raw IDP player data export
+  (Feb 2023). Potential future input for IDP rankings enrichment.
+  Not currently consumed by the pipeline.
 
 ---
 
@@ -87,6 +90,18 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - ~~Roster impact analysis~~ — `RosterImpactPanel` with before/after lineups
 - ~~ESPN + Yahoo adapters~~ — both fully implemented (643 and 877 lines)
 - ~~Mobile responsive audit~~ — responsive padding, hidden columns, scroll wrappers
+
+### Beta Launch Infrastructure
+- Terms of Service (`/terms`) and Privacy Policy (`/privacy`) pages
+- OpenGraph + Twitter meta tags on root layout
+- `robots.txt` (disallows dashboard/league/admin/api) + `sitemap.xml`
+- Middleware updated: `/terms` and `/privacy` accessible without beta cookie
+- Sentry error tracking (`@sentry/nextjs`) with client/server/edge configs
+- Security headers (X-Frame-Options, HSTS, nosniff, referrer-policy)
+- Error boundaries wired to `Sentry.captureException`
+- Vercel Analytics (`@vercel/analytics`) + Speed Insights (`@vercel/speed-insights`)
+- Beta disclaimer banner (dismissible, league pages only)
+- Help tooltips on valuation emphasis, trade calculator, power rankings
 
 ---
 

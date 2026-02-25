@@ -1,0 +1,60 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+
+interface HelpTooltipProps {
+  text: string;
+}
+
+/**
+ * Small (?) icon with tooltip on hover (desktop) or click (mobile).
+ */
+export function HelpTooltip({ text }: HelpTooltipProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="inline-flex items-center justify-center w-4 h-4
+          rounded-full bg-slate-700 text-slate-400 text-[10px]
+          font-bold hover:bg-slate-600 hover:text-slate-200
+          transition-colors cursor-help"
+        aria-label="Help"
+      >
+        ?
+      </button>
+      {open && (
+        <div
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2
+            mb-2 w-64 px-3 py-2 rounded-lg bg-slate-800 border
+            border-slate-600 shadow-lg text-xs text-slate-300
+            leading-relaxed"
+        >
+          {text}
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2
+              -mt-px w-0 h-0 border-x-[6px] border-x-transparent
+              border-t-[6px] border-t-slate-600"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
