@@ -79,9 +79,14 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 
 ### P2: Nice to have (polish)
 
-5. **Player Comparison Tool** - side-by-side multi-player stats
-6. **Trade Finder** - suggest trades between league teams
-7. **Projected Points Charts** - visualize player arcs
+5. **Admin Dashboard**
+   - User listing (email, created date, last login, leagues connected)
+   - Signup notifications (email or in-app alert when new user registers)
+   - Basic user management (delete account, reset data)
+   - Currently only `/admin/diagnostics` exists (league value debugging)
+6. **Player Comparison Tool** - side-by-side multi-player stats
+7. **Trade Finder** - suggest trades between league teams
+8. **Projected Points Charts** - visualize player arcs
 
 ### Done (previously listed as gaps)
 
