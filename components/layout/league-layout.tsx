@@ -6,6 +6,7 @@ import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { FeedbackButton } from "@/components/feedback-button";
 import { BetaBanner } from "./beta-banner";
+import { OverflowDetector } from "@/components/debug/overflow-detector";
 
 interface League {
   id: string;
@@ -106,7 +107,7 @@ export function LeagueLayout({
 
       {/* Main content */}
       <main
-        className={`pt-16 transition-all duration-300 ${
+        className={`pt-16 transition-all duration-300 overflow-x-clip ${
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
         }`}
       >
@@ -116,6 +117,7 @@ export function LeagueLayout({
         </div>
       </main>
       <FeedbackButton leagueId={currentLeagueId} />
+      <OverflowDetector />
     </div>
   );
 }
