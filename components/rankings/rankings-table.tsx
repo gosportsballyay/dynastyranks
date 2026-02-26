@@ -83,26 +83,33 @@ export function RankingsTable({
   userTeamId,
   flexFilter,
 }: RankingsTableProps) {
-  type HighlightMode = "none" | "mine" | "other" | "fa";
-
   const initial = SORT_MODE_MAP[sortMode ?? ""] ?? { column: "rank" as SortColumn, direction: "asc" as SortDirection };
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>(initial.column);
   const [sortDirection, setSortDirection] = useState<SortDirection>(initial.direction);
-  const [highlightMode, setHighlightMode] = useState<HighlightMode>("none");
+  const [activeHighlights, setActiveHighlights] = useState<Set<string>>(new Set());
 
-  /** Returns a bg class for the row based on highlight mode. */
-  function getHighlightClass(v: PlayerValue): string {
-    if (highlightMode === "mine" && v.isOwnedByCurrentUser) {
-      return "bg-blue-900/20";
+  function toggleHighlight(mode: string) {
+    setActiveHighlights((prev) => {
+      const next = new Set(prev);
+      if (next.has(mode)) next.delete(mode);
+      else next.add(mode);
+      return next;
+    });
+  }
+
+  /** Returns a color class for the rank number based on active highlights. */
+  function getRankHighlightColor(v: PlayerValue): string | null {
+    if (activeHighlights.has("mine") && v.isOwnedByCurrentUser) {
+      return "text-blue-400";
     }
-    if (highlightMode === "other" && !v.isFreeAgent && !v.isOwnedByCurrentUser) {
-      return "bg-amber-900/15";
+    if (activeHighlights.has("other") && !v.isFreeAgent && !v.isOwnedByCurrentUser) {
+      return "text-amber-400";
     }
-    if (highlightMode === "fa" && v.isFreeAgent) {
-      return "bg-emerald-900/15";
+    if (activeHighlights.has("fa") && v.isFreeAgent) {
+      return "text-emerald-400";
     }
-    return "";
+    return null;
   }
 
   // Handle column header click
@@ -211,26 +218,25 @@ export function RankingsTable({
     </th>
   );
 
-  const highlightOptions: Array<{ mode: HighlightMode; label: string }> = [
-    { mode: "none", label: "None" },
-    ...(userTeamId ? [{ mode: "mine" as HighlightMode, label: "Mine" }] : []),
-    { mode: "other", label: "Other Teams" },
-    { mode: "fa", label: "FA" },
+  const highlightOptions: Array<{ mode: string; label: string; activeClass: string }> = [
+    ...(userTeamId ? [{ mode: "mine", label: "Mine", activeClass: "bg-blue-600 text-white" }] : []),
+    { mode: "other", label: "Owned", activeClass: "bg-amber-600 text-white" },
+    { mode: "fa", label: "FA", activeClass: "bg-emerald-600 text-white" },
   ];
 
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700">
-      <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-slate-700/50">
-        <span className="text-xs text-slate-500 uppercase tracking-wider">
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700/50">
+        <span className="text-xs text-slate-500 uppercase tracking-wider shrink-0">
           Highlight:
         </span>
         {highlightOptions.map((opt) => (
           <button
             key={opt.mode}
-            onClick={() => setHighlightMode(opt.mode)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors ${
-              highlightMode === opt.mode
-                ? "bg-blue-600 text-white"
+            onClick={() => toggleHighlight(opt.mode)}
+            className={`px-3 py-1 rounded-full text-xs sm:text-sm transition-colors ${
+              activeHighlights.has(opt.mode)
+                ? opt.activeClass
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
@@ -238,15 +244,15 @@ export function RankingsTable({
           </button>
         ))}
       </div>
-      <div>
+      <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
-          <thead className="sticky top-16 z-20">
+          <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr className="border-b border-slate-700 text-left">
               <SortableHeader column="rank">Rank</SortableHeader>
               <SortableHeader column="name">Player</SortableHeader>
               <SortableHeader column="position">Pos</SortableHeader>
-              <SortableHeader column="team" className="hidden sm:table-cell">Team</SortableHeader>
-              <SortableHeader column="age" className="hidden sm:table-cell">Age</SortableHeader>
+              <SortableHeader column="team">Team</SortableHeader>
+              <SortableHeader column="age">Age</SortableHeader>
               <SortableHeader column="lastSeason" className="text-right">
                 Last Szn
               </SortableHeader>
@@ -259,7 +265,7 @@ export function RankingsTable({
                   />
                 </span>
               </SortableHeader>
-              <SortableHeader column="vorp" className="text-right hidden sm:table-cell">
+              <SortableHeader column="vorp" className="text-right">
                 <span className="inline-flex items-center gap-1">
                   VORP
                   <HelpTooltip
@@ -274,7 +280,7 @@ export function RankingsTable({
                   <HelpTooltip text="Players grouped into value tiers. Tier 1 = elite. Helps identify fair trade partners." />
                 </span>
               </SortableHeader>
-              <SortableHeader column="owner" className="hidden md:table-cell">Owner</SortableHeader>
+              <SortableHeader column="owner">Owner</SortableHeader>
             </tr>
           </thead>
           <tbody>
@@ -285,16 +291,16 @@ export function RankingsTable({
                     setExpandedRow(expandedRow === v.id ? null : v.id)
                   }
                   className={`border-b border-slate-700/50 cursor-pointer transition-colors ${
-                    getHighlightClass(v) || (index % 2 === 0 ? "bg-slate-800/30" : "")
+                    index % 2 === 0 ? "bg-slate-800/30" : ""
                   } hover:bg-slate-700/50`}
                 >
-                  <td className="py-3 px-2 sm:px-4 text-slate-300">
+                  <td className={`py-3 px-2 sm:px-4 ${getRankHighlightColor(v) || "text-slate-300"}`}>
                     {flexFilter && v.flexRanks?.[flexFilter] ? (
                       <>
                         <span className="font-medium">
                           #{v.flexRanks[flexFilter]}
                         </span>
-                        <span className="text-xs text-slate-500 ml-1.5">
+                        <span className="text-xs opacity-60 ml-1.5">
                           (#{v.rank})
                         </span>
                       </>
@@ -302,10 +308,10 @@ export function RankingsTable({
                       <>
                         <span className="font-medium">#{v.rank}</span>
                         {groupFilter === "offense" && v.offenseRank != null && (
-                          <span className="text-xs text-slate-400 ml-2">OFF{v.offenseRank}</span>
+                          <span className="text-xs opacity-60 ml-2">OFF{v.offenseRank}</span>
                         )}
                         {groupFilter === "defense" && v.idpRank != null && (
-                          <span className="text-xs text-slate-400 ml-2">IDP{v.idpRank}</span>
+                          <span className="text-xs opacity-60 ml-2">IDP{v.idpRank}</span>
                         )}
                       </>
                     )}
@@ -320,10 +326,10 @@ export function RankingsTable({
                       {v.player.position}{v.rankInPosition}
                     </span>
                   </td>
-                  <td className="py-3 px-2 sm:px-4 text-slate-400 hidden sm:table-cell">
+                  <td className="py-3 px-2 sm:px-4 text-slate-400 whitespace-nowrap">
                     {v.player.nflTeam || "-"}
                   </td>
-                  <td className="py-3 px-2 sm:px-4 text-slate-400 hidden sm:table-cell">
+                  <td className="py-3 px-2 sm:px-4 text-slate-400 whitespace-nowrap">
                     {v.player.age || "-"}
                   </td>
                   <td className="py-3 px-2 sm:px-4 text-right font-mono text-amber-400">
@@ -332,7 +338,7 @@ export function RankingsTable({
                   <td className="py-3 px-2 sm:px-4 text-right font-mono text-green-400">
                     {v.value.toFixed(1)}
                   </td>
-                  <td className="py-3 px-2 sm:px-4 text-right font-mono text-slate-300 hidden sm:table-cell">
+                  <td className="py-3 px-2 sm:px-4 text-right font-mono text-slate-300 whitespace-nowrap">
                     +{v.vorp.toFixed(1)}
                   </td>
                   <td className="py-3 px-2 sm:px-4">
@@ -342,7 +348,7 @@ export function RankingsTable({
                       {v.tier}
                     </span>
                   </td>
-                  <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                  <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
                     {v.owner ? (
                       <span
                         className="text-slate-300"

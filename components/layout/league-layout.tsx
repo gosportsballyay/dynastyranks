@@ -6,7 +6,7 @@ import { Header } from "./header";
 import { Sidebar } from "./sidebar";
 import { FeedbackButton } from "@/components/feedback-button";
 import { BetaBanner } from "./beta-banner";
-import { OverflowDetector } from "@/components/debug/overflow-detector";
+
 
 interface League {
   id: string;
@@ -91,7 +91,7 @@ export function LeagueLayout({
 
       {/* Sidebar - mobile */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 transform transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-40 overflow-hidden transform transition-transform duration-300 lg:hidden ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -107,7 +107,7 @@ export function LeagueLayout({
 
       {/* Main content */}
       <main
-        className={`pt-16 transition-all duration-300 overflow-x-clip ${
+        className={`pt-16 transition-all duration-300 ${
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
         }`}
       >
@@ -117,7 +117,6 @@ export function LeagueLayout({
         </div>
       </main>
       <FeedbackButton leagueId={currentLeagueId} />
-      <OverflowDetector />
     </div>
   );
 }

@@ -165,9 +165,9 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
         </select>
       </div>
 
-      <div>
+      <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
-          <thead className="sticky top-16 z-20">
+          <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr>
               <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
                 Team
@@ -181,10 +181,10 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                   onSort={handleSort}
                 />
               ))}
-              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider hidden sm:table-cell bg-slate-900">
+              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
                 Total Value
               </th>
-              <th className="w-8 sm:w-10 py-2 sm:py-3 hidden sm:table-cell bg-slate-900" />
+              <th className="w-8 sm:w-10 py-2 sm:py-3 bg-slate-900" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -235,12 +235,12 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                       />
                     </td>
                   ))}
-                  <td className="px-2 py-2 sm:px-6 sm:py-4 text-right hidden sm:table-cell">
+                  <td className="px-2 py-2 sm:px-6 sm:py-4 text-right whitespace-nowrap">
                     <span className="font-mono text-slate-300">
                       {team.overallValue.toLocaleString()}
                     </span>
                   </td>
-                  <td className="pr-2 sm:pr-4 py-2 sm:py-4 hidden sm:table-cell">
+                  <td className="pr-2 sm:pr-4 py-2 sm:py-4">
                     <Link
                       href={`/league/${leagueId}/team?teamId=${team.teamId}`}
                       onClick={(e) => e.stopPropagation()}

@@ -306,9 +306,9 @@ function RosterSection({
         </span>
       </div>
 
-      <div>
+      <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
-          <thead className="sticky top-16 z-20">
+          <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr>
               <SortableHeader column="name" className="text-left">
                 Player
@@ -319,10 +319,10 @@ function RosterSection({
               >
                 Pos
               </SortableHeader>
-              <SortableHeader column="team" className="text-left hidden sm:table-cell">
+              <SortableHeader column="team" className="text-left">
                 Team
               </SortableHeader>
-              <SortableHeader column="age" className="text-center hidden sm:table-cell">
+              <SortableHeader column="age" className="text-center">
                 Age
               </SortableHeader>
               <SortableHeader column="value" className="text-right">
@@ -354,10 +354,10 @@ function RosterSection({
                       rankInPosition={player.rankInPosition}
                     />
                   </td>
-                  <td className="px-2 py-2 sm:px-6 sm:py-3 text-slate-400 hidden sm:table-cell">
+                  <td className="px-2 py-2 sm:px-6 sm:py-3 text-slate-400 whitespace-nowrap">
                     {player.nflTeam || "-"}
                   </td>
-                  <td className="px-2 py-2 sm:px-6 sm:py-3 text-center text-slate-400 hidden sm:table-cell">
+                  <td className="px-2 py-2 sm:px-6 sm:py-3 text-center text-slate-400 whitespace-nowrap">
                     {player.age || "-"}
                   </td>
                   <td className="px-2 py-2 sm:px-6 sm:py-3 text-right">
