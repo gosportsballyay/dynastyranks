@@ -10,9 +10,12 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const formData = new FormData(e.currentTarget);
 
     // First create the account
     const signupResult = await signup(formData);
@@ -46,7 +49,7 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-slate-800/50 rounded-xl p-8 ring-1 ring-slate-700">
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-sm">
                 {error}
