@@ -12,7 +12,7 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 
 ---
 
-## Current State (as of 2026-02-23)
+## Current State (as of 2026-02-26)
 
 ### Working Features
 | Feature | Route | Notes |
@@ -28,6 +28,8 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 | Beta gate | `/beta` | Middleware-based access code (env `BETA_ACCESS_CODE`) |
 | Feedback | Floating button | `FeedbackButton` component, `/api/feedback` endpoint |
 | Admin diagnostics | `/admin/diagnostics` | Debug tooling |
+| Admin dashboard | `/admin` | User listing, feedback overview, signup stats |
+| How It Works | `/how-it-works` | Value pipeline explanation + methodology |
 | Consensus pipeline | `scripts/run-rankings-pipeline.sh` | KTC + FantasyCalc + DynastyProcess scrapers |
 
 ### Tech Stack
@@ -54,6 +56,8 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 
 1. **Player Profile Pages**
    - No `/league/[id]/player/[playerId]` route exists
+   - Active worktree: `.worktrees/player-dropdown/` (branch `feature/player-dropdown-redesign`)
+   - Plan doc: `docs/plans/2026-02-23-player-dropdown-redesign.md` (horizontal bands layout)
    - Need: stats breakdown, value trend, age curve projection,
      ownership info, trade value from all sources
    - This is table stakes for any dynasty tool
@@ -79,11 +83,10 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 
 ### P2: Nice to have (polish)
 
-5. **Admin Dashboard**
-   - User listing (email, created date, last login, leagues connected)
+5. **Admin Dashboard** (partially done)
+   - ~~User listing~~ done at `/admin`
    - Signup notifications (email or in-app alert when new user registers)
    - Basic user management (delete account, reset data)
-   - Currently only `/admin/diagnostics` exists (league value debugging)
 6. **Player Comparison Tool** - side-by-side multi-player stats
 7. **Trade Finder** - suggest trades between league teams
 8. **Projected Points Charts** - visualize player arcs
@@ -95,6 +98,7 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - ~~Roster impact analysis~~ — `RosterImpactPanel` with before/after lineups
 - ~~ESPN + Yahoo adapters~~ — both fully implemented (643 and 877 lines)
 - ~~Mobile responsive audit~~ — responsive padding, hidden columns, scroll wrappers
+- ~~Admin Dashboard~~ — User listing, feedback table, stats cards at `/admin`
 
 ### Beta Launch Infrastructure
 - Terms of Service (`/terms`) and Privacy Policy (`/privacy`) pages
@@ -125,6 +129,10 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `team-needs.ts` - Team need/surplus/upgrade analysis
 - `idp-normalization.ts` - IDP position normalization
 - `aggregate.ts` - Consensus rankings from KTC/FC/DP
+- `effective-baseline.ts` - Blends starter/waiver baselines per position
+- `position-normalization.ts` - Resolves defensive sub-positions to parent (DB, DL)
+- `compute-last-season.ts` - Historical fantasy points using league scoring rules
+- `format-complexity.ts` - League config complexity (0-1) for blend weights
 
 ### Trade Engine (`lib/trade-engine/`)
 - `trade-analysis.ts` - Fairness computation + market divergence
@@ -133,6 +141,7 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `roster-projection.ts` - Roster value projection over time
 - `roster-efficiency.ts` - Roster efficiency metrics
 - `types.ts` - Shared types for trade analysis
+- `market-divergence.ts` - League-consensus divergence detection
 
 ### Adapters (`lib/adapters/`)
 - `sleeper.ts` - Full implementation
@@ -194,6 +203,7 @@ All fantasy point calculations MUST be deterministic:
 - FilterChip pattern for URL-based filter state (no client state for filters)
 - Parallel Promise.all for independent DB queries
 - Value engine is league-specific: every value considers scoring, roster, league size
+- If an approach hits 2+ unexpected blockers, stop and re-plan rather than pushing through
 
 ### After any value engine change
 Player values are pre-computed and stored in the database — they do NOT
