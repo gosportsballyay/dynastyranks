@@ -232,7 +232,7 @@ export function RankingsTable({
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-700/50">
-        <span className="text-xs text-slate-500 uppercase tracking-wider shrink-0">
+        <span className="text-xs text-slate-400 uppercase tracking-wider shrink-0">
           Highlight:
         </span>
         {highlightOptions.map((opt) => (
@@ -295,10 +295,18 @@ export function RankingsTable({
             {sortedValues.map((v, index) => (
               <Fragment key={v.id}>
                 <tr
+                  tabIndex={0}
                   onClick={() =>
                     setExpandedRow(expandedRow === v.id ? null : v.id)
                   }
-                  className={`border-b border-slate-700/50 cursor-pointer transition-colors ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setExpandedRow(expandedRow === v.id ? null : v.id);
+                    }
+                  }}
+                  aria-expanded={expandedRow === v.id}
+                  className={`border-b border-slate-700/50 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset ${
                     index % 2 === 0 ? "bg-slate-800/30" : ""
                   } hover:bg-slate-700/50`}
                 >

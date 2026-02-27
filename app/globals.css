@@ -23,6 +23,10 @@
   --radius: 0.5rem;
 }
 
+html {
+  font-size: 90%;
+}
+
 * {
   border-color: var(--color-border);
 }

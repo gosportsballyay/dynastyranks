@@ -159,12 +159,12 @@ export function PlayerDetailDropdown({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-3 sm:gap-y-4">
         {/* Season History */}
         <div>
-          <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
+          <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Season History
           </h4>
           <table className="text-sm">
             <thead>
-              <tr className="text-slate-500 text-xs">
+              <tr className="text-slate-400 text-xs">
                 <th className="text-left py-1 pr-2 sm:pr-4 font-medium">
                   Season
                 </th>
@@ -200,7 +200,7 @@ export function PlayerDetailDropdown({
                 <tr>
                   <td
                     colSpan={4}
-                    className="py-1 text-slate-500 italic"
+                    className="py-1 text-slate-400 italic"
                   >
                     No history available
                   </td>
@@ -212,23 +212,23 @@ export function PlayerDetailDropdown({
 
         {/* Ranks */}
         <div>
-          <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
+          <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Ranks
           </h4>
           <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
-            <dt className="text-slate-500">Overall</dt>
+            <dt className="text-slate-400">Overall</dt>
             <dd className="text-white font-mono text-right">
               #{rank}
             </dd>
-            <dt className="text-slate-500">Position</dt>
+            <dt className="text-slate-400">Position</dt>
             <dd className="text-white font-mono text-right">
               {positionLabel}
             </dd>
-            <dt className="text-slate-500">VORP</dt>
+            <dt className="text-slate-400">VORP</dt>
             <dd className="text-white font-mono text-right">
               +{vorp.toFixed(1)}
             </dd>
-            <dt className="text-slate-500">Tier</dt>
+            <dt className="text-slate-400">Tier</dt>
             <dd className="text-white font-mono text-right">
               {tier}
             </dd>
@@ -240,7 +240,7 @@ export function PlayerDetailDropdown({
                 : slot.charAt(0) + slot.slice(1).toLowerCase();
               return (
                 <Fragment key={slot}>
-                  <dt className="text-slate-500">{label}</dt>
+                  <dt className="text-slate-400">{label}</dt>
                   <dd className="text-white font-mono text-right">
                     #{r}
                   </dd>
@@ -252,23 +252,23 @@ export function PlayerDetailDropdown({
 
         {/* Values */}
         <div>
-          <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
+          <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Values
           </h4>
           <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
-            <dt className="text-slate-500">
+            <dt className="text-slate-400">
               {projYear} Proj
             </dt>
             <dd className="text-white font-mono text-right">
               {projectedPoints.toFixed(1)}
             </dd>
-            <dt className="text-slate-500">Consensus</dt>
+            <dt className="text-slate-400">Consensus</dt>
             <dd className="text-white font-mono text-right">
               {consensusValue != null
                 ? consensusValue.toLocaleString()
                 : "-"}
             </dd>
-            <dt className="text-slate-500">League</dt>
+            <dt className="text-slate-400">League</dt>
             <dd className="text-white font-mono text-right">
               {leagueValue.toLocaleString()}
             </dd>

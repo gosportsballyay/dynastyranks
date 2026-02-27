@@ -15,14 +15,19 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const result = await login(formData);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const result = await login(formData);
 
-    if (result.success) {
-      router.push("/dashboard");
-      router.refresh();
-    } else {
-      setError(result.error || "Failed to log in");
+      if (result.success) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setError(result.error || "Failed to log in");
+        setLoading(false);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
       setLoading(false);
     }
   }
@@ -95,7 +100,7 @@ export default function LoginPage() {
               Don&apos;t have an account?{" "}
               <Link
                 href="/signup"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
               >
                 Sign up
               </Link>

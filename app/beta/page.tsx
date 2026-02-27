@@ -83,7 +83,7 @@ export default function BetaAccessPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-slate-400">
             Invite only.
           </p>
         </div>

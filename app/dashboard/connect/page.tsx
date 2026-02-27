@@ -271,6 +271,43 @@ function ConnectLeagueContent() {
           </p>
         </div>
 
+        {/* Step indicator */}
+        {(() => {
+          const currentStep = showTeamSelection ? 3
+            : showLeagueSelection ? 2
+            : provider ? 2
+            : 1;
+          const steps = ["Platform", "Details", "Team"];
+          return (
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {steps.map((label, i) => {
+                const step = i + 1;
+                const done = step < currentStep;
+                const active = step === currentStep;
+                return (
+                  <div key={label} className="flex items-center gap-2">
+                    {i > 0 && (
+                      <div className={`w-8 h-px ${done || active ? "bg-blue-500" : "bg-slate-700"}`} />
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                        done ? "bg-blue-600 text-white"
+                          : active ? "bg-blue-600 text-white ring-2 ring-blue-400/50"
+                          : "bg-slate-700 text-slate-400"
+                      }`}>
+                        {done ? "✓" : step}
+                      </div>
+                      <span className={`text-xs hidden sm:inline ${active ? "text-white" : "text-slate-400"}`}>
+                        {label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
         <div className="bg-slate-800/50 rounded-xl p-8 ring-1 ring-slate-700">
           {/* League Selection Step (for multi-league platforms) */}
           {showLeagueSelection ? (
@@ -457,25 +494,25 @@ function ConnectLeagueContent() {
                           placeholder={getProviderPlaceholder()}
                         />
                         {provider === "sleeper" && (
-                          <p className="mt-2 text-sm text-slate-500">
+                          <p className="mt-2 text-sm text-slate-400">
                             After entering your username, you&apos;ll be able to select
                             from your leagues
                           </p>
                         )}
                         {provider === "fleaflicker" && (
-                          <p className="mt-2 text-sm text-slate-500">
+                          <p className="mt-2 text-sm text-slate-400">
                             Find your league ID in the URL: fleaflicker.com/nfl/leagues/
                             <span className="text-blue-400">123456</span>
                           </p>
                         )}
                         {provider === "espn" && (
-                          <p className="mt-2 text-sm text-slate-500">
+                          <p className="mt-2 text-sm text-slate-400">
                             Find your league ID in the URL: fantasy.espn.com/football/league?leagueId=
                             <span className="text-blue-400">12345678</span>
                           </p>
                         )}
                         {provider === "yahoo" && (
-                          <p className="mt-2 text-sm text-slate-500">
+                          <p className="mt-2 text-sm text-slate-400">
                             Leave empty to see all your leagues, or enter a specific league ID
                           </p>
                         )}
@@ -507,7 +544,7 @@ function ConnectLeagueContent() {
 
                           {showCookieInputs && (
                             <div className="mt-4 space-y-4">
-                              <p className="text-sm text-slate-500">
+                              <p className="text-sm text-slate-400">
                                 For private leagues, you need to provide your ESPN cookies.
                                 <a
                                   href="https://github.com/cwendt94/espn-api/discussions/150"

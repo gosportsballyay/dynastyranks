@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type {
   PlayerAsset,
   DraftPickAsset,
@@ -73,6 +73,7 @@ export function TradeSide({
   const [pickSearch, setPickSearch] = useState("");
   const [showPicks, setShowPicks] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [pickTiers, setPickTiers] = useState<Record<string, PickTier>>(
     {},
   );
@@ -220,7 +221,7 @@ export function TradeSide({
       {/* Selected assets */}
       <div className="space-y-1.5 mb-4 min-h-[48px]">
         {selectedPlayers.length === 0 && selectedPicks.length === 0 ? (
-          <div className="text-slate-500 text-sm py-3 text-center">
+          <div className="text-slate-400 text-sm py-3 text-center">
             Add players or picks below
           </div>
         ) : (
@@ -379,33 +380,81 @@ export function TradeSide({
               onChange={(e) => {
                 setSearch(e.target.value);
                 setDropdownOpen(true);
+                setHighlightedIndex(-1);
               }}
               onFocus={() => setDropdownOpen(true)}
+              onKeyDown={(e) => {
+                const items = searchResults.slice(0, 15);
+                if (!dropdownOpen || items.length === 0) {
+                  if (e.key === "ArrowDown") {
+                    setDropdownOpen(true);
+                    setHighlightedIndex(0);
+                    e.preventDefault();
+                  }
+                  return;
+                }
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) =>
+                    i < items.length - 1 ? i + 1 : 0,
+                  );
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) =>
+                    i > 0 ? i - 1 : items.length - 1,
+                  );
+                } else if (e.key === "Enter" && highlightedIndex >= 0) {
+                  e.preventDefault();
+                  const player = items[highlightedIndex];
+                  if (player) {
+                    if (!teamId) onSelectTeam(player.ownerTeamId, true);
+                    onAddPlayer(player);
+                    setSearch("");
+                    setDropdownOpen(false);
+                    setHighlightedIndex(-1);
+                  }
+                } else if (e.key === "Escape") {
+                  setDropdownOpen(false);
+                  setHighlightedIndex(-1);
+                }
+              }}
               placeholder={
                 teamId && !isNoTeam
                   ? "Search players..."
                   : "Search all players..."
               }
+              aria-label="Search players"
+              aria-expanded={dropdownOpen}
+              aria-autocomplete="list"
+              role="combobox"
               className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {dropdownOpen && (
               <div
                 ref={dropdownRef}
+                role="listbox"
                 className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg max-h-48 overflow-y-auto"
               >
-                {searchResults.slice(0, 15).map((player) => (
+                {searchResults.slice(0, 15).map((player, idx) => (
                   <button
                     key={player.playerId}
+                    role="option"
+                    aria-selected={idx === highlightedIndex}
                     onClick={() => {
-                      // Auto-fill team if not selected (skip for no-team)
                       if (!teamId) {
                         onSelectTeam(player.ownerTeamId, true);
                       }
                       onAddPlayer(player);
                       setSearch("");
                       setDropdownOpen(false);
+                      setHighlightedIndex(-1);
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-700/50 transition-colors text-left"
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    className={`w-full flex items-center justify-between px-3 py-2 transition-colors text-left ${
+                      idx === highlightedIndex
+                        ? "bg-slate-700/70"
+                        : "hover:bg-slate-700/50"
+                    }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span
@@ -436,7 +485,7 @@ export function TradeSide({
                   </button>
                 ))}
                 {searchResults.length === 0 && (
-                  <div className="px-3 py-2 text-sm text-slate-500">
+                  <div className="px-3 py-2 text-sm text-slate-400">
                     No players found
                   </div>
                 )}
@@ -446,7 +495,7 @@ export function TradeSide({
         ) : (
           <div>
             {!teamId && !isNoTeam ? (
-              <div className="text-sm text-slate-500 py-2 text-center">
+              <div className="text-sm text-slate-400 py-2 text-center">
                 Add a player first to select a team
               </div>
             ) : (
@@ -460,7 +509,7 @@ export function TradeSide({
                 />
                 <div className="max-h-48 overflow-y-auto space-y-2">
                   {availablePicks.length === 0 ? (
-                    <div className="text-sm text-slate-500 py-2 text-center">
+                    <div className="text-sm text-slate-400 py-2 text-center">
                       No draft picks found
                     </div>
                   ) : (

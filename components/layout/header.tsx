@@ -33,7 +33,7 @@ export function Header({
 
   const currentLeague = leagues.find((l) => l.id === currentLeagueId);
 
-  // Close dropdowns when clicking outside
+  // Close dropdowns when clicking outside or pressing Escape
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (leagueRef.current && !leagueRef.current.contains(event.target as Node)) {
@@ -43,10 +43,30 @@ export function Header({
         setUserDropdownOpen(false);
       }
     }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        if (leagueDropdownOpen) {
+          setLeagueDropdownOpen(false);
+          leagueRef.current
+            ?.querySelector("button")
+            ?.focus();
+        }
+        if (userDropdownOpen) {
+          setUserDropdownOpen(false);
+          userRef.current
+            ?.querySelector("button")
+            ?.focus();
+        }
+      }
+    }
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [leagueDropdownOpen, userDropdownOpen]);
 
   function handleLeagueSelect(leagueId: string) {
     setLeagueDropdownOpen(false);
@@ -91,12 +111,31 @@ export function Header({
               </button>
 
               {leagueDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-slate-800 rounded-lg shadow-lg border border-slate-700 py-1 z-50">
+                <div
+                  role="listbox"
+                  onKeyDown={(e) => {
+                    const items = e.currentTarget.querySelectorAll<HTMLElement>(
+                      "button, a",
+                    );
+                    const focused = document.activeElement as HTMLElement;
+                    const idx = Array.from(items).indexOf(focused);
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      items[idx < items.length - 1 ? idx + 1 : 0]?.focus();
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      items[idx > 0 ? idx - 1 : items.length - 1]?.focus();
+                    }
+                  }}
+                  className="absolute top-full left-0 mt-1 w-64 bg-slate-800 rounded-lg shadow-lg border border-slate-700 py-1 z-50"
+                >
                   {leagues.map((league) => (
                     <button
                       key={league.id}
+                      role="option"
+                      aria-selected={league.id === currentLeagueId}
                       onClick={() => handleLeagueSelect(league.id)}
-                      className={`w-full text-left px-4 py-2 hover:bg-slate-700 transition-colors ${
+                      className={`w-full text-left px-4 py-2 hover:bg-slate-700 focus-visible:bg-slate-700 focus-visible:outline-none transition-colors ${
                         league.id === currentLeagueId
                           ? "text-blue-400 bg-blue-600/10"
                           : "text-slate-300"
@@ -140,15 +179,33 @@ export function Header({
           </button>
 
           {userDropdownOpen && (
-            <div className="absolute top-full right-0 mt-1 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700 py-1 z-50">
+            <div
+              role="menu"
+              onKeyDown={(e) => {
+                const items = e.currentTarget.querySelectorAll<HTMLElement>(
+                  "a, button[type=submit]",
+                );
+                const focused = document.activeElement as HTMLElement;
+                const idx = Array.from(items).indexOf(focused);
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  items[idx < items.length - 1 ? idx + 1 : 0]?.focus();
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  items[idx > 0 ? idx - 1 : items.length - 1]?.focus();
+                }
+              }}
+              className="absolute top-full right-0 mt-1 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700 py-1 z-50"
+            >
               <div className="px-4 py-2 text-sm text-slate-400 border-b border-slate-700 sm:hidden">
                 {userEmail}
               </div>
               {currentLeague && (
                 <Link
                   href={`/league/${currentLeague.id}/settings`}
+                  role="menuitem"
                   onClick={() => setUserDropdownOpen(false)}
-                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 focus-visible:bg-slate-700 focus-visible:outline-none transition-colors"
                 >
                   <SettingsIcon />
                   <span>League Settings</span>
@@ -157,7 +214,8 @@ export function Header({
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
-                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                  role="menuitem"
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 focus-visible:bg-slate-700 focus-visible:outline-none transition-colors"
                 >
                   <LogoutIcon />
                   <span>Sign out</span>

@@ -58,7 +58,7 @@ export function HelpTooltip({ text, learnMoreHref }: HelpTooltipProps) {
             <a
               href={learnMoreHref}
               className="block mt-1 text-blue-400
-                hover:text-blue-300 text-xs"
+                hover:text-blue-300 text-xs underline underline-offset-2"
             >
               Learn more &rarr;
             </a>

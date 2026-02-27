@@ -15,26 +15,40 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const password = formData.get("password") as string;
+      const confirm = formData.get("confirmPassword") as string;
 
-    // First create the account
-    const signupResult = await signup(formData);
+      if (password !== confirm) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
+      }
 
-    if (!signupResult.success) {
-      setError(signupResult.error || "Failed to create account");
+      // First create the account
+      const signupResult = await signup(formData);
+
+      if (!signupResult.success) {
+        setError(signupResult.error || "Failed to create account");
+        setLoading(false);
+        return;
+      }
+
+      // Then log in
+      const loginResult = await login(formData);
+
+      if (loginResult.success) {
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        // Account created but login failed - redirect to login
+        setLoading(false);
+        router.push("/login");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
       setLoading(false);
-      return;
-    }
-
-    // Then log in
-    const loginResult = await login(formData);
-
-    if (loginResult.success) {
-      router.push("/dashboard");
-      router.refresh();
-    } else {
-      // Account created but login failed - redirect to login
-      router.push("/login");
     }
   }
 
@@ -111,6 +125,25 @@ export default function SignupPage() {
               />
             </div>
 
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-slate-300 mb-2"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                className="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Re-enter your password"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -125,7 +158,7 @@ export default function SignupPage() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors"
               >
                 Sign in
               </Link>
