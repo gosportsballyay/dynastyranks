@@ -7,92 +7,119 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
-              <span className="text-xl font-bold text-white">DynastyRanks</span>
+              <span className="text-xl font-bold text-white">
+                DynastyRanks
+              </span>
               <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/30">
                 Beta
               </span>
             </div>
-            <div />
+            <Link
+              href="/login"
+              className="text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            >
+              Log in
+            </Link>
           </div>
         </div>
       </nav>
 
-      <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-            Dynasty Rankings That
-            <span className="text-blue-400"> Actually Understand</span>
-            <br />
-            Your League
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            The only dynasty tool that calculates player values based on YOUR
-            league&apos;s exact settings. IDP support, custom scoring, unique
-            roster configurations - we handle it all.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <Link
-              href="/login"
-              className="rounded-md border border-slate-500 px-6 py-3 text-base font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
-            >
-              Log In
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-md bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors"
-            >
-              Get Started
-            </Link>
+      <div className="mx-auto max-w-2xl px-4 pt-24 pb-16 sm:px-6 sm:pt-32 sm:pb-24">
+        <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <span className="italic text-blue-400">DynastyValues</span> for your league.
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-slate-400">
+          Not generic rankings. Values calculated from your scoring
+          rules, roster size, and league format. Connect your league
+          and get values that reflect how your league actually scores.
+        </p>
+
+        <div className="mt-8 flex items-center gap-4">
+          <Link
+            href="/signup"
+            className="inline-block rounded-md bg-blue-600 px-6 py-3 text-base font-semibold text-white hover:bg-blue-500 transition-colors"
+          >
+            Get started
+          </Link>
+          <Link
+            href="/login"
+            className="inline-block rounded-md px-6 py-3 text-base font-semibold text-slate-300 ring-1 ring-slate-600 hover:text-white hover:ring-slate-500 transition-colors"
+          >
+            Log in
+          </Link>
+        </div>
+
+        <dl className="mt-16 divide-y divide-slate-700/50 text-sm">
+          <div className="flex items-center gap-x-3 pb-4">
+            <dt className="text-slate-300 font-bold w-36 shrink-0">
+              IDP-native
+            </dt>
+            <dd className="text-slate-300">
+              DL, LB, DB, and granular positions like EDR, IL, CB, S
+              &mdash; scored from your league&apos;s IDP settings.
+            </dd>
           </div>
-        </div>
+          <div className="flex items-center gap-x-3 py-4">
+            <dt className="text-slate-300 font-bold w-36 shrink-0">
+              VORP rankings
+            </dt>
+            <dd className="text-slate-300">
+              Value over replacement calculated per-position based on
+              your roster depth and flex eligibility.
+            </dd>
+          </div>
+          <div className="flex items-center gap-x-3 py-4">
+            <dt className="text-slate-300 font-bold w-36 shrink-0">
+              Trade calculator
+            </dt>
+            <dd className="text-slate-300">
+              Side-by-side value comparison with fairness verdict,
+              market divergence, and roster impact analysis.
+            </dd>
+          </div>
+          <div className="flex items-center gap-x-3 pt-4">
+            <dt className="text-slate-300 font-bold w-36 shrink-0">
+              Age curves
+            </dt>
+            <dd className="text-slate-300">
+              Position-specific aging factored into every value.
+              A 24-year-old RB and a 29-year-old RB aren&apos;t equal.
+            </dd>
+          </div>
+        </dl>
 
-        <div className="mt-24 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <FeatureCard
-            title="League-Specific Values"
-            description="Your 12-team IDP league with TE premium scores differently than a standard league. We calculate values for YOUR exact settings."
-          />
-          <FeatureCard
-            title="IDP Support"
-            description="Finally, a tool that understands IDP. DL, LB, DB - even granular positions like EDR, IL, CB, S. Position-specific scoring included."
-          />
-          <FeatureCard
-            title="VORP-Based Rankings"
-            description="Value Over Replacement Player calculated per-position based on your league's roster depth and flex eligibility."
-          />
-          <FeatureCard
-            title="Dynasty Age Curves"
-            description="24-year-old RB vs 29-year-old RB? We factor in positional age curves to give you true dynasty value."
-          />
-          <FeatureCard
-            title="Trade Calculator"
-            description="Compare player values with full VORP breakdowns. See exactly why one side of a trade wins."
-          />
-          <FeatureCard
-            title="Multiple Platforms"
-            description="Connect Sleeper, Fleaflicker, ESPN, or Yahoo leagues. Same powerful analysis across all platforms."
-          />
-        </div>
-
-        <p className="mt-12 text-center text-slate-400">
-          Want to understand the math?{" "}
-          <Link href="/how-it-works" className="text-blue-400 hover:text-blue-300">
-            See how it works &rarr;
+        <p className="mt-12 text-sm text-slate-500">
+          Works with Sleeper, Fleaflicker, ESPN, and Yahoo.{" "}
+          <Link
+            href="/how-it-works"
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            How it works &rarr;
           </Link>
         </p>
       </div>
 
       <footer className="border-t border-slate-700 bg-slate-900">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="text-center text-slate-400">
-            <p>&copy; 2026 DynastyRanks. All rights reserved.</p>
-            <div className="mt-4 flex justify-center gap-6">
-              <Link href="/privacy" className="hover:text-white transition-colors">
-                Privacy Policy
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <p>&copy; 2026 DynastyRanks</p>
+            <div className="flex gap-6">
+              <Link
+                href="/privacy"
+                className="hover:text-white transition-colors"
+              >
+                Privacy
               </Link>
-              <Link href="/terms" className="hover:text-white transition-colors">
-                Terms of Service
+              <Link
+                href="/terms"
+                className="hover:text-white transition-colors"
+              >
+                Terms
               </Link>
-              <Link href="/how-it-works" className="hover:text-white transition-colors">
+              <Link
+                href="/how-it-works"
+                className="hover:text-white transition-colors"
+              >
                 How It Works
               </Link>
             </div>
@@ -100,20 +127,5 @@ export default function Home() {
         </div>
       </footer>
     </main>
-  );
-}
-
-function FeatureCard({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl bg-slate-800/50 p-6 ring-1 ring-slate-700">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-slate-400">{description}</p>
-    </div>
   );
 }
