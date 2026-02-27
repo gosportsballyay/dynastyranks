@@ -379,7 +379,7 @@ export function RankingsTable({
                 </tr>
                 {expandedRow === v.id && (
                   <tr className="bg-slate-900/50">
-                    <td colSpan={10} className="py-4 px-4">
+                    <td colSpan={10} className="py-4 px-2 sm:px-4">
                       <PlayerDetailDropdown
                         injuryStatus={v.player.injuryStatus}
                         draftRound={v.player.draftRound}

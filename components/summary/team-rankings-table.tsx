@@ -272,7 +272,7 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
 
                 {expandedTeam === team.teamId && (
                   <tr className="bg-slate-900/30">
-                    <td colSpan={colSpan} className="px-6 py-4">
+                    <td colSpan={colSpan} className="py-4 px-2 sm:px-6">
                       <TeamDetailsV2
                         team={team}
                         totalTeams={rankings.length}
@@ -382,7 +382,7 @@ function TeamDetailsV2({
   const surplusPositions = (team.surplus ?? []).map((s) => s.position);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-4 sm:gap-6">
       {/* Column 1 — Team Profile */}
       <div>
         <h4 className="text-sm font-medium text-slate-400 pb-2 mb-3 border-b border-slate-700">

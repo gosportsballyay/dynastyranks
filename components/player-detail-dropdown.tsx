@@ -127,7 +127,7 @@ export function PlayerDetailDropdown({
   const projYear = new Date().getFullYear();
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-[85vw] sm:max-w-none">
       {/* Bio band */}
       <div className="flex flex-wrap items-center gap-y-1 text-sm text-slate-300">
         {injuryStatus && (
@@ -155,10 +155,10 @@ export function PlayerDetailDropdown({
         )}
       </div>
 
-      {/* Three-column layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-3 sm:gap-y-4">
+      {/* Three-column layout: mobile = Season full-width, Ranks+Values side by side */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4">
         {/* Season History */}
-        <div>
+        <div className="col-span-2 sm:col-span-1">
           <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Season History
           </h4>
@@ -215,7 +215,7 @@ export function PlayerDetailDropdown({
           <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Ranks
           </h4>
-          <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
             <dt className="text-slate-400">Overall</dt>
             <dd className="text-white font-mono text-right">
               #{rank}
@@ -255,7 +255,7 @@ export function PlayerDetailDropdown({
           <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Values
           </h4>
-          <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
             <dt className="text-slate-400">
               {projYear} Proj
             </dt>

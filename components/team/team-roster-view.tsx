@@ -374,7 +374,7 @@ function RosterSection({
                 </tr>
                 {expandedRow === player.playerId && (
                   <tr className="bg-slate-900/50">
-                    <td colSpan={5} className="py-4 px-6">
+                    <td colSpan={5} className="py-4 px-2 sm:px-6">
                       <PlayerDetailDropdown
                         injuryStatus={player.injuryStatus}
                         draftRound={player.draftRound}
