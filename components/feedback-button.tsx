@@ -79,13 +79,19 @@ export function FeedbackButton({
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="feedback-dialog-title"
+          onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+        >
           <div
             ref={modalRef}
             className="w-full max-w-md mx-4 rounded-lg bg-slate-800
               border border-slate-700 p-5 shadow-xl"
           >
-            <h3 className="text-sm font-semibold text-white mb-3">
+            <h3 id="feedback-dialog-title" className="text-sm font-semibold text-white mb-3">
               Send Feedback
             </h3>
 

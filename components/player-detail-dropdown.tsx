@@ -156,7 +156,7 @@ export function PlayerDetailDropdown({
       </div>
 
       {/* Three-column layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-3 sm:gap-y-4">
         {/* Season History */}
         <div>
           <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
@@ -165,13 +165,13 @@ export function PlayerDetailDropdown({
           <table className="text-sm">
             <thead>
               <tr className="text-slate-500 text-xs">
-                <th className="text-left py-1 pr-4 font-medium">
+                <th className="text-left py-1 pr-2 sm:pr-4 font-medium">
                   Season
                 </th>
-                <th className="text-right py-1 pr-4 font-medium">
+                <th className="text-right py-1 pr-2 sm:pr-4 font-medium">
                   Pts
                 </th>
-                <th className="text-right py-1 pr-4 font-medium">
+                <th className="text-right py-1 pr-2 sm:pr-4 font-medium">
                   GP
                 </th>
                 <th className="text-right py-1 font-medium">
@@ -182,11 +182,11 @@ export function PlayerDetailDropdown({
             <tbody>
               {sortedSeasons.map((s) => (
                 <tr key={s.season} className="text-slate-300">
-                  <td className="py-0.5 pr-4">{s.season}</td>
-                  <td className="text-right font-mono pr-4">
+                  <td className="py-0.5 pr-2 sm:pr-4">{s.season}</td>
+                  <td className="text-right font-mono pr-2 sm:pr-4">
                     {s.points.toFixed(1)}
                   </td>
-                  <td className="text-right font-mono pr-4">
+                  <td className="text-right font-mono pr-2 sm:pr-4">
                     {s.gamesPlayed}
                   </td>
                   <td className="text-right font-mono">
@@ -215,7 +215,7 @@ export function PlayerDetailDropdown({
           <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Ranks
           </h4>
-          <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
+          <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
             <dt className="text-slate-500">Overall</dt>
             <dd className="text-white font-mono text-right">
               #{rank}
@@ -255,7 +255,7 @@ export function PlayerDetailDropdown({
           <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-700">
             Values
           </h4>
-          <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-1 text-sm">
+          <dl className="grid grid-cols-[auto_auto] gap-x-2 sm:gap-x-4 gap-y-1 text-sm">
             <dt className="text-slate-500">
               {projYear} Proj
             </dt>

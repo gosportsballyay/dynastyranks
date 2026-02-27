@@ -107,6 +107,7 @@ export function LeagueLayout({
 
       {/* Main content */}
       <main
+        id="main-content"
         className={`pt-16 transition-all duration-300 ${
           sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
         }`}

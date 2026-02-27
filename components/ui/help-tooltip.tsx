@@ -46,8 +46,10 @@ export function HelpTooltip({ text, learnMoreHref }: HelpTooltipProps) {
       </button>
       {open && (
         <div
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2
-            mb-2 w-64 px-3 py-2 rounded-lg bg-slate-800 border
+          className="fixed sm:absolute z-[60] left-4 right-4 bottom-4
+            sm:left-1/2 sm:right-auto sm:bottom-full sm:-translate-x-1/2
+            sm:mb-2 sm:w-64
+            px-3 py-2 rounded-lg bg-slate-800 border
             border-slate-600 shadow-lg text-xs text-slate-300
             leading-relaxed"
         >
@@ -62,7 +64,7 @@ export function HelpTooltip({ text, learnMoreHref }: HelpTooltipProps) {
             </a>
           )}
           <div
-            className="absolute top-full left-1/2 -translate-x-1/2
+            className="hidden sm:block absolute top-full left-1/2 -translate-x-1/2
               -mt-px w-0 h-0 border-x-[6px] border-x-transparent
               border-t-[6px] border-t-slate-600"
           />

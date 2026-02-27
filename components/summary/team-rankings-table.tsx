@@ -167,9 +167,12 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
 
       <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
+          <caption className="sr-only">
+            League power rankings by team
+          </caption>
           <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr>
-              <th className="px-2 py-2 sm:px-6 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
+              <th scope="col" className="px-2 py-2 sm:px-6 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
                 Team
               </th>
               {cols.map((col) => (
@@ -181,10 +184,12 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                   onSort={handleSort}
                 />
               ))}
-              <th className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
+              <th scope="col" className="px-2 py-2 sm:px-6 sm:py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-wider bg-slate-900">
                 Total Value
               </th>
-              <th className="w-8 sm:w-10 py-2 sm:py-3 bg-slate-900" />
+              <th scope="col" className="w-8 sm:w-10 py-2 sm:py-3 bg-slate-900">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -244,8 +249,8 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                     <Link
                       href={`/league/${leagueId}/team?teamId=${team.teamId}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-700 text-slate-400 hover:text-white hover:bg-slate-600 transition-colors"
-                      title="View team"
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-slate-700 text-slate-400 hover:text-white hover:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
+                      aria-label={`View ${team.teamName || "team"} roster`}
                     >
                       <svg
                         fill="none"
@@ -253,6 +258,7 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
                         stroke="currentColor"
                         strokeWidth={1.5}
                         className="w-4 h-4"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"
@@ -333,8 +339,12 @@ function SortableHeader({
 
   return (
     <th
+      scope="col"
+      tabIndex={0}
       onClick={() => onSort(column)}
-      className={`px-1 py-2 sm:px-6 sm:py-3 ${alignClass} text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200 select-none bg-slate-900`}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSort(column); } }}
+      aria-sort={isActive ? (sortConfig.direction === "asc" ? "ascending" : "descending") : undefined}
+      className={`px-1 py-2 sm:px-6 sm:py-3 ${alignClass} text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200 focus-visible:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset select-none bg-slate-900`}
     >
       {label}
       {arrow && (

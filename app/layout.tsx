@@ -30,7 +30,6 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -41,6 +40,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+        >
+          Skip to main content
+        </a>
         {children}
         <Analytics />
         <SpeedInsights />

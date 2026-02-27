@@ -93,17 +93,18 @@ export default async function DashboardPage() {
                 DynastyRanks
               </Link>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-slate-300">{session.user.email}</span>
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <span className="text-slate-300 hidden sm:inline truncate max-w-[200px]">{session.user.email}</span>
               <form
                 action={async () => {
                   "use server";
                   await signOut({ redirectTo: "/" });
                 }}
+                className="shrink-0"
               >
                 <button
                   type="submit"
-                  className="text-slate-300 hover:text-white transition-colors"
+                  className="text-slate-300 hover:text-white transition-colors text-sm"
                 >
                   Sign out
                 </button>
@@ -113,7 +114,7 @@ export default async function DashboardPage() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <main id="main-content" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-white">My Leagues</h1>
           <Link

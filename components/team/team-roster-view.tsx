@@ -287,9 +287,14 @@ function RosterSection({
     className?: string;
   }) => (
     <th
+      scope="col"
+      tabIndex={0}
       onClick={() => handleSort(column)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort(column); } }}
+      aria-sort={sortState.column === column ? (sortState.direction === "asc" ? "ascending" : "descending") : undefined}
       className={`px-2 py-2 sm:px-6 text-[10px] sm:text-xs font-medium text-slate-400
         uppercase tracking-wider cursor-pointer hover:text-white
+        focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset
         transition-colors select-none bg-slate-900 ${className}`}
     >
       {children}
@@ -308,6 +313,7 @@ function RosterSection({
 
       <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
+          <caption className="sr-only">{title} roster</caption>
           <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr>
               <SortableHeader column="name" className="text-left">

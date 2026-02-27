@@ -210,8 +210,13 @@ export function RankingsTable({
     className?: string;
   }) => (
     <th
+      scope="col"
+      role="columnheader"
+      tabIndex={0}
       onClick={() => handleSort(column)}
-      className={`py-3 px-2 sm:px-4 font-medium text-slate-400 cursor-pointer hover:text-white transition-colors select-none bg-slate-900 ${className}`}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort(column); } }}
+      aria-sort={sortColumn === column ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+      className={`py-3 px-2 sm:px-4 font-medium text-slate-400 cursor-pointer hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset transition-colors select-none bg-slate-900 ${className}`}
     >
       {children}
       <SortIndicator column={column} />
@@ -246,6 +251,9 @@ export function RankingsTable({
       </div>
       <div className="overflow-x-auto sm:overflow-x-visible">
         <table className="w-full text-xs sm:text-sm">
+          <caption className="sr-only">
+            Player dynasty rankings sorted by {sortColumn} {sortDirection === "asc" ? "ascending" : "descending"}
+          </caption>
           <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr className="border-b border-slate-700 text-left">
               <SortableHeader column="rank">Rank</SortableHeader>
