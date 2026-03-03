@@ -67,12 +67,12 @@ these assertions, flag it before proceeding.
   steeper drop-off should carry higher scarcity value even if its top
   scorer has fewer total points.
 
-### IDP — Consensus & DynastyRanks' Role
+### IDP — Consensus & MyDynastyValues' Role
 
 - KTC, FantasyCalc, DynastyProcess do not publish IDP dynasty values.
 - IDP-specific sites (PFF, The IDP Show, DynastyNerds, DynastySharks)
   publish rankings but vary because they don't disclose scoring
-  assumptions — this is the core problem DynastyRanks solves.
+  assumptions — this is the core problem MyDynastyValues solves.
 - IDP values computed from league signals should be conservative
   relative to offense (higher replacement-level volatility).
 

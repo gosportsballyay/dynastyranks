@@ -7,8 +7,8 @@ export default function PrivacyPolicyPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-white">
-                DynastyRanks
+              <span className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+                MyDynastyValues
               </span>
               <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/30">
                 Beta
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
             <p className="text-slate-300 leading-relaxed">
               Your league data is used exclusively to compute league-specific
               player rankings and trade values. We do not use your data for any
-              purpose other than providing the DynastyRanks service to you.
+              purpose other than providing the MyDynastyValues service to you.
             </p>
           </section>
 

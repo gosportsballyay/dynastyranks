@@ -7,8 +7,8 @@ export default function HowItWorksPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-white">
-                DynastyRanks
+              <span className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+                MyDynastyValues
               </span>
               <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/30">
                 Beta
@@ -29,7 +29,7 @@ export default function HowItWorksPage() {
           How It Works
         </h1>
         <p className="text-slate-400 mb-10">
-          A quick guide to how DynastyRanks calculates player
+          A quick guide to how MyDynastyValues calculates player
           values, ranks your roster, and evaluates trades.
         </p>
 
@@ -96,7 +96,7 @@ export default function HowItWorksPage() {
               Market consensus aggregates dynasty rankings from
               KeepTradeCut (40%), FantasyCalc (35%), and
               DynastyProcess (25%). This represents how the broader
-              dynasty community values each player. DynastyRanks
+              dynasty community values each player. MyDynastyValues
               blends this consensus with your league&apos;s computed
               signal based on your Valuation Emphasis setting:
             </p>
@@ -173,7 +173,7 @@ export default function HowItWorksPage() {
             </h2>
             <p className="text-slate-300 leading-relaxed">
               No major dynasty ranking site publishes IDP values.
-              DynastyRanks computes IDP values entirely from your
+              MyDynastyValues computes IDP values entirely from your
               league&apos;s scoring signals &mdash; tackles, sacks,
               interceptions, pass breakups, and other stats weighted
               exactly as your league scores them. IDP values are

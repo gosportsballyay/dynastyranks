@@ -53,7 +53,7 @@ async function main() {
     leagueId = args[leagueIndex + 1];
   }
 
-  console.log("=== DynastyRanks Data Integrity Tests ===\n");
+  console.log("=== MyDynastyValues Data Integrity Tests ===\n");
 
   if (!process.env.DATABASE_URL) {
     console.error("Error: DATABASE_URL environment variable is not set");

@@ -56,8 +56,8 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold text-white">
-            DynastyRanks
+          <Link href="/" className="text-2xl font-bold text-white font-[family-name:var(--font-display)]">
+            MyDynastyValues
           </Link>
           <p className="mt-2 text-slate-400">Create your account</p>
         </div>

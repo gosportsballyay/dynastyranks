@@ -1,4 +1,4 @@
-# DynastyRanks - Value Engine Specification
+# MyDynastyValues - Value Engine Specification
 
 Engine version: `1.2.0`
 

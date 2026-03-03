@@ -1,6 +1,6 @@
 # Ranking System Data Sources
 
-This document explains how DynastyRanks generates player rankings and the data sources used at each layer.
+This document explains how MyDynastyValues generates player rankings and the data sources used at each layer.
 
 ## Overview
 

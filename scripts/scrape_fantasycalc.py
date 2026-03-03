@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FantasyCalc Scraper for DynastyRanks
+FantasyCalc Scraper for MyDynastyValues
 
 Fetches dynasty rankings from FantasyCalc's public API and inserts into our database.
 Handles 1QB and SuperFlex variants.

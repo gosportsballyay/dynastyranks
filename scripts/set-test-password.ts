@@ -9,8 +9,8 @@ async function main() {
   await db
     .update(users)
     .set({ passwordHash })
-    .where(eq(users.email, "test02@dynastyranks.dev"));
-  console.log("Password updated for test02@dynastyranks.dev");
+    .where(eq(users.email, "test02@mydynastyvalues.dev"));
+  console.log("Password updated for test02@mydynastyvalues.dev");
 }
 
 main();

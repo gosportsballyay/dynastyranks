@@ -88,9 +88,9 @@ export function Header({
             </button>
           )}
 
-          <Link href="/dashboard" className="font-bold text-white hover:text-blue-400 transition-colors shrink-0">
-            <span className="text-xl hidden sm:inline">DynastyRanks</span>
-            <span className="text-lg sm:hidden">DR</span>
+          <Link href="/dashboard" className="font-bold text-white hover:text-blue-400 transition-colors shrink-0 font-[family-name:var(--font-display)]">
+            <span className="text-xl hidden sm:inline">MyDynastyValues</span>
+            <span className="text-lg sm:hidden">MDV</span>
           </Link>
 
           {/* League Switcher */}

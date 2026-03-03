@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FantasyPros IDP Dynasty ECR Scraper for DynastyRanks.
+FantasyPros IDP Dynasty ECR Scraper for MyDynastyValues.
 
 Fetches IDP dynasty rankings from FantasyPros across the combined
 page and all three position-specific pages (LB, DL, DB), then

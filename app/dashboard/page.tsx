@@ -89,8 +89,8 @@ export default async function DashboardPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-white">
-                DynastyRanks
+              <Link href="/dashboard" className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+                MyDynastyValues
               </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">

@@ -7,8 +7,8 @@ export default function TermsOfServicePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center">
-              <span className="text-xl font-bold text-white">
-                DynastyRanks
+              <span className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+                MyDynastyValues
               </span>
               <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-600/20 text-blue-400 ring-1 ring-blue-500/30">
                 Beta
@@ -35,7 +35,7 @@ export default function TermsOfServicePage() {
               Beta Status
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              DynastyRanks is currently in beta. The service is provided
+              MyDynastyValues is currently in beta. The service is provided
               &quot;as-is&quot; with no guarantees of availability, accuracy, or
               data persistence. Features may change, and data (including
               accounts and league connections) may be reset during the beta
@@ -48,7 +48,7 @@ export default function TermsOfServicePage() {
               Acceptable Use
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              DynastyRanks is intended for personal fantasy football analysis
+              MyDynastyValues is intended for personal fantasy football analysis
               only. You agree not to use the service for commercial purposes,
               scrape data from the platform, or interfere with the operation of
               the service.
@@ -60,7 +60,7 @@ export default function TermsOfServicePage() {
               Account and Data
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              To use DynastyRanks, you create an account with an email address
+              To use MyDynastyValues, you create an account with an email address
               and password. Your password is stored as a cryptographic hash and
               is never stored in plain text. League data is fetched from
               third-party platforms (Sleeper, Fleaflicker, ESPN, Yahoo) using
@@ -73,7 +73,7 @@ export default function TermsOfServicePage() {
               Intellectual Property
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              DynastyRanks owns all rights to the tool, including the ranking
+              MyDynastyValues owns all rights to the tool, including the ranking
               algorithms, user interface, and value engine. You retain ownership
               of your personal data and league information. Player data and
               statistics are sourced from publicly available third-party
@@ -86,8 +86,8 @@ export default function TermsOfServicePage() {
               Limitation of Liability
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              DynastyRanks is a hobby project and free beta service. To the
-              maximum extent permitted by law, DynastyRanks and its creators
+              MyDynastyValues is a hobby project and free beta service. To the
+              maximum extent permitted by law, MyDynastyValues and its creators
               shall not be liable for any indirect, incidental, special, or
               consequential damages arising from your use of the service. This
               includes but is not limited to trade decisions made based on

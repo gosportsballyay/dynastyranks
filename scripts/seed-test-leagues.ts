@@ -55,7 +55,7 @@ async function getOrCreateUser(): Promise<string> {
   const [existing] = await db
     .select()
     .from(users)
-    .where(eq(users.email, "test02@dynastyranks.dev"))
+    .where(eq(users.email, "test02@mydynastyvalues.dev"))
     .limit(1);
 
   if (existing) {
@@ -67,7 +67,7 @@ async function getOrCreateUser(): Promise<string> {
     .insert(users)
     .values({
       id: randomUUID(),
-      email: "test02@dynastyranks.dev",
+      email: "test02@mydynastyvalues.dev",
       name: "Test02-2026",
       passwordHash: "test-account-no-login",
     })

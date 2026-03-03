@@ -253,8 +253,8 @@ function ConnectLeagueContent() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-xl font-bold text-white">
-                DynastyRanks
+              <Link href="/dashboard" className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+                MyDynastyValues
               </Link>
               <span className="text-slate-500">/</span>
               <span className="text-slate-300">Connect League</span>

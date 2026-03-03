@@ -45,7 +45,7 @@ export abstract class BaseAdapter {
         ...options,
         headers: {
           "Accept": "application/json",
-          "User-Agent": "DynastyRanks/1.0",
+          "User-Agent": "MyDynastyValues/1.0",
           ...options?.headers,
         },
       });

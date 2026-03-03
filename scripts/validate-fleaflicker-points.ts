@@ -42,7 +42,7 @@ async function fetchFleaflicker<T>(
   const response = await fetch(url.toString(), {
     headers: {
       Accept: "application/json",
-      "User-Agent": "DynastyRanks/1.0",
+      "User-Agent": "MyDynastyValues/1.0",
     },
   });
   if (!response.ok) {

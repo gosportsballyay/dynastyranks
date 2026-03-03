@@ -1,4 +1,4 @@
-# DynastyRanks - Project Brief
+# MyDynastyValues - Project Brief
 
 ## Vision
 A **lighter dynasty-daddy.com clone** with first-class IDP support and
@@ -164,7 +164,7 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 ### IDP Value Engine Design Constraint
 
 IDP dynasty values have no industry consensus. KTC, FantasyCalc, and
-DynastyProcess publish **zero** IDP rankings. DynastyRanks must compute
+DynastyProcess publish **zero** IDP rankings. MyDynastyValues must compute
 IDP values entirely from league-specific signals (stats, projections,
 league config). This is a first-class design constraint, not a fallback:
 

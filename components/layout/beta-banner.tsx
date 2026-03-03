@@ -25,7 +25,7 @@ export function BetaBanner() {
       <p className="text-sm text-slate-300">
         <span className="font-medium text-blue-400">Beta</span>
         {" — "}
-        DynastyRanks is in beta. Values and features may change.
+        MyDynastyValues is in beta. Values and features may change.
         Found a bug? Use the Feedback button.
       </p>
       <button

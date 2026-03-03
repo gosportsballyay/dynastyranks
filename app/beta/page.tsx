@@ -41,8 +41,8 @@ export default function BetaAccessPage() {
     <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white">
-            DynastyRanks
+          <h1 className="text-2xl font-bold text-white font-[family-name:var(--font-display)]">
+            MyDynastyValues
           </h1>
           <p className="mt-2 text-slate-400">Beta Access</p>
         </div>

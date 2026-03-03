@@ -1,5 +1,5 @@
 /**
- * Aggregation Engine for DynastyRanks
+ * Aggregation Engine for MyDynastyValues
  *
  * Combines dynasty rankings from multiple sources (KTC, FantasyCalc, DynastyProcess)
  * into a unified aggregated value for each player.

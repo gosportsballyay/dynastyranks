@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DynastyProcess Scraper for DynastyRanks
+DynastyProcess Scraper for MyDynastyValues
 
 Fetches dynasty rankings from DynastyProcess's open GitHub data repository.
 DynastyProcess values are built on FantasyPros ECR, so this gives us both.

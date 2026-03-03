@@ -64,7 +64,7 @@ async function main() {
     mode = "dev";
   }
 
-  console.log("=== DynastyRanks Data Health Check ===");
+  console.log("=== MyDynastyValues Data Health Check ===");
   console.log(`Mode: ${mode}\n`);
 
   if (!process.env.DATABASE_URL) {

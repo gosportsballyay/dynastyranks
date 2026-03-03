@@ -1,4 +1,4 @@
-# DynastyRanks Value System - Diagnostic Report
+# MyDynastyValues Value System - Diagnostic Report
 
 ## Executive Summary
 

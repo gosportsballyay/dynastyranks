@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-KeepTradeCut Scraper for DynastyRanks
+KeepTradeCut Scraper for MyDynastyValues
 
 Scrapes dynasty rankings from KeepTradeCut and inserts into our database.
 Handles 1QB, SuperFlex, and TE Premium variants.

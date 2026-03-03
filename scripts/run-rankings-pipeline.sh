@@ -2,7 +2,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# DynastyRanks Rankings Pipeline
+# MyDynastyValues Rankings Pipeline
 # Runs all scrapers and aggregation for external dynasty rankings
 #
 # Usage:
@@ -21,7 +21,7 @@ fi
 
 cd "$PROJECT_DIR"
 
-echo "=== DynastyRanks Rankings Pipeline ==="
+echo "=== MyDynastyValues Rankings Pipeline ==="
 echo "Started at: $(date)"
 echo ""
 

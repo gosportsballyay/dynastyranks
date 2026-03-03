@@ -9,7 +9,7 @@ Disallow: /admin
 Disallow: /debug
 Disallow: /api
 
-Sitemap: https://dynastyranks.com/sitemap.xml
+Sitemap: https://mydynastyvalues.com/sitemap.xml
 `;
 
   return new Response(body, {
