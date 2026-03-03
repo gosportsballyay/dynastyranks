@@ -635,6 +635,27 @@ export const playerPositionOverrides = pgTable(
 );
 
 /**
+ * Password Reset Tokens
+ */
+export const passwordResetTokens = pgTable(
+  "password_reset_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    tokenHashIdx: uniqueIndex("token_hash_idx").on(table.tokenHash),
+    userIdIdx: index("reset_token_user_idx").on(table.userId),
+  })
+);
+
+/**
  * User Feedback
  */
 export const userFeedback = pgTable("user_feedback", {
@@ -653,6 +674,7 @@ export const userFeedback = pgTable("user_feedback", {
 export const usersRelations = relations(users, ({ many }) => ({
   tokens: many(userTokens),
   leagues: many(leagues),
+  passwordResetTokens: many(passwordResetTokens),
 }));
 
 export const userTokensRelations = relations(userTokens, ({ one }) => ({
@@ -661,6 +683,16 @@ export const userTokensRelations = relations(userTokens, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const passwordResetTokensRelations = relations(
+  passwordResetTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [passwordResetTokens.userId],
+      references: [users.id],
+    }),
+  })
+);
 
 export const leaguesRelations = relations(leagues, ({ one, many }) => ({
   user: one(users, {
