@@ -32,7 +32,9 @@ export const CANONICAL_STAT_KEYS = {
   kicking: [
     "fg", "fg_0_19", "fg_0_39", "fg_20_29", "fg_30_39",
     "fg_40_49", "fg_50_plus", "fg_50_59", "fg_60_plus",
-    "fg_miss", "fg_ret_yd", "fgm_yds", "fgm_yds_over_30",
+    "fg_miss", "fg_miss_0_19", "fg_miss_20_29", "fg_miss_30_39",
+    "fg_miss_40_49", "fg_miss_50_plus",
+    "fg_ret_yd", "fgm_yds", "fgm_yds_over_30",
     "xp", "xp_miss",
   ] as const,
   returns: [
@@ -119,6 +121,11 @@ export const STAT_KEY_ALIASES: ReadonlyMap<string, string> = new Map([
   ["xpm", "xp"],
   ["xpmiss", "xp_miss"],
   ["fgmiss", "fg_miss"],
+  ["fgmiss_0_19", "fg_miss_0_19"],
+  ["fgmiss_20_29", "fg_miss_20_29"],
+  ["fgmiss_30_39", "fg_miss_30_39"],
+  ["fgmiss_40_49", "fg_miss_40_49"],
+  ["fgmiss_50p", "fg_miss_50_plus"],
   ["fgm_0_19", "fg_0_19"],
   ["fgm_20_29", "fg_20_29"],
   ["fgm_30_39", "fg_30_39"],

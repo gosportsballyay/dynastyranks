@@ -272,21 +272,21 @@ export function calculateFantasyPoints(
   }
 
   // Path 3: No structuredRules (Sleeper, legacy) → original logic
-  // Validate scoring rule keys are canonical
+  // Warn on unknown scoring rule keys and skip them
   const unknownRuleKeys = Object.keys(scoringRules)
     .filter((k) => !VALID_STAT_KEYS.has(k));
   if (unknownRuleKeys.length > 0) {
-    throw new Error(
-      `Non-canonical scoring rule keys: ${unknownRuleKeys.join(", ")}`,
+    console.warn(
+      `Skipping non-canonical scoring rule keys: ${unknownRuleKeys.join(", ")}`,
     );
   }
 
-  // Validate projection stat keys are canonical
+  // Warn on unknown projection stat keys and skip them
   const unknownStatKeys = Object.keys(projections)
     .filter((k) => !VALID_STAT_KEYS.has(k));
   if (unknownStatKeys.length > 0) {
-    throw new Error(
-      `Non-canonical projection stat keys: ${unknownStatKeys.join(", ")}`,
+    console.warn(
+      `Skipping non-canonical projection stat keys: ${unknownStatKeys.join(", ")}`,
     );
   }
 

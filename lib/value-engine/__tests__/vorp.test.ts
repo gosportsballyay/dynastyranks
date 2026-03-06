@@ -1,4 +1,4 @@
-import { describe, test, expect } from "vitest";
+import { describe, test, expect, vi } from "vitest";
 import {
   calculateVORP,
   calculateFantasyPoints,
@@ -201,28 +201,38 @@ describe("calculateFantasyPoints", () => {
     expect(points).toBe(100);
   });
 
-  test("rejects non-canonical projection keys", () => {
+  test("warns on non-canonical projection keys and skips them", () => {
     const projections = { rush_yd: 1000, mystery_stat: 50 };
     const scoringRules = { rush_yd: 0.1 };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    expect(() =>
-      calculateFantasyPoints(
-        projections as Record<string, number>,
-        scoringRules,
-      ),
-    ).toThrow("Non-canonical projection stat keys: mystery_stat");
+    const points = calculateFantasyPoints(
+      projections as Record<string, number>,
+      scoringRules,
+    );
+
+    expect(points).toBe(100); // only rush_yd scored
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("mystery_stat"),
+    );
+    warn.mockRestore();
   });
 
-  test("rejects non-canonical scoring rule keys", () => {
+  test("warns on non-canonical scoring rule keys and skips them", () => {
     const projections = { rush_yd: 1000 };
     const scoringRules = { rush_yd: 0.1, bad_key: 2.0 };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    expect(() =>
-      calculateFantasyPoints(
-        projections,
-        scoringRules as Record<string, number>,
-      ),
-    ).toThrow("Non-canonical scoring rule keys: bad_key");
+    const points = calculateFantasyPoints(
+      projections,
+      scoringRules as Record<string, number>,
+    );
+
+    expect(points).toBe(100); // only rush_yd scored
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("bad_key"),
+    );
+    warn.mockRestore();
   });
 
   test("no bonuses without gameLogs (fallback path)", () => {
