@@ -182,6 +182,34 @@ export default function HowItWorksPage() {
             </p>
           </section>
 
+          {/* Draft Pick Valuation */}
+          <section id="draft-pick-valuation">
+            <h2 className="text-xl font-semibold text-white mb-3">
+              Draft Pick Valuation
+            </h2>
+            <p className="text-slate-300 leading-relaxed mb-3">
+              Draft picks are valued on the same 0&ndash;10,000 scale
+              as players using a two-tier model. Rounds 1&ndash;4 use
+              an expected-value formula: each pick&apos;s historical
+              hit rate (the probability it produces a fantasy starter)
+              is multiplied by a ceiling value to estimate its worth.
+              Early picks are valued against elite players (top 12),
+              not average starters, because a 1.01 that hits produces
+              a league-winner, not a middling starter. That elite
+              ceiling blends down to the starter tier by pick 24, so
+              late first-rounders and second-rounders are valued
+              against a realistic starter pool.
+            </p>
+            <p className="text-slate-300 leading-relaxed mb-3">
+              Rounds 5 and later use a roster-spot premium model
+              instead &mdash; they&apos;re worth the gap between a
+              bench player and the waiver wire, with steep decay each
+              round. All picks receive a small rookie dynasty premium
+              (youth at ~22 years old) and future picks are discounted
+              10% per year until they convey.
+            </p>
+          </section>
+
           {/* Trade Analysis */}
           <section id="trade-analysis">
             <h2 className="text-xl font-semibold text-white mb-3">
@@ -230,7 +258,7 @@ export default function HowItWorksPage() {
           </section>
 
           <p className="text-sm text-slate-500 pt-4 border-t border-slate-700">
-            Last updated: February 24, 2026
+            Last updated: March 5, 2026
           </p>
         </div>
       </main>

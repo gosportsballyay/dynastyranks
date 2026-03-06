@@ -70,6 +70,7 @@ export type TradeAsset =
 
 /** Stats derived from league-wide player values. */
 export interface LeagueValueStats {
+  avgEliteValue: number;
   avgStarterValue: number;
   avgBenchValue: number;
   replacementValue: number;

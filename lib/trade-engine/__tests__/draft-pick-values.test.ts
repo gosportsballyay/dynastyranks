@@ -7,6 +7,7 @@ import {
 import type { LeagueValueStats } from "../types";
 
 const sampleStats: LeagueValueStats = {
+  avgEliteValue: 8000,
   avgStarterValue: 6000,
   avgBenchValue: 2000,
   replacementValue: 500,
@@ -52,11 +53,34 @@ describe("computePickValue", () => {
     // Both use default 0.1 decay, should be equal
     expect(r8).toBe(r10);
   });
+
+  it("uses elite ceiling for early picks, widening gap vs late 1sts", () => {
+    const pick1 = computePickValue(1, 1, 12, sampleStats, 0);
+    const pick12 = computePickValue(1, 12, 12, sampleStats, 0);
+    // With elite ceiling, 1.01 should be boosted more than 1.12
+    // Elite blend at pick 1: 100%, at pick 12: ~52%
+    // The gap should be wider than without elite ceiling
+    const noEliteStats = { ...sampleStats, avgEliteValue: sampleStats.avgStarterValue };
+    const pick1Flat = computePickValue(1, 1, 12, noEliteStats, 0);
+    const pick12Flat = computePickValue(1, 12, 12, noEliteStats, 0);
+    const gapWithElite = pick1 - pick12;
+    const gapWithout = pick1Flat - pick12Flat;
+    expect(gapWithElite).toBeGreaterThan(gapWithout);
+  });
+
+  it("does not affect late-round picks (round 5+)", () => {
+    const r5 = computePickValue(5, 6, 12, sampleStats, 0);
+    const noEliteStats = { ...sampleStats, avgEliteValue: sampleStats.avgStarterValue };
+    const r5Flat = computePickValue(5, 6, 12, noEliteStats, 0);
+    // Round 5+ uses roster spot premium model, no elite ceiling
+    expect(r5).toBe(r5Flat);
+  });
 });
 
 describe("getLeagueValueStats", () => {
   it("returns sensible defaults for empty input", () => {
     const stats = getLeagueValueStats([]);
+    expect(stats.avgEliteValue).toBe(7000);
     expect(stats.avgStarterValue).toBe(5000);
     expect(stats.avgBenchValue).toBe(1500);
     expect(stats.replacementValue).toBe(500);
@@ -68,7 +92,8 @@ describe("getLeagueValueStats", () => {
       rank: i + 1,
     }));
     const stats = getLeagueValueStats(players);
-    // Top 24 players avg
+    // Elite (top 12) > starters (top 24) > bench > replacement
+    expect(stats.avgEliteValue).toBeGreaterThan(stats.avgStarterValue);
     expect(stats.avgStarterValue).toBeGreaterThan(stats.avgBenchValue);
     expect(stats.avgBenchValue).toBeGreaterThan(stats.replacementValue);
   });
