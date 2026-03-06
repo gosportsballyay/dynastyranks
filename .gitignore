@@ -46,3 +46,10 @@ next-env.d.ts
 *.rtf
 *.csv
 .worktrees/
+
+# Claude Code
+.claude/worktrees/
+.playwright-mcp/
+
+# Screenshots
+*.png
