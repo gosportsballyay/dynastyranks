@@ -110,9 +110,14 @@ export function computePickValue(
   if (round <= EXPECTED_VALUE_MAX_ROUND) {
     const overallPick = toOverallPick(round, slotInRound, totalTeams);
     const hitRate = getHitRate(overallPick);
+    // Early picks hit into the elite tier (top-12), not average
+    // starter tier. Blend from elite → starter over picks 1-24.
+    const eliteBlend = Math.max(0, 1 - (overallPick - 1) / 23);
+    const ceiling =
+      eliteBlend * stats.avgEliteValue +
+      (1 - eliteBlend) * stats.avgStarterValue;
     const rawValue =
-      hitRate * stats.avgStarterValue +
-      (1 - hitRate) * stats.replacementValue;
+      hitRate * ceiling + (1 - hitRate) * stats.replacementValue;
     return Math.round(rawValue * ROOKIE_DYNASTY_PREMIUM * futureDiscount);
   }
 
@@ -141,6 +146,7 @@ export function getLeagueValueStats(
 ): LeagueValueStats {
   if (playerValues.length === 0) {
     return {
+      avgEliteValue: 7000,
       avgStarterValue: 5000,
       avgBenchValue: 1500,
       replacementValue: 500,
@@ -148,6 +154,12 @@ export function getLeagueValueStats(
   }
 
   const sorted = [...playerValues].sort((a, b) => a.rank - b.rank);
+
+  // Top 12 players = elite tier (top-1 at each position)
+  const eliteCount = Math.min(12, sorted.length);
+  const elites = sorted.slice(0, eliteCount);
+  const avgEliteValue =
+    elites.reduce((s, p) => s + p.value, 0) / elites.length;
 
   // Top 24 players = starters (top-2 at ~12 positions)
   const starterCount = Math.min(24, sorted.length);
@@ -170,7 +182,7 @@ export function getLeagueValueStats(
         replacementSlice.length
     : 0;
 
-  return { avgStarterValue, avgBenchValue, replacementValue };
+  return { avgEliteValue, avgStarterValue, avgBenchValue, replacementValue };
 }
 
 /**
