@@ -41,7 +41,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.1.0";
+export const ENGINE_VERSION = "3.2.0";
 export const PROJECTION_VERSION = "1.0.0";
 
 /**

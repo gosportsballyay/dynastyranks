@@ -25,6 +25,7 @@ interface SourceWeights {
   fantasycalc: number;
   dynastyprocess: number;
   fantasypros?: number;
+  idpshow?: number;
   idpModel?: number;
 }
 
@@ -35,10 +36,11 @@ const OFFENSE_WEIGHTS: SourceWeights = {
 };
 
 const IDP_WEIGHTS: SourceWeights = {
-  ktc: 0.20, // KTC has some IDP
-  fantasycalc: 0.20, // FC has minimal IDP
-  dynastyprocess: 0.10, // DP rarely covers IDP
-  fantasypros: 0.50, // Primary IDP consensus source
+  ktc: 0.15, // KTC has some IDP
+  fantasycalc: 0.15, // FC has minimal IDP
+  dynastyprocess: 0.15, // DP rarely covers IDP
+  fantasypros: 0.35, // Primary IDP consensus source
+  idpshow: 0.20, // Light consensus anchor (Big 3 scoring bias)
 };
 
 /**
@@ -86,6 +88,7 @@ interface PlayerRankings {
   fantasycalc: number | null;
   dynastyprocess: number | null;
   fantasypros: number | null;
+  idpshow: number | null;
   idpValue: number | null;
 }
 
@@ -159,6 +162,7 @@ function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings>
         fantasycalc: null,
         dynastyprocess: null,
         fantasypros: null,
+        idpshow: null,
         idpValue: null,
       });
       idVotes.set(key, new Map());
@@ -187,6 +191,9 @@ function groupByPlayer(rankings: ExternalRanking[]): Map<string, PlayerRankings>
         break;
       case "fantasypros":
         player.fantasypros = r.value;
+        break;
+      case "idpshow":
+        player.idpshow = r.value;
         break;
     }
   }
@@ -276,6 +283,16 @@ function calculateAggregateValue(player: PlayerRankings): number {
   ) {
     weightedSum += player.fantasypros * weights.fantasypros;
     totalWeight += weights.fantasypros;
+  }
+
+  // IDP Show (light consensus anchor for IDP positions)
+  if (
+    player.idpshow !== null &&
+    player.idpshow > 0 &&
+    weights.idpshow
+  ) {
+    weightedSum += player.idpshow * weights.idpshow;
+    totalWeight += weights.idpshow;
   }
 
   // If no sources have data, return 0

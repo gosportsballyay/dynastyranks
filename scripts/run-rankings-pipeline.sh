@@ -49,6 +49,12 @@ python3 scripts/scrape_fantasypros_idp.py $DRY_RUN
 
 echo ""
 
+# Step 3.6: Import IDP Show dynasty rankings from CSV
+echo ">>> Step 3.6: Importing IDP Show dynasty rankings..."
+python3 scripts/import_idpshow.py $DRY_RUN
+
+echo ""
+
 # Step 4: Match external rankings to canonical players (TypeScript)
 if [[ -z "$DRY_RUN" ]]; then
     echo ">>> Step 4: Matching rankings to canonical players..."

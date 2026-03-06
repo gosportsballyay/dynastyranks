@@ -533,6 +533,7 @@ export const externalRankingSourceEnum = pgEnum("external_ranking_source", [
   "fantasypros",
   "dynastyprocess",
   "dynastysuperflex",
+  "idpshow",
 ]);
 
 export const externalRankings = pgTable(
