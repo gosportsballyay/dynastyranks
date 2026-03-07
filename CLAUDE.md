@@ -130,7 +130,7 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `idp-normalization.ts` - IDP position normalization
 - `aggregate.ts` - Consensus rankings from KTC/FC/DP
 - `effective-baseline.ts` - Blends starter/waiver baselines per position
-- `position-normalization.ts` - Resolves defensive sub-positions to parent (DB, DL)
+- `position-normalization.ts` - Resolves defensive positions **per league** (see below)
 - `compute-last-season.ts` - Historical fantasy points using league scoring rules
 - `format-complexity.ts` - League config complexity (0-1) for blend weights
 
@@ -160,6 +160,35 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `projections` - Player projections
 - `historicalStats` - Historical stats with `gameLogs` for per-game scoring
 - `userFeedback` - Beta feedback submissions
+
+### IDP Position Resolution — Per-League, Not Global
+
+**Full reference: `docs/IDP_POSITION_REFERENCE.md`**
+
+The engine does NOT globally consolidate IDP positions to 3 groups.
+Each platform uses different position taxonomies:
+
+| Platform | IDP Positions | Per-Position Scoring? |
+|----------|--------------|----------------------|
+| Sleeper | DL, LB, DB (consolidated) | No |
+| Fleaflicker | EDR, IL, LB, CB, S (granular) | Yes (`applyTo`) |
+| ESPN | DE, DT, LB, CB, S / DL, DB | Yes (`pointsOverrides`) |
+| Yahoo | DE, DT, LB, CB, S / DL, DB | No |
+
+`resolveDefensivePosition()` in `position-normalization.ts` resolves
+each player's position based on the league's actual roster slots:
+- League has `DB` slot → CB/S players resolve to `DB`
+- League has `CB` + `S` slots → players keep granular positions
+- Same player can be `DL` in a Sleeper league and `EDR` in a
+  Fleaflicker league — this is correct behavior
+
+The `IDP_POSITION_GROUPS` mapping in `aggregate.ts` (cb/s→db,
+edr/il/de/dt→dl) is ONLY for cross-source consensus matching.
+It does NOT affect per-league value calculations.
+
+Do NOT assume all leagues use 3 IDP groups. Do NOT force-consolidate
+positions at data ingestion time. Always preserve the most granular
+position available and let the per-league resolver handle it.
 
 ### IDP Value Engine Design Constraint
 

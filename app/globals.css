@@ -21,10 +21,8 @@
   --color-input: hsl(214.3 31.8% 91.4%);
   --color-ring: hsl(222.2 84% 4.9%);
   --radius: 0.5rem;
-}
-
-html {
-  font-size: 90%;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 * {
@@ -36,6 +34,21 @@ body {
   overscroll-behavior-x: none;
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+/* Compact data tables to prevent overflow on dense pages */
+.table-compact {
+  font-size: 0.8125rem; /* 13px — tighter than text-sm but readable */
+}
+.table-compact th,
+.table-compact td {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Tabular numbers for data columns */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -34,6 +34,16 @@ export interface RosterPlayer {
   flexRanks?: Record<string, number>;
 }
 
+export interface TeamDraftPick {
+  pickId: string;
+  season: number;
+  round: number;
+  pickNumber: number | null;
+  projectedPickNumber: number | null;
+  value: number;
+  originalTeamName: string | null;
+}
+
 export interface TeamOption {
   id: string;
   name: string;
@@ -46,6 +56,7 @@ interface TeamRosterViewProps {
   userTeamId: string | null;
   allTeams: TeamOption[];
   roster: RosterPlayer[];
+  draftPicks: TeamDraftPick[];
   teamName: string;
   ownerName: string;
 }
@@ -73,6 +84,7 @@ export function TeamRosterView({
   userTeamId,
   allTeams,
   roster,
+  draftPicks,
   teamName,
   ownerName,
 }: TeamRosterViewProps) {
@@ -95,9 +107,15 @@ export function TeamRosterView({
     [roster]
   );
 
+  const totalPickValue = useMemo(
+    () => draftPicks.reduce((sum, p) => sum + p.value, 0),
+    [draftPicks]
+  );
+
   const totalValue = useMemo(
-    () => roster.reduce((sum, p) => sum + p.value, 0),
-    [roster]
+    () =>
+      roster.reduce((sum, p) => sum + p.value, 0) + totalPickValue,
+    [roster, totalPickValue]
   );
 
   function handleTeamChange(teamId: string) {
@@ -156,15 +174,24 @@ export function TeamRosterView({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {sections.map((s) => (
           <SummaryCard
             key={s.key}
             label={s.title}
             value={s.players.reduce((sum, p) => sum + p.value, 0)}
             count={s.players.length}
+            countLabel="players"
           />
         ))}
+        {draftPicks.length > 0 && (
+          <SummaryCard
+            label="Draft Picks"
+            value={totalPickValue}
+            count={draftPicks.length}
+            countLabel="picks"
+          />
+        )}
       </div>
 
       {/* Roster Sections */}
@@ -178,6 +205,9 @@ export function TeamRosterView({
                 players={s.players}
               />
             )
+        )}
+        {draftPicks.length > 0 && (
+          <DraftPicksSection picks={draftPicks} />
         )}
       </div>
 
@@ -194,10 +224,12 @@ function SummaryCard({
   label,
   value,
   count,
+  countLabel = "players",
 }: {
   label: string;
   value: number;
   count: number;
+  countLabel?: string;
 }) {
   return (
     <div className="bg-slate-800/50 rounded-lg p-4">
@@ -206,7 +238,7 @@ function SummaryCard({
         {value.toLocaleString()}
       </div>
       <div className="text-xs text-slate-500 mt-1">
-        {count} players
+        {count} {countLabel}
       </div>
     </div>
   );
@@ -399,6 +431,115 @@ function RosterSection({
                     </td>
                   </tr>
                 )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function formatPickLabel(pick: TeamDraftPick): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (pick.pickNumber != null) {
+    return `${pick.season} Rd ${pick.round}.${pad(pick.pickNumber)}`;
+  }
+  if (pick.projectedPickNumber != null) {
+    return `${pick.season} Rd ${pick.round}.${pad(pick.projectedPickNumber)}~`;
+  }
+  return `${pick.season} Round ${pick.round}`;
+}
+
+function DraftPicksSection({ picks }: { picks: TeamDraftPick[] }) {
+  const sorted = useMemo(() => {
+    return [...picks].sort((a, b) => {
+      if (a.season !== b.season) return a.season - b.season;
+      if (a.round !== b.round) return a.round - b.round;
+      const aNum = a.pickNumber ?? a.projectedPickNumber ?? 99;
+      const bNum = b.pickNumber ?? b.projectedPickNumber ?? 99;
+      return aNum - bNum;
+    });
+  }, [picks]);
+
+  // Group by season for visual separation
+  const seasons = useMemo(() => {
+    const map = new Map<number, TeamDraftPick[]>();
+    for (const pick of sorted) {
+      const list = map.get(pick.season);
+      if (list) list.push(pick);
+      else map.set(pick.season, [pick]);
+    }
+    return Array.from(map.entries());
+  }, [sorted]);
+
+  return (
+    <div className="bg-slate-800/50 rounded-lg overflow-clip">
+      <div className="px-3 py-2 sm:px-6 sm:py-3 border-b border-slate-700 flex items-center justify-between">
+        <h2 className="font-semibold text-white text-sm sm:text-base">
+          Draft Picks
+        </h2>
+        <span className="text-xs sm:text-sm text-slate-400">
+          {picks.length} {picks.length === 1 ? "pick" : "picks"}
+        </span>
+      </div>
+
+      <div className="overflow-x-auto sm:overflow-x-visible">
+        <table className="w-full text-xs sm:text-sm">
+          <caption className="sr-only">Draft picks</caption>
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                className="px-2 py-2 sm:px-6 text-[10px] sm:text-xs
+                  font-medium text-slate-400 uppercase tracking-wider
+                  text-left bg-slate-900"
+              >
+                Pick
+              </th>
+              <th
+                scope="col"
+                className="px-2 py-2 sm:px-6 text-[10px] sm:text-xs
+                  font-medium text-slate-400 uppercase tracking-wider
+                  text-left bg-slate-900"
+              >
+                Origin
+              </th>
+              <th
+                scope="col"
+                className="px-2 py-2 sm:px-6 text-[10px] sm:text-xs
+                  font-medium text-slate-400 uppercase tracking-wider
+                  text-right bg-slate-900"
+              >
+                Value
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-700/50">
+            {seasons.map(([season, seasonPicks]) => (
+              <Fragment key={season}>
+                {seasonPicks.map((pick) => (
+                  <tr
+                    key={pick.pickId}
+                    className="hover:bg-slate-700/30 transition-colors"
+                  >
+                    <td className="px-2 py-2 sm:px-6 sm:py-3">
+                      <span className="font-medium text-white text-xs sm:text-sm">
+                        {formatPickLabel(pick)}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-3 text-slate-400">
+                      {pick.originalTeamName
+                        ? `via ${pick.originalTeamName}`
+                        : "Own pick"}
+                    </td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-3 text-right">
+                      <span className="font-mono text-slate-300 text-xs sm:text-sm">
+                        {pick.value.toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </Fragment>
             ))}
           </tbody>

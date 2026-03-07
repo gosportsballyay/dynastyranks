@@ -12,12 +12,16 @@ import {
   canonicalPlayers,
   historicalStats,
   aggregatedValues,
+  draftPicks,
 } from "@/lib/db/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, asc } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
+import { computeAllPickValues } from "@/lib/trade-engine/draft-pick-values";
 import {
   TeamRosterView,
   type RosterPlayer,
+  type TeamDraftPick,
 } from "@/components/team/team-roster-view";
 
 interface PageProps {
@@ -167,13 +171,15 @@ export default async function MyTeamPage({
     );
   }
 
-  // Fetch roster, settings, history, consensus, and league values in parallel
+  // Fetch roster, settings, history, consensus, league values, and draft picks
+  const originalTeams = alias(teams, "originalTeams");
   const [
     rosterData,
     settingsResult,
     historyRows,
     consensusRows,
     allValues,
+    draftPickRows,
   ] = await Promise.all([
       db
         .select({
@@ -215,6 +221,8 @@ export default async function MyTeamPage({
           id: playerValues.id,
           position: canonicalPlayers.position,
           canonicalPlayerId: playerValues.canonicalPlayerId,
+          value: playerValues.value,
+          rank: playerValues.rank,
         })
         .from(playerValues)
         .innerJoin(
@@ -223,6 +231,33 @@ export default async function MyTeamPage({
         )
         .where(eq(playerValues.leagueId, league.id))
         .orderBy(desc(playerValues.value)),
+      db
+        .select({
+          id: draftPicks.id,
+          season: draftPicks.season,
+          round: draftPicks.round,
+          pickNumber: draftPicks.pickNumber,
+          projectedPickNumber: draftPicks.projectedPickNumber,
+          originalTeamName: originalTeams.teamName,
+          ownerTeamId: draftPicks.ownerTeamId,
+          originalTeamId: draftPicks.originalTeamId,
+        })
+        .from(draftPicks)
+        .leftJoin(
+          originalTeams,
+          eq(draftPicks.originalTeamId, originalTeams.id),
+        )
+        .where(
+          and(
+            eq(draftPicks.ownerTeamId, viewedTeam.id),
+            eq(draftPicks.leagueId, league.id),
+          ),
+        )
+        .orderBy(
+          asc(draftPicks.season),
+          asc(draftPicks.round),
+          asc(draftPicks.pickNumber),
+        ),
     ]);
 
   const [settings] = settingsResult;
@@ -278,6 +313,36 @@ export default async function MyTeamPage({
     flexRankMaps.set(rule.slot, rankMap);
   }
 
+  // Compute draft pick values on the fly (DB column is not populated)
+  const allPlayerValues = allValues
+    .filter((v) => v.value != null && v.rank != null)
+    .map((v) => ({ value: v.value!, rank: v.rank! }));
+  const pickValueMap = computeAllPickValues(
+    draftPickRows.map((p) => ({
+      id: p.id,
+      season: p.season,
+      round: p.round,
+      pickNumber: p.pickNumber,
+      projectedPickNumber: p.projectedPickNumber,
+    })),
+    allPlayerValues,
+    league.season,
+    league.totalTeams,
+  );
+
+  const teamDraftPicks: TeamDraftPick[] = draftPickRows.map((p) => ({
+    pickId: p.id,
+    season: p.season,
+    round: p.round,
+    pickNumber: p.pickNumber,
+    projectedPickNumber: p.projectedPickNumber,
+    value: pickValueMap.get(p.id) ?? 0,
+    originalTeamName:
+      p.originalTeamId && p.originalTeamId !== viewedTeam.id
+        ? (p.originalTeamName || "Unknown")
+        : null,
+  }));
+
   const roster: RosterPlayer[] = rosterData.map((r) => ({
     playerId: r.player.id,
     playerName: r.player.name,
@@ -324,6 +389,7 @@ export default async function MyTeamPage({
         owner: t.ownerName || "Unknown",
       }))}
       roster={roster}
+      draftPicks={teamDraftPicks}
       teamName={viewedTeam.teamName || "Unknown Team"}
       ownerName={viewedTeam.ownerName || "Unknown"}
     />

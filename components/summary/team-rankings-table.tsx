@@ -166,7 +166,7 @@ export function TeamRankingsTable({ rankings, hasIdp = true, leagueId }: TeamRan
       </div>
 
       <div className="overflow-x-auto sm:overflow-x-visible">
-        <table className="w-full text-xs sm:text-sm">
+        <table className="w-full text-xs sm:text-sm table-compact">
           <caption className="sr-only">
             League power rankings by team
           </caption>
