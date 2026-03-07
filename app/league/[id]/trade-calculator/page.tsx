@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
+import { getLeagueForUser } from "@/lib/auth/get-league";
 import { db } from "@/lib/db/client";
 import {
-  leagues,
   leagueSettings,
   teams,
   rosters,
@@ -42,14 +42,9 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
     notFound();
   }
 
-  const [league] = await db
-    .select()
-    .from(leagues)
-    .where(
-      and(eq(leagues.id, params.id), eq(leagues.userId, session.user.id)),
-    )
-    .limit(1);
-
+  const league = await getLeagueForUser(
+    params.id, session.user.id, session.user.email,
+  );
   if (!league) {
     notFound();
   }

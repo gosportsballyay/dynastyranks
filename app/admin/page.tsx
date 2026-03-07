@@ -1,32 +1,24 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
+import { isAdmin } from "@/lib/auth/admin";
 import { db } from "@/lib/db/client";
 import { users, leagues, userFeedback } from "@/lib/db/schema";
-import { count, desc, sql, eq } from "drizzle-orm";
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+import { count, desc, eq } from "drizzle-orm";
+import Link from "next/link";
 
 export default async function AdminDashboardPage() {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
-  if (
-    ADMIN_EMAILS.length > 0 &&
-    !ADMIN_EMAILS.includes(
-      (session.user.email ?? "").toLowerCase(),
-    )
-  ) {
+  if (!isAdmin(session.user.email)) {
     notFound();
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [allUsers, leagueCounts, feedback, feedbackTotal] =
+  const [allUsers, allLeagues, feedback, feedbackTotal] =
     await Promise.all([
       db
         .select({
@@ -40,11 +32,14 @@ export default async function AdminDashboardPage() {
         .orderBy(desc(users.createdAt)),
       db
         .select({
+          id: leagues.id,
           userId: leagues.userId,
-          count: count(),
+          name: leagues.name,
+          provider: leagues.provider,
+          totalTeams: leagues.totalTeams,
+          season: leagues.season,
         })
-        .from(leagues)
-        .groupBy(leagues.userId),
+        .from(leagues),
       db
         .select({
           id: userFeedback.id,
@@ -60,9 +55,16 @@ export default async function AdminDashboardPage() {
         .from(userFeedback),
     ]);
 
-  const leagueCountMap = new Map(
-    leagueCounts.map((r) => [r.userId, r.count]),
-  );
+  // Group leagues by user
+  const userLeaguesMap = new Map<
+    string,
+    Array<{ id: string; name: string; provider: string; totalTeams: number; season: number }>
+  >();
+  for (const l of allLeagues) {
+    const existing = userLeaguesMap.get(l.userId) ?? [];
+    existing.push(l);
+    userLeaguesMap.set(l.userId, existing);
+  }
 
   const userEmailMap = new Map(
     allUsers.map((u) => [u.id, u.email]),
@@ -72,10 +74,7 @@ export default async function AdminDashboardPage() {
   const signupsToday = allUsers.filter(
     (u) => u.createdAt >= today,
   ).length;
-  const totalLeagues = leagueCounts.reduce(
-    (sum, r) => sum + r.count,
-    0,
-  );
+  const totalLeagues = allLeagues.length;
   const totalFeedback = feedbackTotal[0]?.count ?? 0;
 
   return (
@@ -120,36 +119,64 @@ export default async function AdminDashboardPage() {
                   <th className="text-left px-4 py-3">
                     Last Login
                   </th>
-                  <th className="text-right px-4 py-3">
+                  <th className="text-left px-4 py-3">
                     Leagues
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
-                {allUsers.map((u) => (
-                  <tr
-                    key={u.id}
-                    className="hover:bg-slate-800/40"
-                  >
-                    <td className="px-4 py-2 font-mono text-xs">
-                      {u.email}
-                    </td>
-                    <td className="px-4 py-2 text-slate-300">
-                      {u.name ?? "—"}
-                    </td>
-                    <td className="px-4 py-2 text-slate-400">
-                      {formatDate(u.createdAt)}
-                    </td>
-                    <td className="px-4 py-2 text-slate-400">
-                      {u.lastLoginAt
-                        ? formatDate(u.lastLoginAt)
-                        : "Never"}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      {leagueCountMap.get(u.id) ?? 0}
-                    </td>
-                  </tr>
-                ))}
+                {allUsers.map((u) => {
+                  const userLeagues =
+                    userLeaguesMap.get(u.id) ?? [];
+                  return (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-slate-800/40 align-top"
+                    >
+                      <td className="px-4 py-2 font-mono text-xs">
+                        {u.email}
+                      </td>
+                      <td className="px-4 py-2 text-slate-300">
+                        {u.name ?? "—"}
+                      </td>
+                      <td className="px-4 py-2 text-slate-400 whitespace-nowrap">
+                        {formatDateTime(u.createdAt)}
+                      </td>
+                      <td className="px-4 py-2 text-slate-400 whitespace-nowrap">
+                        {u.lastLoginAt
+                          ? formatDateTime(u.lastLoginAt)
+                          : "Never"}
+                      </td>
+                      <td className="px-4 py-2">
+                        {userLeagues.length === 0 ? (
+                          <span className="text-slate-500">
+                            None
+                          </span>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            {userLeagues.map((l) => (
+                              <Link
+                                key={l.id}
+                                href={`/league/${l.id}/rankings`}
+                                className="group flex items-center gap-1.5 text-xs hover:text-blue-400 transition-colors"
+                              >
+                                <ProviderBadge
+                                  provider={l.provider}
+                                />
+                                <span className="text-slate-300 group-hover:text-blue-400 truncate max-w-[200px]">
+                                  {l.name}
+                                </span>
+                                <span className="text-slate-500">
+                                  {l.totalTeams}T
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -184,7 +211,7 @@ export default async function AdminDashboardPage() {
                       className="hover:bg-slate-800/40"
                     >
                       <td className="px-4 py-2 text-slate-400 whitespace-nowrap">
-                        {formatDate(f.createdAt)}
+                        {formatDateTime(f.createdAt)}
                       </td>
                       <td className="px-4 py-2 font-mono text-xs">
                         {userEmailMap.get(f.userId) ??
@@ -213,6 +240,22 @@ export default async function AdminDashboardPage() {
   );
 }
 
+function ProviderBadge({ provider }: { provider: string }) {
+  const colors: Record<string, string> = {
+    sleeper: "bg-purple-500/20 text-purple-300",
+    fleaflicker: "bg-green-500/20 text-green-300",
+    espn: "bg-red-500/20 text-red-300",
+    yahoo: "bg-violet-500/20 text-violet-300",
+  };
+  return (
+    <span
+      className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium uppercase ${colors[provider] ?? "bg-slate-700 text-slate-300"}`}
+    >
+      {provider}
+    </span>
+  );
+}
+
 function StatCard({
   label,
   value,
@@ -228,10 +271,11 @@ function StatCard({
   );
 }
 
-function formatDate(date: Date): string {
+function formatDateTime(date: Date): string {
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }

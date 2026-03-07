@@ -1,9 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth/config";
+import { getLeagueForUser } from "@/lib/auth/get-league";
 import { db } from "@/lib/db/client";
 import {
-  leagues,
   leagueSettings,
   teams,
   rosters,
@@ -37,15 +37,9 @@ export async function analyzeRosterImpactAction(
   const session = await auth();
   if (!session?.user) return null;
 
-  // Verify league ownership
-  const [league] = await db
-    .select()
-    .from(leagues)
-    .where(
-      and(eq(leagues.id, leagueId), eq(leagues.userId, session.user.id)),
-    )
-    .limit(1);
-
+  const league = await getLeagueForUser(
+    leagueId, session.user.id, session.user.email,
+  );
   if (!league) return null;
 
   // Fetch settings and full roster
