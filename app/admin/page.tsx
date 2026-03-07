@@ -190,19 +190,13 @@ export default async function AdminDashboardPage() {
                         {userEmailMap.get(f.userId) ??
                           f.userId}
                       </td>
-                      <td className="px-4 py-2 text-slate-400">
-                        {f.page ? (
-                          <a
-                            href={f.page}
-                            className="text-blue-400 hover:underline"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {f.page.replace(/^\/league\/[^/]+/, "…")}
-                          </a>
-                        ) : (
-                          "—"
-                        )}
+                      <td className="px-4 py-2 text-slate-400 font-mono text-xs">
+                        {f.page
+                          ? f.page.replace(
+                              /\/league\/[a-f0-9-]+/,
+                              "/league/…"
+                            )
+                          : "—"}
                       </td>
                       <td className="px-4 py-2 text-slate-300 max-w-xl">
                         {f.message}
