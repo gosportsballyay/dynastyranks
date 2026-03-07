@@ -9,18 +9,18 @@ import type {
 
 /** Position badge color mapping. */
 const POS_COLORS: Record<string, string> = {
-  QB: "bg-red-900/50 text-red-400",
-  RB: "bg-green-900/50 text-green-400",
-  WR: "bg-blue-900/50 text-blue-400",
-  TE: "bg-orange-900/50 text-orange-400",
-  K: "bg-slate-700 text-slate-300",
-  DL: "bg-purple-900/50 text-purple-400",
-  LB: "bg-yellow-900/50 text-yellow-400",
-  DB: "bg-cyan-900/50 text-cyan-400",
-  EDR: "bg-purple-900/50 text-purple-400",
-  IL: "bg-purple-900/50 text-purple-400",
-  CB: "bg-cyan-900/50 text-cyan-400",
-  S: "bg-cyan-900/50 text-cyan-400",
+  QB: "bg-red-900/70 text-red-300",
+  RB: "bg-green-900/70 text-green-300",
+  WR: "bg-blue-900/70 text-blue-300",
+  TE: "bg-orange-900/70 text-orange-300",
+  K: "bg-slate-600/80 text-slate-200",
+  DL: "bg-purple-900/70 text-purple-300",
+  LB: "bg-yellow-900/70 text-yellow-300",
+  DB: "bg-cyan-900/70 text-cyan-300",
+  EDR: "bg-purple-900/70 text-purple-300",
+  IL: "bg-purple-900/70 text-purple-300",
+  CB: "bg-cyan-900/70 text-cyan-300",
+  S: "bg-cyan-900/70 text-cyan-300",
 };
 
 /** Early/Mid/Late/Projected pick position tier. */
@@ -263,7 +263,7 @@ export function TradeSide({
                 className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-400">
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-900/70 text-amber-300">
                     PICK
                   </span>
                   <span className="text-white text-sm">
@@ -329,7 +329,7 @@ export function TradeSide({
             {valueAdjustment > 0 && (
               <div className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-indigo-900/50 text-indigo-400">
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-indigo-900/70 text-indigo-300">
                     ADJ
                   </span>
                   <span className="text-slate-300 text-sm">

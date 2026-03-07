@@ -550,18 +550,18 @@ function DraftPicksSection({ picks }: { picks: TeamDraftPick[] }) {
 }
 
 const POSITION_COLORS: Record<string, string> = {
-  QB: "bg-red-900/50 text-red-400",
-  RB: "bg-green-900/50 text-green-400",
-  WR: "bg-blue-900/50 text-blue-400",
-  TE: "bg-yellow-900/50 text-yellow-400",
-  K: "bg-slate-700 text-slate-300",
-  DL: "bg-purple-900/50 text-purple-400",
-  LB: "bg-purple-900/50 text-purple-400",
-  DB: "bg-purple-900/50 text-purple-400",
-  EDR: "bg-purple-900/50 text-purple-400",
-  IL: "bg-purple-900/50 text-purple-400",
-  CB: "bg-purple-900/50 text-purple-400",
-  S: "bg-purple-900/50 text-purple-400",
+  QB: "bg-red-900/70 text-red-300",
+  RB: "bg-green-900/70 text-green-300",
+  WR: "bg-blue-900/70 text-blue-300",
+  TE: "bg-yellow-900/70 text-yellow-300",
+  K: "bg-slate-600/80 text-slate-200",
+  DL: "bg-purple-900/70 text-purple-300",
+  LB: "bg-purple-900/70 text-purple-300",
+  DB: "bg-purple-900/70 text-purple-300",
+  EDR: "bg-purple-900/70 text-purple-300",
+  IL: "bg-purple-900/70 text-purple-300",
+  CB: "bg-purple-900/70 text-purple-300",
+  S: "bg-purple-900/70 text-purple-300",
 };
 
 function PositionBadge({

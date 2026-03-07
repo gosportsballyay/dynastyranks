@@ -472,7 +472,7 @@ function TeamDetailsV2({
                 {needPositions.map((pos) => (
                   <span
                     key={pos}
-                    className="px-2 py-0.5 rounded text-xs bg-red-900/50 text-red-400"
+                    className="px-2 py-0.5 rounded text-xs bg-red-900/70 text-red-300"
                   >
                     {pos}
                   </span>
@@ -500,7 +500,7 @@ function TeamDetailsV2({
                 {surplusPositions.map((pos) => (
                   <span
                     key={pos}
-                    className="px-2 py-0.5 rounded text-xs bg-green-900/50 text-green-400"
+                    className="px-2 py-0.5 rounded text-xs bg-green-900/70 text-green-300"
                   >
                     {pos}
                   </span>
@@ -609,9 +609,9 @@ function DeltaValue({ value }: { value: number }) {
 }
 
 const TIER_STYLES: Record<string, string> = {
-  contender: "bg-green-900/40 text-green-400",
-  middling: "bg-slate-700/60 text-slate-400",
-  rebuilder: "bg-amber-900/40 text-amber-400",
+  contender: "bg-green-900/60 text-green-300",
+  middling: "bg-slate-700/80 text-slate-300",
+  rebuilder: "bg-amber-900/60 text-amber-300",
 };
 
 const TIER_LABELS: Record<string, string> = {
@@ -639,13 +639,13 @@ function RankBadge({
 }) {
   const percentile = ((total - rank + 1) / total) * 100;
 
-  let colorClass = "bg-slate-700 text-slate-300";
-  if (percentile >= 80) colorClass = "bg-green-900/50 text-green-400";
-  else if (percentile >= 60) colorClass = "bg-blue-900/50 text-blue-400";
-  else if (percentile >= 40) colorClass = "bg-slate-700 text-slate-300";
+  let colorClass = "bg-slate-600/80 text-slate-200";
+  if (percentile >= 80) colorClass = "bg-green-900/70 text-green-300";
+  else if (percentile >= 60) colorClass = "bg-blue-900/70 text-blue-300";
+  else if (percentile >= 40) colorClass = "bg-slate-600/80 text-slate-200";
   else if (percentile >= 20)
-    colorClass = "bg-yellow-900/50 text-yellow-400";
-  else colorClass = "bg-red-900/50 text-red-400";
+    colorClass = "bg-yellow-900/70 text-yellow-300";
+  else colorClass = "bg-red-900/70 text-red-300";
 
   return (
     <span

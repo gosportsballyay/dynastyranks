@@ -73,7 +73,7 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
             {efficiency.thinPositions.map((pos) => (
               <span
                 key={pos}
-                className="px-2 py-0.5 rounded text-xs bg-amber-900/50 text-amber-400"
+                className="px-2 py-0.5 rounded text-xs bg-amber-900/70 text-amber-300"
               >
                 {pos}
               </span>
