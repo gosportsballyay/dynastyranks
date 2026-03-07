@@ -367,6 +367,7 @@ async function syncLeagueData(
         season: p.season,
         round: p.round,
         pickNumber: p.pickNumber,
+        projectedPickNumber: p.projectedPickNumber,
       }))
     );
   }

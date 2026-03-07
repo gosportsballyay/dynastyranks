@@ -91,6 +91,7 @@ export interface AdapterDraftPick {
   season: number;
   round: number;
   pickNumber?: number;
+  projectedPickNumber?: number;
   ownerTeamExternalId: string;
   originalTeamExternalId?: string;
 }

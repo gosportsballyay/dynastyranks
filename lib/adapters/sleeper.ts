@@ -272,21 +272,107 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
   }
 
   /**
-   * Fetch draft picks
+   * Fetch draft picks — generates full future pick inventory,
+   * then overlays traded pick ownership changes.
+   *
+   * Sleeper's /traded_picks endpoint only returns picks that
+   * changed hands. We generate default picks for each team/season/
+   * round, then reassign ownership based on trades.
    */
   async getDraftPicks(leagueId: string): Promise<AdapterDraftPick[]> {
-    const picks = await this.fetch<SleeperDraftPick[]>(
-      `${SLEEPER_API_BASE}/league/${leagueId}/traded_picks`,
-      undefined,
-      "GetTradedPicks"
-    );
+    const [league, rosters, tradedPicks] = await Promise.all([
+      this.fetch<SleeperLeague>(
+        `${SLEEPER_API_BASE}/league/${leagueId}`,
+        undefined,
+        "GetLeagueForPicks"
+      ),
+      this.fetch<SleeperRoster[]>(
+        `${SLEEPER_API_BASE}/league/${leagueId}/rosters`,
+        undefined,
+        "GetRostersForPicks"
+      ),
+      this.fetch<SleeperDraftPick[]>(
+        `${SLEEPER_API_BASE}/league/${leagueId}/traded_picks`,
+        undefined,
+        "GetTradedPicks"
+      ),
+    ]);
 
-    return picks.map((pick) => ({
-      season: parseInt(pick.season),
-      round: pick.round,
-      ownerTeamExternalId: pick.owner_id.toString(),
-      originalTeamExternalId: pick.roster_id.toString(),
-    }));
+    const currentSeason = parseInt(league.season);
+    const draftRounds = league.settings.draft_rounds || 5;
+    const totalTeams = rosters.length;
+
+    // Project pick positions based on inverse standings
+    // Worst team gets pick 1 (best pick), best team gets last pick
+    const projectedPickMap = this.projectPickPositions(rosters);
+
+    // Generate full inventory for upcoming seasons.
+    // Include current season (rookie draft may not have happened)
+    // plus 2 future seasons.
+    const futureSeasons = [
+      currentSeason,
+      currentSeason + 1,
+      currentSeason + 2,
+    ];
+
+    // Build default inventory: each team owns their own picks
+    const picks: AdapterDraftPick[] = [];
+    for (const season of futureSeasons) {
+      for (let round = 1; round <= draftRounds; round++) {
+        for (const roster of rosters) {
+          const teamId = roster.roster_id.toString();
+          picks.push({
+            season,
+            round,
+            projectedPickNumber: projectedPickMap.get(
+              roster.roster_id,
+            ),
+            ownerTeamExternalId: teamId,
+            originalTeamExternalId: teamId,
+          });
+        }
+      }
+    }
+
+    // Apply traded pick ownership changes
+    for (const trade of tradedPicks) {
+      const tradeSeason = parseInt(trade.season);
+      const match = picks.find(
+        (p) =>
+          p.season === tradeSeason &&
+          p.round === trade.round &&
+          p.originalTeamExternalId ===
+            trade.roster_id.toString(),
+      );
+      if (match) {
+        match.ownerTeamExternalId = trade.owner_id.toString();
+      }
+    }
+
+    return picks;
+  }
+
+  /**
+   * Project pick positions from standings. Worst record = pick 1.
+   * Uses wins, then total points as tiebreaker.
+   */
+  private projectPickPositions(
+    rosters: SleeperRoster[],
+  ): Map<number, number> {
+    const sorted = [...rosters].sort((a, b) => {
+      const aWins = a.settings?.wins ?? 0;
+      const bWins = b.settings?.wins ?? 0;
+      if (aWins !== bWins) return aWins - bWins; // fewer wins = earlier pick
+      const aPts = a.settings?.fpts ?? 0;
+      const bPts = b.settings?.fpts ?? 0;
+      return aPts - bPts; // fewer points = earlier pick
+    });
+
+    const result = new Map<number, number>();
+    sorted.forEach((roster, index) => {
+      result.set(roster.roster_id, index + 1);
+    });
+    return result;
   }
 
   /**

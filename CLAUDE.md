@@ -234,11 +234,24 @@ All fantasy point calculations MUST be deterministic:
 - Value engine is league-specific: every value considers scoring, roster, league size
 - If an approach hits 2+ unexpected blockers, stop and re-plan rather than pushing through
 
-### After any value engine change
-Player values are pre-computed and stored in the database — they do NOT
-recalculate on page load. After modifying any file in `lib/value-engine/`,
-you **must** recompute all leagues for the changes to be reflected on the site:
+### Deployment: Data Must Be Seamless for Users
 
+Users should NEVER need to manually re-sync or take any action after a
+deploy. If a code change affects stored data (values, picks, rosters),
+the deploy process must include a server-side script to update that
+data. Users seeing stale/broken data after a deploy will lose trust.
+
+**After any value engine change** (`lib/value-engine/`):
 ```bash
 export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/recompute-all-leagues.ts
 ```
+
+**After any adapter change** (`lib/adapters/`) that affects synced data
+(draft picks, rosters, scoring rules):
+```bash
+export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/resync-draft-picks.ts [--provider sleeper]
+```
+
+**Rule:** Every PR that changes adapter or value engine code MUST
+include the post-deploy resync/recompute command in the PR description.
+Do not merge without running it.
