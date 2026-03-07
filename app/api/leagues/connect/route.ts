@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
         espnS2: body.espnS2,
         swid: body.swid,
         leagueId: identifier,
+        season,
       });
 
       targetLeague = await adapter.getLeagueById(identifier, season);
@@ -291,7 +292,8 @@ export async function POST(request: NextRequest) {
         identifier,
         session.user.id,
         body.espnS2,
-        body.swid
+        body.swid,
+        season
       );
 
       // Compute values immediately so rankings are ready
@@ -353,7 +355,8 @@ async function syncLeagueData(
   identifier: string,
   userId: string,
   espnS2?: string,
-  swid?: string
+  swid?: string,
+  season?: number
 ): Promise<void> {
   // Create adapter based on provider
   let adapter;
@@ -367,6 +370,7 @@ async function syncLeagueData(
       espnS2,
       swid,
       leagueId: externalLeagueId,
+      season,
     });
   } else if (provider === "yahoo") {
     // Fetch Yahoo token from database

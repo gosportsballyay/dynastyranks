@@ -97,7 +97,8 @@ export async function POST(
         league.externalLeagueId,
         session.user.id,
         espnS2,
-        swid
+        swid,
+        league.season
       );
 
       // Recompute values with unified engine
@@ -165,7 +166,8 @@ async function syncLeagueData(
   identifier: string,
   userId: string,
   espnS2?: string,
-  swid?: string
+  swid?: string,
+  season?: number
 ): Promise<void> {
   // Create adapter based on provider
   let adapter;
@@ -221,6 +223,7 @@ async function syncLeagueData(
       espnS2: s2,
       swid: swidCookie,
       leagueId: externalLeagueId,
+      season,
     });
   } else if (provider === "yahoo") {
     const [token] = await db

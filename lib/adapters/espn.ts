@@ -250,6 +250,7 @@ export interface ESPNAdapterConfig extends AdapterConfig {
   espnS2?: string;   // espn_s2 cookie for private leagues
   swid?: string;     // SWID cookie for private leagues
   leagueId?: string; // ESPN league ID (for direct access)
+  season?: number;   // League season year (defaults to current year)
 }
 
 export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
@@ -257,12 +258,14 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
   private espnS2?: string;
   private swid?: string;
   private leagueId?: string;
+  private season: number;
 
   constructor(config: ESPNAdapterConfig) {
     super({ ...config, rateLimitMs: 200 });
     this.espnS2 = config.espnS2;
     this.swid = config.swid;
     this.leagueId = config.leagueId;
+    this.season = config.season ?? new Date().getFullYear();
   }
 
   /**
@@ -337,8 +340,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
    * Fetch and normalize league settings.
    */
   async getLeagueSettings(leagueId: string): Promise<AdapterSettings> {
-    const season = new Date().getFullYear();
-    const url = this.buildUrl(leagueId, season, ["mSettings"]);
+    const url = this.buildUrl(leagueId, this.season, ["mSettings"]);
 
     const response = await this.fetch<ESPNFullResponse>(
       url,
@@ -385,8 +387,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
    * Fetch all teams with standings.
    */
   async getTeams(leagueId: string): Promise<AdapterTeam[]> {
-    const season = new Date().getFullYear();
-    const url = this.buildUrl(leagueId, season, ["mTeam"]);
+    const url = this.buildUrl(leagueId, this.season, ["mTeam"]);
 
     const response = await this.fetch<ESPNFullResponse>(
       url,
@@ -418,8 +419,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
    * Fetch all rostered players using concurrent fetching.
    */
   async getRosters(leagueId: string): Promise<AdapterPlayer[]> {
-    const season = new Date().getFullYear();
-    const url = this.buildUrl(leagueId, season, ["mRoster", "mTeam"]);
+    const url = this.buildUrl(leagueId, this.season, ["mRoster", "mTeam"]);
 
     const response = await this.fetch<ESPNFullResponse>(
       url,
@@ -455,8 +455,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
    * Fetch draft picks including traded picks.
    */
   async getDraftPicks(leagueId: string): Promise<AdapterDraftPick[]> {
-    const season = new Date().getFullYear();
-    const url = this.buildUrl(leagueId, season, ["mDraftDetail"]);
+    const url = this.buildUrl(leagueId, this.season, ["mDraftDetail"]);
 
     try {
       const response = await this.fetch<ESPNFullResponse>(
@@ -473,7 +472,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
       // For future picks (not yet drafted), we need to track ownership
       // ESPN shows tradedToTeamId if the pick was traded
       return draftDetail.picks.map((pick) => ({
-        season,
+        season: this.season,
         round: pick.roundId,
         pickNumber: pick.overallPickNumber,
         ownerTeamExternalId: (pick.tradedToTeamId || pick.teamId).toString(),
