@@ -191,9 +191,20 @@ export default async function AdminDashboardPage() {
                           f.userId}
                       </td>
                       <td className="px-4 py-2 text-slate-400">
-                        {f.page ?? "—"}
+                        {f.page ? (
+                          <a
+                            href={f.page}
+                            className="text-blue-400 hover:underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {f.page.replace(/^\/league\/[^/]+/, "…")}
+                          </a>
+                        ) : (
+                          "—"
+                        )}
                       </td>
-                      <td className="px-4 py-2 text-slate-300 max-w-md truncate">
+                      <td className="px-4 py-2 text-slate-300 max-w-xl">
                         {f.message}
                       </td>
                     </tr>
