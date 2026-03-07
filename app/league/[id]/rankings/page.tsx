@@ -339,14 +339,17 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     }
   }
 
-  // Compute flex rank maps from full sorted values
+  // Compute flex rank maps from full sorted values.
+  // Use league-resolved position (eligibilityPosition) so CB matches
+  // DB flex rules in consolidated leagues.
   const flexRankMaps = new Map<string, Map<string, number>>();
   for (const rule of settings?.flexRules ?? []) {
     const eligibleSet = new Set(rule.eligible);
     const rankMap = new Map<string, number>();
     let counter = 0;
     for (const v of values) {
-      if (eligibleSet.has(v.player.position)) {
+      const pos = v.value.eligibilityPosition ?? v.player.position;
+      if (eligibleSet.has(pos)) {
         counter++;
         rankMap.set(v.value.id, counter);
       }
@@ -359,12 +362,16 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
     ((settings?.metadata as Record<string, unknown> | null)
       ?.valuationMode as string) ?? "auto";
 
-  // Transform values with ownership info for table
+  // Transform values with ownership info for table.
+  // Override player.position with league-resolved position so
+  // CB displays as DB in consolidated leagues, etc.
   const valuesWithOwnership = sortedValues.map((v) => {
     const ownership = ownershipMap.get(v.player.id);
+    const resolvedPosition =
+      v.value.eligibilityPosition ?? v.player.position;
     return {
       ...v.value,
-      player: v.player,
+      player: { ...v.player, position: resolvedPosition },
       owner: ownership ? ownership.teamName : null,
       ownerName: ownership ? ownership.ownerName : null,
       isOwnedByCurrentUser: ownership?.teamId === league.userTeamId,
@@ -374,11 +381,15 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       seasonLines: historyMap.get(v.player.id) ?? [],
       consensusAggValue: consensusMap.get(v.player.id) ?? null,
       flexEligibility: (settings?.flexRules ?? [])
-        .filter((r) => r.eligible.includes(v.player.position))
+        .filter((r) => r.eligible.includes(
+          v.value.eligibilityPosition ?? v.player.position,
+        ))
         .map((r) => r.slot),
       flexRanks: Object.fromEntries(
         (settings?.flexRules ?? [])
-          .filter((r) => r.eligible.includes(v.player.position))
+          .filter((r) => r.eligible.includes(
+            v.value.eligibilityPosition ?? v.player.position,
+          ))
           .map((r): [string, number] => [
             r.slot,
             flexRankMaps.get(r.slot)?.get(v.value.id) ?? 0,

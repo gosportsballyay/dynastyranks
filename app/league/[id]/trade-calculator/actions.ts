@@ -85,7 +85,7 @@ export async function analyzeRosterImpactAction(
   const myRoster: PlayerAsset[] = rosterData.map(({ player, pv }) => ({
     playerId: player.id,
     playerName: player.name,
-    position: player.position,
+    position: pv?.eligibilityPosition ?? player.position,
     positionGroup: player.positionGroup,
     age: player.age,
     nflTeam: player.nflTeam,

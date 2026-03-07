@@ -226,7 +226,7 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       ? computeOptimalStarters(
           teamRoster.map((r) => ({
             id: r.player.id,
-            position: r.player.position,
+            position: r.value?.eligibilityPosition ?? r.player.position,
             positionGroup: r.player.positionGroup,
             value: r.value?.value || 0,
             slot: r.roster.slotPosition || "BN",
@@ -267,7 +267,7 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
     // Build roster player list for expanded details
     const roster: RosterPlayer[] = teamRoster.map((r) => ({
       name: r.player.name,
-      position: r.player.position,
+      position: r.value?.eligibilityPosition ?? r.player.position,
       value: r.value?.value || 0,
       age: r.player.age,
       slot: r.roster.slotPosition || "BN",
@@ -405,7 +405,7 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
       Array<{ value: number }>
     > = {};
     for (const r of rosterData) {
-      const pos = r.player.position;
+      const pos = r.value?.eligibilityPosition ?? r.player.position;
       if (!leagueByPosition[pos]) leagueByPosition[pos] = [];
       leagueByPosition[pos].push({ value: r.value?.value ?? 0 });
     }

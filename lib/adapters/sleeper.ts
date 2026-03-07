@@ -208,7 +208,9 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
       return {
         externalTeamId: roster.roster_id.toString(),
         ownerName: user?.display_name || `Team ${index + 1}`,
-        teamName: user?.metadata?.team_name || `Team ${index + 1}`,
+        teamName: user?.metadata?.team_name
+          || user?.display_name
+          || `Team ${index + 1}`,
         standingRank: index + 1, // Will need to sort by wins
         totalPoints: roster.settings?.fpts || 0,
         wins: roster.settings?.wins || 0,
@@ -334,7 +336,9 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
       }
     }
 
-    // Apply traded pick ownership changes
+    // Apply traded pick ownership changes.
+    // If a traded pick falls outside the generated inventory
+    // (e.g. season beyond 3-year window, extra round), add it.
     for (const trade of tradedPicks) {
       const tradeSeason = parseInt(trade.season);
       const match = picks.find(
@@ -346,6 +350,17 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
       );
       if (match) {
         match.ownerTeamExternalId = trade.owner_id.toString();
+      } else {
+        // Pick outside generated range — add it explicitly
+        picks.push({
+          season: tradeSeason,
+          round: trade.round,
+          projectedPickNumber: projectedPickMap.get(
+            trade.roster_id,
+          ),
+          ownerTeamExternalId: trade.owner_id.toString(),
+          originalTeamExternalId: trade.roster_id.toString(),
+        });
       }
     }
 

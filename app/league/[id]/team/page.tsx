@@ -335,40 +335,44 @@ export default async function MyTeamPage({
         : null,
   }));
 
-  const roster: RosterPlayer[] = rosterData.map((r) => ({
-    playerId: r.player.id,
-    playerName: r.player.name,
-    position: r.player.position,
-    nflTeam: r.player.nflTeam,
-    age: r.player.age,
-    value: r.value?.value || 0,
-    rankInPosition: r.value?.rankInPosition ?? null,
-    slot: r.roster.slotPosition || "BN",
-    injuryStatus: r.player.injuryStatus,
-    draftRound: r.player.draftRound,
-    draftPick: r.player.draftPick,
-    rookieYear: r.player.rookieYear,
-    yearsExperience: r.player.yearsExperience,
-    seasonLines: historyMap.get(r.player.id) ?? [],
-    projectedPoints: r.value?.projectedPoints ?? 0,
-    rank: r.value?.rank ?? 0,
-    vorp: r.value?.vorp ?? 0,
-    consensusValue: consensusMap.get(r.player.id) ?? null,
-    tier: r.value?.tier ?? 10,
-    lastSeasonPoints: r.value?.lastSeasonPoints ?? null,
-    flexEligibility: (settings?.flexRules ?? [])
-      .filter((rule) => rule.eligible.includes(r.player.position))
-      .map((rule) => rule.slot),
-    flexRanks: Object.fromEntries(
-      (settings?.flexRules ?? [])
-        .filter((rule) => rule.eligible.includes(r.player.position))
-        .map((rule): [string, number] => [
-          rule.slot,
-          flexRankMaps.get(rule.slot)?.get(r.value?.id ?? "") ?? 0,
-        ])
-        .filter(([, rank]) => rank > 0),
-    ),
-  }));
+  const roster: RosterPlayer[] = rosterData.map((r) => {
+    const resolvedPos =
+      r.value?.eligibilityPosition ?? r.player.position;
+    return {
+      playerId: r.player.id,
+      playerName: r.player.name,
+      position: resolvedPos,
+      nflTeam: r.player.nflTeam,
+      age: r.player.age,
+      value: r.value?.value || 0,
+      rankInPosition: r.value?.rankInPosition ?? null,
+      slot: r.roster.slotPosition || "BN",
+      injuryStatus: r.player.injuryStatus,
+      draftRound: r.player.draftRound,
+      draftPick: r.player.draftPick,
+      rookieYear: r.player.rookieYear,
+      yearsExperience: r.player.yearsExperience,
+      seasonLines: historyMap.get(r.player.id) ?? [],
+      projectedPoints: r.value?.projectedPoints ?? 0,
+      rank: r.value?.rank ?? 0,
+      vorp: r.value?.vorp ?? 0,
+      consensusValue: consensusMap.get(r.player.id) ?? null,
+      tier: r.value?.tier ?? 10,
+      lastSeasonPoints: r.value?.lastSeasonPoints ?? null,
+      flexEligibility: (settings?.flexRules ?? [])
+        .filter((rule) => rule.eligible.includes(resolvedPos))
+        .map((rule) => rule.slot),
+      flexRanks: Object.fromEntries(
+        (settings?.flexRules ?? [])
+          .filter((rule) => rule.eligible.includes(resolvedPos))
+          .map((rule): [string, number] => [
+            rule.slot,
+            flexRankMaps.get(rule.slot)?.get(r.value?.id ?? "") ?? 0,
+          ])
+          .filter(([, rank]) => rank > 0),
+      ),
+    };
+  });
 
   return (
     <TeamRosterView
