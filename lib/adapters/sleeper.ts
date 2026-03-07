@@ -77,6 +77,17 @@ interface SleeperDraftPick {
   owner_id: number;
 }
 
+interface SleeperDraft {
+  draft_id: string;
+  season: string;
+  status: "pre_draft" | "drafting" | "complete";
+  slot_to_roster_id: Record<string, number> | null;
+  settings: {
+    rounds: number;
+    [key: string]: unknown;
+  };
+}
+
 interface SleeperLeagueUser {
   user_id: string;
   display_name: string;
@@ -282,7 +293,7 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
    * round, then reassign ownership based on trades.
    */
   async getDraftPicks(leagueId: string): Promise<AdapterDraftPick[]> {
-    const [league, rosters, tradedPicks] = await Promise.all([
+    const [league, rosters, tradedPicks, drafts] = await Promise.all([
       this.fetch<SleeperLeague>(
         `${SLEEPER_API_BASE}/league/${leagueId}`,
         undefined,
@@ -298,19 +309,40 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
         undefined,
         "GetTradedPicks"
       ),
+      this.fetch<SleeperDraft[]>(
+        `${SLEEPER_API_BASE}/league/${leagueId}/drafts`,
+        undefined,
+        "GetDrafts"
+      ),
     ]);
 
     const currentSeason = parseInt(league.season);
     const draftRounds = league.settings.draft_rounds || 5;
-    const totalTeams = rosters.length;
 
-    // Project pick positions based on inverse standings
-    // Worst team gets pick 1 (best pick), best team gets last pick
+    // Build draft order maps from Sleeper's actual drafts.
+    // For each season with a draft, map roster_id → pick slot.
+    const draftOrderBySeason = new Map<
+      number,
+      Map<number, number>
+    >();
+    for (const draft of drafts) {
+      if (!draft.slot_to_roster_id) continue;
+      const season = parseInt(draft.season);
+      // slot_to_roster_id: { "1": rosterId, "2": rosterId, ... }
+      // Invert to: rosterId → slot
+      const rosterToSlot = new Map<number, number>();
+      for (const [slot, rosterId] of Object.entries(
+        draft.slot_to_roster_id,
+      )) {
+        rosterToSlot.set(rosterId, parseInt(slot));
+      }
+      draftOrderBySeason.set(season, rosterToSlot);
+    }
+
+    // Fallback: project pick positions from standings
     const projectedPickMap = this.projectPickPositions(rosters);
 
     // Generate full inventory for upcoming seasons.
-    // Include current season (rookie draft may not have happened)
-    // plus 2 future seasons.
     const futureSeasons = [
       currentSeason,
       currentSeason + 1,
@@ -320,15 +352,22 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
     // Build default inventory: each team owns their own picks
     const picks: AdapterDraftPick[] = [];
     for (const season of futureSeasons) {
+      const draftOrder = draftOrderBySeason.get(season);
       for (let round = 1; round <= draftRounds; round++) {
         for (const roster of rosters) {
           const teamId = roster.roster_id.toString();
+          // Use actual draft order if available, else project
+          const pickSlot = draftOrder?.get(roster.roster_id)
+            ?? projectedPickMap.get(roster.roster_id);
           picks.push({
             season,
             round,
-            projectedPickNumber: projectedPickMap.get(
-              roster.roster_id,
-            ),
+            pickNumber: draftOrder
+              ? pickSlot
+              : undefined,
+            projectedPickNumber: draftOrder
+              ? undefined
+              : pickSlot,
             ownerTeamExternalId: teamId,
             originalTeamExternalId: teamId,
           });
@@ -351,13 +390,16 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
       if (match) {
         match.ownerTeamExternalId = trade.owner_id.toString();
       } else {
-        // Pick outside generated range — add it explicitly
+        const draftOrder = draftOrderBySeason.get(tradeSeason);
+        const pickSlot = draftOrder?.get(trade.roster_id)
+          ?? projectedPickMap.get(trade.roster_id);
         picks.push({
           season: tradeSeason,
           round: trade.round,
-          projectedPickNumber: projectedPickMap.get(
-            trade.roster_id,
-          ),
+          pickNumber: draftOrder ? pickSlot : undefined,
+          projectedPickNumber: draftOrder
+            ? undefined
+            : pickSlot,
           ownerTeamExternalId: trade.owner_id.toString(),
           originalTeamExternalId: trade.roster_id.toString(),
         });

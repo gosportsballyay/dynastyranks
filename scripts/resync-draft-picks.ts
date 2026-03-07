@@ -1,9 +1,9 @@
 /**
- * Re-sync draft picks for all leagues (or a specific provider).
+ * Re-sync draft picks and team names for all leagues (or a specific provider).
  *
- * Use after deploying changes to adapter getDraftPicks() logic.
- * Deletes existing picks, re-fetches via the updated adapter,
- * and recomputes values.
+ * Use after deploying changes to adapter getDraftPicks() or getTeams() logic.
+ * Refreshes team names, deletes existing picks, re-fetches via the updated
+ * adapter, and recomputes values.
  *
  * Usage:
  *   export $(grep -v '^#' .env.local | xargs) && \
@@ -12,7 +12,7 @@
 
 import { db } from "../lib/db/client";
 import { leagues, teams, draftPicks } from "../lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   createSleeperAdapter,
   createFleaflickerAdapter,
@@ -70,6 +70,32 @@ async function main() {
       const teamIdMap = new Map<string, string>();
       for (const t of leagueTeams) {
         teamIdMap.set(t.externalTeamId, t.id);
+      }
+
+      // Refresh team names from the provider
+      const freshTeams = await adapter.getTeams(
+        league.externalLeagueId,
+      );
+      for (const ft of freshTeams) {
+        const internalId = teamIdMap.get(ft.externalTeamId);
+        if (internalId) {
+          await db
+            .update(teams)
+            .set({
+              teamName: ft.teamName,
+              ownerName: ft.ownerName,
+              wins: ft.wins,
+              losses: ft.losses,
+              ties: ft.ties,
+              totalPoints: ft.totalPoints,
+            })
+            .where(
+              and(
+                eq(teams.id, internalId),
+                eq(teams.leagueId, league.id),
+              ),
+            );
+        }
       }
 
       // Delete existing picks
