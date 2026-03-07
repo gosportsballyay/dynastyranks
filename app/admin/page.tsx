@@ -6,6 +6,8 @@ import { users, leagues, userFeedback } from "@/lib/db/schema";
 import { count, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const session = await auth();
   if (!session?.user) {
