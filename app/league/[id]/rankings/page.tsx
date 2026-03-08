@@ -219,7 +219,9 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
         activeFlexRule.eligible.map((p) => p.toUpperCase()),
       );
       filteredValues = filteredValues.filter((v) =>
-        eligibleSet.has(v.player.position.toUpperCase()),
+        eligibleSet.has(
+          (v.value.eligibilityPosition ?? v.player.position).toUpperCase(),
+        ),
       );
     } else {
       // Expand consolidated positions (e.g. "DL" → ["EDR", "IL", "DE", "DT"])
@@ -234,7 +236,9 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       granularSet.add(filterPos);
 
       filteredValues = filteredValues.filter((v) =>
-        granularSet.has(v.player.position.toUpperCase()),
+        granularSet.has(
+          (v.value.eligibilityPosition ?? v.player.position).toUpperCase(),
+        ),
       );
     }
   }
