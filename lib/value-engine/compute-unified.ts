@@ -41,7 +41,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.2.1";
+export const ENGINE_VERSION = "3.3.0";
 export const PROJECTION_VERSION = "1.0.0";
 
 /**
@@ -181,10 +181,18 @@ export async function computeUnifiedValues(
     );
 
     // --- Fetch players ---
-    const players = await db
+    const isNonIdpLeague = settings.idpStructure === "none";
+    const allPlayers = await db
       .select()
       .from(canonicalPlayers)
       .where(eq(canonicalPlayers.isActive, true));
+
+    // Skip IDP players entirely in non-IDP leagues
+    const players = isNonIdpLeague
+      ? allPlayers.filter(
+          (p) => !IDP_POSITIONS.has(p.position),
+        )
+      : allPlayers;
 
     if (players.length === 0) {
       warnings.push("No active players found");
@@ -360,8 +368,13 @@ export async function computeUnifiedValues(
         points *= ageFactor;
       }
 
-      // Confidence scaling based on most recent season
-      const confidence = Math.min(1, recent.gamesPlayed / 8);
+      // Confidence scaling based on most recent season,
+      // with veteran track record floor
+      const confidence = computeVeteranConfidence(
+        recent.gamesPlayed,
+        seasons,
+        player.yearsExperience,
+      );
       points *= confidence;
 
       // Missed-season penalty: detect the latest season any
@@ -1073,6 +1086,46 @@ export function cbStabilityMultiplier(
   const step = 0.07;
   const mult = base + step * Math.max(0, cbSlotsPerTeam - 1);
   return Math.min(mult, 0.92);
+}
+
+/**
+ * Confidence multiplier that accounts for veteran track record.
+ *
+ * The base confidence formula (gamesPlayed/8) penalizes short
+ * recent seasons. For proven veterans with multi-year elite
+ * production, this double-penalizes alongside the multi-season
+ * smoothing that already prorates the injury year. This function
+ * sets a floor on confidence when career track record is strong.
+ */
+export function computeVeteranConfidence(
+  recentGamesPlayed: number,
+  seasons: Array<{
+    season: number;
+    points: number;
+    gamesPlayed: number;
+  }>,
+  yearsExperience: number | null,
+): number {
+  const baseConfidence = Math.min(1, recentGamesPlayed / 8);
+  if (baseConfidence >= 1) return 1;
+
+  const sorted = [...seasons].sort(
+    (a, b) => b.season - a.season,
+  );
+  const priorHealthySeasons = sorted
+    .slice(1)
+    .filter((s) => s.gamesPlayed >= 8).length;
+
+  const isProven =
+    (yearsExperience !== null &&
+      yearsExperience >= 4 &&
+      priorHealthySeasons >= 1) ||
+    priorHealthySeasons >= 2;
+
+  if (!isProven) return baseConfidence;
+
+  const floor = priorHealthySeasons >= 2 ? 0.85 : 0.70;
+  return Math.max(baseConfidence, floor);
 }
 
 /**

@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { computeSmoothedProjection } from "../compute-unified";
+import {
+  computeSmoothedProjection,
+  computeVeteranConfidence,
+} from "../compute-unified";
 
 describe("computeSmoothedProjection", () => {
   const target = 2026;
@@ -84,5 +87,86 @@ describe("computeSmoothedProjection", () => {
     // 2024: 230*0.1 = 23
     // total = 249.5
     expect(computeSmoothedProjection(seasons, target)).toBeCloseTo(249.5, 0);
+  });
+});
+
+describe("computeVeteranConfidence", () => {
+  it("full season (16 games) returns 1.0", () => {
+    expect(
+      computeVeteranConfidence(16, [{ season: 2025, points: 200, gamesPlayed: 16 }], 7),
+    ).toBe(1);
+  });
+
+  it("rookie with 3 games gets base penalty", () => {
+    expect(
+      computeVeteranConfidence(3, [{ season: 2025, points: 30, gamesPlayed: 3 }], 1),
+    ).toBeCloseTo(0.375, 3);
+  });
+
+  it("proven vet, 3 games, 2 healthy priors → floor 0.85", () => {
+    const seasons = [
+      { season: 2025, points: 30, gamesPlayed: 3 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+      { season: 2023, points: 190, gamesPlayed: 16 },
+    ];
+    expect(computeVeteranConfidence(3, seasons, 7)).toBe(0.85);
+  });
+
+  it("proven vet, 3 games, 1 healthy prior → floor 0.70", () => {
+    const seasons = [
+      { season: 2025, points: 30, gamesPlayed: 3 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+    ];
+    expect(computeVeteranConfidence(3, seasons, 5)).toBe(0.70);
+  });
+
+  it("3-year player with 1 healthy prior stays at base", () => {
+    // yearsExperience < 4, only 1 healthy prior → not proven
+    const seasons = [
+      { season: 2025, points: 30, gamesPlayed: 3 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+    ];
+    expect(computeVeteranConfidence(3, seasons, 3)).toBeCloseTo(0.375, 3);
+  });
+
+  it("null yearsExp with 2 healthy priors → floor 0.85", () => {
+    const seasons = [
+      { season: 2025, points: 30, gamesPlayed: 3 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+      { season: 2023, points: 190, gamesPlayed: 15 },
+    ];
+    expect(computeVeteranConfidence(3, seasons, null)).toBe(0.85);
+  });
+
+  it("no prior seasons stays at base", () => {
+    expect(
+      computeVeteranConfidence(3, [{ season: 2025, points: 30, gamesPlayed: 3 }], null),
+    ).toBeCloseTo(0.375, 3);
+  });
+
+  it("proven vet, 0 games (full IR), 2 healthy priors → floor 0.85", () => {
+    const seasons = [
+      { season: 2025, points: 0, gamesPlayed: 0 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+      { season: 2023, points: 190, gamesPlayed: 16 },
+    ];
+    expect(computeVeteranConfidence(0, seasons, 7)).toBe(0.85);
+  });
+
+  it("exact threshold (8 games) returns 1.0", () => {
+    const seasons = [
+      { season: 2025, points: 80, gamesPlayed: 8 },
+      { season: 2024, points: 200, gamesPlayed: 17 },
+    ];
+    expect(computeVeteranConfidence(8, seasons, 5)).toBe(1);
+  });
+
+  it("prior season exactly 8 GP counts as healthy", () => {
+    const seasons = [
+      { season: 2025, points: 30, gamesPlayed: 3 },
+      { season: 2024, points: 80, gamesPlayed: 8 },
+    ];
+    // yearsExp=5 + 1 healthy prior → proven, floor 0.70
+    expect(computeVeteranConfidence(3, seasons, 5)).toBe(0.70);
   });
 });
