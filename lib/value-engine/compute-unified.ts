@@ -41,7 +41,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.2.0";
+export const ENGINE_VERSION = "3.2.1";
 export const PROJECTION_VERSION = "1.0.0";
 
 /**
@@ -644,9 +644,11 @@ export async function computeUnifiedValues(
           // Signal-primary position (IDP) — consensus doesn't
           // exist for this position group, so signal is the
           // best available data, not a fallback
-          const stability = pos === "CB"
+          const stability = player.position === "CB"
             ? cbStabilityMultiplier(
-                (settings.rosterPositions as Record<string, number>)["CB"] ?? 0,
+                (settings.rosterPositions as Record<string, number>)["CB"]
+                  ?? (settings.rosterPositions as Record<string, number>)[pos]
+                  ?? 0,
               )
             : 1.0;
           leagueSignalComponent = adjustedSignal * stability;
