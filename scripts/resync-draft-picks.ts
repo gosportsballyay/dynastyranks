@@ -32,6 +32,7 @@ async function main() {
       name: leagues.name,
       provider: leagues.provider,
       externalLeagueId: leagues.externalLeagueId,
+      season: leagues.season,
     })
     .from(leagues);
 
@@ -52,7 +53,10 @@ async function main() {
     const label = `${league.name} (${league.provider})`;
     try {
       // Create adapter
-      const adapter = createAdapter(league.provider as Provider);
+      const adapter = createAdapter(
+        league.provider as Provider,
+        league.season,
+      );
       if (!adapter) {
         console.log(`  SKIP ${label} — no adapter`);
         continue;
@@ -162,6 +166,7 @@ async function main() {
 
 function createAdapter(
   provider: Provider,
+  season?: number,
 ): LeagueProviderAdapter | null {
   switch (provider) {
     case "sleeper":
@@ -172,8 +177,7 @@ function createAdapter(
     case "fleaflicker":
       return createFleaflickerAdapter();
     case "espn":
-      // ESPN needs cookies — skip in batch script
-      return null;
+      return createESPNAdapter({ season });
     case "yahoo":
       // Yahoo needs OAuth — skip in batch script
       return null;

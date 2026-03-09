@@ -452,35 +452,91 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
   }
 
   /**
-   * Fetch draft picks including traded picks.
+   * Generate draft picks for 3 future years.
+   *
+   * ESPN's API only exposes the current season's draft detail — it does
+   * not track future pick trades. We generate a default inventory where
+   * every team owns their own picks, then overlay any traded-pick data
+   * ESPN provides for the current season's draft.
    */
   async getDraftPicks(leagueId: string): Promise<AdapterDraftPick[]> {
-    const url = this.buildUrl(leagueId, this.season, ["mDraftDetail"]);
+    const currentYear = new Date().getFullYear();
+    const teams = await this.getTeams(leagueId);
+    const draftRounds = 4;
 
-    try {
-      const response = await this.fetch<ESPNFullResponse>(
-        url,
-        { headers: this.getHeaders() },
-        "GetDraftPicks"
+    // Project pick positions: worst standing = earliest pick
+    const totalTeams = teams.length;
+    const projectedSlot = new Map<string, number>();
+    for (const team of teams) {
+      projectedSlot.set(
+        team.externalTeamId,
+        totalTeams - (team.standingRank ?? totalTeams) + 1,
       );
-
-      const draftDetail = response.draftDetail;
-      if (!draftDetail?.picks) {
-        return [];
-      }
-
-      // For future picks (not yet drafted), we need to track ownership
-      // ESPN shows tradedToTeamId if the pick was traded
-      return draftDetail.picks.map((pick) => ({
-        season: this.season,
-        round: pick.roundId,
-        pickNumber: pick.overallPickNumber,
-        ownerTeamExternalId: (pick.tradedToTeamId || pick.teamId).toString(),
-        originalTeamExternalId: pick.teamId.toString(),
-      }));
-    } catch {
-      return [];
     }
+
+    const futureSeasons = [
+      currentYear,
+      currentYear + 1,
+      currentYear + 2,
+    ];
+    const picks: AdapterDraftPick[] = [];
+
+    for (const season of futureSeasons) {
+      for (let round = 1; round <= draftRounds; round++) {
+        for (const team of teams) {
+          picks.push({
+            season,
+            round,
+            projectedPickNumber: projectedSlot.get(
+              team.externalTeamId,
+            ),
+            ownerTeamExternalId: team.externalTeamId,
+            originalTeamExternalId: team.externalTeamId,
+          });
+        }
+      }
+    }
+
+    // Overlay traded-pick ownership from ESPN's draft detail
+    // (only useful when this.season is in our future window)
+    if (this.season >= currentYear) {
+      try {
+        const url = this.buildUrl(leagueId, this.season, [
+          "mDraftDetail",
+        ]);
+        const response = await this.fetch<ESPNFullResponse>(
+          url,
+          { headers: this.getHeaders() },
+          "GetDraftPicks",
+        );
+        const draftDetail = response.draftDetail;
+
+        if (draftDetail?.picks) {
+          for (const espnPick of draftDetail.picks) {
+            if (
+              espnPick.tradedToTeamId &&
+              espnPick.tradedToTeamId !== espnPick.teamId
+            ) {
+              const match = picks.find(
+                (p) =>
+                  p.season === this.season &&
+                  p.round === espnPick.roundId &&
+                  p.originalTeamExternalId ===
+                    espnPick.teamId.toString(),
+              );
+              if (match) {
+                match.ownerTeamExternalId =
+                  espnPick.tradedToTeamId.toString();
+              }
+            }
+          }
+        }
+      } catch {
+        // Draft detail unavailable — keep defaults
+      }
+    }
+
+    return picks;
   }
 
   /**

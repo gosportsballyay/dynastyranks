@@ -59,6 +59,7 @@ interface TeamRosterViewProps {
   draftPicks: TeamDraftPick[];
   teamName: string;
   ownerName: string;
+  provider?: string;
 }
 
 type SortColumn = "name" | "position" | "team" | "age" | "value";
@@ -87,6 +88,7 @@ export function TeamRosterView({
   draftPicks,
   teamName,
   ownerName,
+  provider,
 }: TeamRosterViewProps) {
   const router = useRouter();
 
@@ -209,7 +211,22 @@ export function TeamRosterView({
             )
         )}
         {draftPicks.length > 0 && (
-          <DraftPicksSection picks={draftPicks} />
+          <>
+            {provider === "espn" && (
+              <div className="rounded-lg bg-amber-900/20 border border-amber-700/30 px-4 py-3 text-sm text-amber-300">
+                ESPN does not provide draft pick trade data. Picks shown
+                assume original ownership — traded picks may not be
+                reflected.
+              </div>
+            )}
+            <DraftPicksSection picks={draftPicks} />
+          </>
+        )}
+        {draftPicks.length === 0 && provider === "espn" && (
+          <div className="rounded-lg bg-slate-800/50 px-4 py-6 text-center text-sm text-slate-400">
+            No draft picks available. ESPN does not provide future
+            draft pick data for this league.
+          </div>
         )}
       </div>
 

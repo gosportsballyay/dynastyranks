@@ -35,6 +35,7 @@ interface TradeCalculatorProps {
   userTeamId: string | null;
   leagueId: string;
   replacementValue: number;
+  provider?: string;
 }
 
 export function TradeCalculator({
@@ -44,6 +45,7 @@ export function TradeCalculator({
   userTeamId,
   leagueId,
   replacementValue,
+  provider,
 }: TradeCalculatorProps) {
   const [team1Id, setTeam1Id] = useState("");
   const [team2Id, setTeam2Id] = useState("");
@@ -200,6 +202,13 @@ export function TradeCalculator({
 
   return (
     <div className="space-y-6">
+      {provider === "espn" && (
+        <div className="rounded-lg bg-amber-900/20 border border-amber-700/30 px-4 py-3 text-sm text-amber-300">
+          ESPN does not provide draft pick trade data. Pick ownership
+          assumes each team holds their own picks — traded picks may
+          not be reflected.
+        </div>
+      )}
       {/* Trade workspace */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TradeSide

@@ -84,7 +84,7 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
         .where(
           and(
             eq(draftPicks.leagueId, league.id),
-            gte(draftPicks.season, league.season),
+            gte(draftPicks.season, new Date().getFullYear()),
           ),
         ),
     ]);
@@ -286,6 +286,7 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
         userTeamId={league.userTeamId ?? null}
         leagueId={league.id}
         replacementValue={leagueStats.replacementValue}
+        provider={league.provider}
       />
     </div>
   );

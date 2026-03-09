@@ -244,7 +244,7 @@ export default async function MyTeamPage({
           and(
             eq(draftPicks.ownerTeamId, viewedTeam.id),
             eq(draftPicks.leagueId, league.id),
-            gte(draftPicks.season, league.season),
+            gte(draftPicks.season, new Date().getFullYear()),
           ),
         )
         .orderBy(
@@ -418,6 +418,7 @@ export default async function MyTeamPage({
       draftPicks={teamDraftPicks}
       teamName={viewedTeam.teamName || "Unknown Team"}
       ownerName={viewedTeam.ownerName || "Unknown"}
+      provider={league.provider}
     />
   );
 }
