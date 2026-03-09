@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/terms",
   "/privacy",
   "/how-it-works",
+  "/idp-trends",
   "/forgot-password",
   "/reset-password",
 ];

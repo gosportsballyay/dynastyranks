@@ -3,6 +3,7 @@ export function GET() {
 Allow: /
 Allow: /terms
 Allow: /privacy
+Allow: /idp-trends
 Disallow: /dashboard
 Disallow: /league
 Disallow: /admin

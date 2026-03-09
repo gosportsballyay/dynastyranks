@@ -55,6 +55,11 @@ export function Sidebar({ leagueId, collapsed, onToggle, mobile }: SidebarProps)
       icon: <HelpIcon />,
     },
     {
+      href: "/idp-trends",
+      label: "IDP Trends",
+      icon: <TrendIcon />,
+    },
+    {
       href: `/league/${leagueId}/settings`,
       label: "Settings",
       icon: <SettingsIcon />,
@@ -214,6 +219,14 @@ function HelpIcon() {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+    </svg>
+  );
+}
+
+function TrendIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
     </svg>
   );
 }

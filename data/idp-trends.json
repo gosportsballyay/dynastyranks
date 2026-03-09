@@ -1,0 +1,548 @@
+{
+  "meta": {
+    "lastUpdated": "2026-03-09",
+    "totalLeaguesCrawled": 26787,
+    "idpLeaguesFound": 5011,
+    "idpPct": 18.7,
+    "dynastyPct": 82.1,
+    "season": 2025
+  },
+  "highlights": {
+    "medianIdpStarters": 7,
+    "mostCommonIdpCount": 11,
+    "pctWithIdpFlex": 90,
+    "medianTotalStarters": 17,
+    "avgBenchSlots": 18.7,
+    "pctSuperFlex": 73
+  },
+  "starterDistribution": [
+    {
+      "idpSlots": 1,
+      "count": 298,
+      "pct": 5.9
+    },
+    {
+      "idpSlots": 2,
+      "count": 241,
+      "pct": 4.8
+    },
+    {
+      "idpSlots": 3,
+      "count": 344,
+      "pct": 6.9
+    },
+    {
+      "idpSlots": 4,
+      "count": 447,
+      "pct": 8.9
+    },
+    {
+      "idpSlots": 5,
+      "count": 569,
+      "pct": 11.4
+    },
+    {
+      "idpSlots": 6,
+      "count": 352,
+      "pct": 7
+    },
+    {
+      "idpSlots": 7,
+      "count": 369,
+      "pct": 7.4
+    },
+    {
+      "idpSlots": 8,
+      "count": 544,
+      "pct": 10.9
+    },
+    {
+      "idpSlots": 9,
+      "count": 367,
+      "pct": 7.3
+    },
+    {
+      "idpSlots": 10,
+      "count": 265,
+      "pct": 5.3
+    },
+    {
+      "idpSlots": 11,
+      "count": 664,
+      "pct": 13.3
+    },
+    {
+      "idpSlots": 12,
+      "count": 326,
+      "pct": 6.5
+    },
+    {
+      "idpSlots": 13,
+      "count": 55,
+      "pct": 1.1
+    },
+    {
+      "idpSlots": 14,
+      "count": 49,
+      "pct": 1
+    },
+    {
+      "idpSlots": 15,
+      "count": 31,
+      "pct": 0.6
+    },
+    {
+      "idpSlots": 16,
+      "count": 28,
+      "pct": 0.6
+    },
+    {
+      "idpSlots": 17,
+      "count": 4,
+      "pct": 0.1
+    },
+    {
+      "idpSlots": 18,
+      "count": 5,
+      "pct": 0.1
+    },
+    {
+      "idpSlots": 19,
+      "count": 2,
+      "pct": 0
+    },
+    {
+      "idpSlots": 20,
+      "count": 8,
+      "pct": 0.2
+    },
+    {
+      "idpSlots": 21,
+      "count": 2,
+      "pct": 0
+    },
+    {
+      "idpSlots": 22,
+      "count": 4,
+      "pct": 0.1
+    },
+    {
+      "idpSlots": 23,
+      "count": 1,
+      "pct": 0
+    },
+    {
+      "idpSlots": 24,
+      "count": 5,
+      "pct": 0.1
+    },
+    {
+      "idpSlots": 25,
+      "count": 4,
+      "pct": 0.1
+    },
+    {
+      "idpSlots": 29,
+      "count": 2,
+      "pct": 0
+    },
+    {
+      "idpSlots": 30,
+      "count": 1,
+      "pct": 0
+    },
+    {
+      "idpSlots": 32,
+      "count": 17,
+      "pct": 0.3
+    },
+    {
+      "idpSlots": 35,
+      "count": 1,
+      "pct": 0
+    },
+    {
+      "idpSlots": 40,
+      "count": 2,
+      "pct": 0
+    },
+    {
+      "idpSlots": 50,
+      "count": 1,
+      "pct": 0
+    },
+    {
+      "idpSlots": 60,
+      "count": 2,
+      "pct": 0
+    },
+    {
+      "idpSlots": 72,
+      "count": 1,
+      "pct": 0
+    }
+  ],
+  "scoringDistributions": [
+    {
+      "stat": "idp_tkl_solo",
+      "label": "Solo Tackle",
+      "min": 0,
+      "p25": 1.5,
+      "median": 2,
+      "p75": 2,
+      "max": 99999,
+      "mostCommon": 2,
+      "mostCommonPct": 62.2
+    },
+    {
+      "stat": "idp_tkl_ast",
+      "label": "Assisted Tackle",
+      "min": 0,
+      "p25": 0.5,
+      "median": 1,
+      "p75": 1,
+      "max": 99999,
+      "mostCommon": 1,
+      "mostCommonPct": 62.9
+    },
+    {
+      "stat": "idp_sack",
+      "label": "Sack",
+      "min": 0,
+      "p25": 4,
+      "median": 6,
+      "p75": 6,
+      "max": 358368,
+      "mostCommon": 6,
+      "mostCommonPct": 57.4
+    },
+    {
+      "stat": "idp_int",
+      "label": "Interception",
+      "min": -83,
+      "p25": 5,
+      "median": 6,
+      "p75": 6,
+      "max": 99999,
+      "mostCommon": 6,
+      "mostCommonPct": 64.5
+    },
+    {
+      "stat": "idp_ff",
+      "label": "Forced Fumble",
+      "min": 0,
+      "p25": 3,
+      "median": 3,
+      "p75": 3,
+      "max": 99999,
+      "mostCommon": 3,
+      "mostCommonPct": 65.8
+    },
+    {
+      "stat": "idp_fum_rec",
+      "label": "Fumble Recovery",
+      "min": 0,
+      "p25": 3,
+      "median": 3,
+      "p75": 3,
+      "max": 99999,
+      "mostCommon": 3,
+      "mostCommonPct": 69.7
+    },
+    {
+      "stat": "idp_pass_def",
+      "label": "Pass Defended",
+      "min": 0,
+      "p25": 3,
+      "median": 3,
+      "p75": 3,
+      "max": 99999,
+      "mostCommon": 3,
+      "mostCommonPct": 63.4
+    },
+    {
+      "stat": "idp_safe",
+      "label": "Safety",
+      "min": 0,
+      "p25": 3,
+      "median": 3,
+      "p75": 3,
+      "max": 99999,
+      "mostCommon": 3,
+      "mostCommonPct": 59.9
+    },
+    {
+      "stat": "idp_def_td",
+      "label": "Defensive TD",
+      "min": 0,
+      "p25": 6,
+      "median": 6,
+      "p75": 6,
+      "max": 99999,
+      "mostCommon": 6,
+      "mostCommonPct": 87.1
+    },
+    {
+      "stat": "idp_blk_kick",
+      "label": "Blocked Kick",
+      "min": 0,
+      "p25": 3,
+      "median": 3,
+      "p75": 3,
+      "max": 99999,
+      "mostCommon": 3,
+      "mostCommonPct": 69.5
+    },
+    {
+      "stat": "idp_tkl_loss",
+      "label": "Tackle for Loss",
+      "min": 0,
+      "p25": 2,
+      "median": 2,
+      "p75": 2,
+      "max": 99999,
+      "mostCommon": 2,
+      "mostCommonPct": 68.6
+    },
+    {
+      "stat": "idp_qb_hit",
+      "label": "QB Hit",
+      "min": 0,
+      "p25": 1,
+      "median": 1,
+      "p75": 1,
+      "max": 99999,
+      "mostCommon": 1,
+      "mostCommonPct": 67.9
+    },
+    {
+      "stat": "idp_tkl",
+      "label": "Total Tackle",
+      "min": 0,
+      "p25": 0,
+      "median": 0.5,
+      "p75": 1,
+      "max": 99999,
+      "mostCommon": 0,
+      "mostCommonPct": 37.2
+    }
+  ],
+  "topRosterConfigs": [
+    {
+      "config": "DB:2 DL:2 IDP_FLEX:2 LB:2",
+      "idpSlots": 8,
+      "count": 418,
+      "pct": 8.3
+    },
+    {
+      "config": "IDP_FLEX:5",
+      "idpSlots": 5,
+      "count": 359,
+      "pct": 7.2
+    },
+    {
+      "config": "DB:1 DL:1 IDP_FLEX:1 LB:1",
+      "idpSlots": 4,
+      "count": 338,
+      "pct": 6.7
+    },
+    {
+      "config": "DB:3 DL:3 IDP_FLEX:2 LB:3",
+      "idpSlots": 11,
+      "count": 286,
+      "pct": 5.7
+    },
+    {
+      "config": "IDP_FLEX:1",
+      "idpSlots": 1,
+      "count": 277,
+      "pct": 5.5
+    },
+    {
+      "config": "DB:2 DL:2 IDP_FLEX:1 LB:2",
+      "idpSlots": 7,
+      "count": 262,
+      "pct": 5.2
+    },
+    {
+      "config": "DB:3 DL:3 IDP_FLEX:3 LB:3",
+      "idpSlots": 12,
+      "count": 244,
+      "pct": 4.9
+    },
+    {
+      "config": "DB:2 DL:2 IDP_FLEX:3 LB:2",
+      "idpSlots": 9,
+      "count": 232,
+      "pct": 4.6
+    },
+    {
+      "config": "IDP_FLEX:2",
+      "idpSlots": 2,
+      "count": 228,
+      "pct": 4.5
+    },
+    {
+      "config": "DB:1 DL:1 LB:1",
+      "idpSlots": 3,
+      "count": 173,
+      "pct": 3.5
+    },
+    {
+      "config": "DB:1 DL:1 IDP_FLEX:2 LB:1",
+      "idpSlots": 5,
+      "count": 169,
+      "pct": 3.4
+    },
+    {
+      "config": "IDP_FLEX:3",
+      "idpSlots": 3,
+      "count": 152,
+      "pct": 3
+    },
+    {
+      "config": "IDP_FLEX:6",
+      "idpSlots": 6,
+      "count": 127,
+      "pct": 2.5
+    },
+    {
+      "config": "DB:2 DL:2 LB:2",
+      "idpSlots": 6,
+      "count": 102,
+      "pct": 2
+    },
+    {
+      "config": "IDP_FLEX:4",
+      "idpSlots": 4,
+      "count": 87,
+      "pct": 1.7
+    }
+  ],
+  "crossTabs": {
+    "byLeagueSize": [
+      {
+        "teamCount": 4,
+        "leagueCount": 120,
+        "avgIdpStarters": 10.5,
+        "medianIdpStarters": 7
+      },
+      {
+        "teamCount": 6,
+        "leagueCount": 131,
+        "avgIdpStarters": 7,
+        "medianIdpStarters": 6
+      },
+      {
+        "teamCount": 7,
+        "leagueCount": 1,
+        "avgIdpStarters": 5,
+        "medianIdpStarters": 5
+      },
+      {
+        "teamCount": 8,
+        "leagueCount": 338,
+        "avgIdpStarters": 8.4,
+        "medianIdpStarters": 7
+      },
+      {
+        "teamCount": 9,
+        "leagueCount": 2,
+        "avgIdpStarters": 3.5,
+        "medianIdpStarters": 3.5
+      },
+      {
+        "teamCount": 10,
+        "leagueCount": 1025,
+        "avgIdpStarters": 6.6,
+        "medianIdpStarters": 6
+      },
+      {
+        "teamCount": 12,
+        "leagueCount": 2078,
+        "avgIdpStarters": 7,
+        "medianIdpStarters": 7
+      },
+      {
+        "teamCount": 14,
+        "leagueCount": 280,
+        "avgIdpStarters": 8.1,
+        "medianIdpStarters": 9
+      },
+      {
+        "teamCount": 16,
+        "leagueCount": 368,
+        "avgIdpStarters": 8.9,
+        "medianIdpStarters": 9
+      },
+      {
+        "teamCount": 17,
+        "leagueCount": 1,
+        "avgIdpStarters": 1,
+        "medianIdpStarters": 1
+      },
+      {
+        "teamCount": 18,
+        "leagueCount": 60,
+        "avgIdpStarters": 6.5,
+        "medianIdpStarters": 5
+      },
+      {
+        "teamCount": 20,
+        "leagueCount": 49,
+        "avgIdpStarters": 6.5,
+        "medianIdpStarters": 6
+      },
+      {
+        "teamCount": 22,
+        "leagueCount": 7,
+        "avgIdpStarters": 7.3,
+        "medianIdpStarters": 5
+      },
+      {
+        "teamCount": 24,
+        "leagueCount": 49,
+        "avgIdpStarters": 5.7,
+        "medianIdpStarters": 4
+      },
+      {
+        "teamCount": 32,
+        "leagueCount": 502,
+        "avgIdpStarters": 7.5,
+        "medianIdpStarters": 7
+      }
+    ],
+    "dynastyVsRedraft": {
+      "dynasty": {
+        "count": 4116,
+        "avgIdpStarters": 7.7,
+        "pctWithIdpFlex": 90.4
+      },
+      "redraft": {
+        "count": 895,
+        "avgIdpStarters": 5.6,
+        "pctWithIdpFlex": 88
+      }
+    },
+    "superFlexCorrelation": {
+      "superFlex": {
+        "count": 3657,
+        "avgIdpStarters": 7.3
+      },
+      "nonSuperFlex": {
+        "count": 1354,
+        "avgIdpStarters": 7.3
+      }
+    },
+    "tepCorrelation": {
+      "tep": {
+        "count": 3175,
+        "avgIdpStarters": 7.8
+      },
+      "nonTep": {
+        "count": 1836,
+        "avgIdpStarters": 6.5
+      }
+    }
+  }
+}

@@ -123,6 +123,12 @@ export default function Home() {
               >
                 How It Works
               </Link>
+              <Link
+                href="/idp-trends"
+                className="hover:text-white transition-colors"
+              >
+                IDP Trends
+              </Link>
             </div>
           </div>
         </div>
