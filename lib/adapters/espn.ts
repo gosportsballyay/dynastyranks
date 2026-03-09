@@ -574,15 +574,7 @@ export class ESPNAdapter extends BaseAdapter implements LeagueProviderAdapter {
    * Map ESPN slot ID to normalized slot position.
    */
   private mapSlotPosition(slotId: number): string {
-    const position = ESPN_POSITION_MAP[slotId];
-    if (!position) return "BN";
-
-    // Map starter positions to START prefix
-    if (!["BN", "IR", "TAXI"].includes(position)) {
-      return "START";
-    }
-
-    return position;
+    return ESPN_POSITION_MAP[slotId] ?? "BN";
   }
 
   /**

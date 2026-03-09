@@ -383,7 +383,8 @@ export async function computeUnifiedValues(
       // regardless of offseason vs in-season timing.
       if (recent.season < latestDataSeason && !isFA) {
         const missedYears = latestDataSeason - recent.season;
-        // 0.4 for 1 missed year, 0.2 for 2 missed years
+        // 0.6 base minus 0.2 per missed year, floor 0.2
+        // 1 missed: 0.4× (injury risk), 2 missed: 0.2× (severe)
         const missedPenalty = Math.max(0.2, 0.6 - missedYears * 0.2);
         points *= missedPenalty;
       }
@@ -514,6 +515,7 @@ export async function computeUnifiedValues(
     }> = [];
 
     // First pass: compute values for players with stats
+    let skippedCount = 0;
     for (const player of players) {
       const consensus = consensusMap.get(player.id);
       const pointsData = playerPoints.get(player.id);
@@ -682,7 +684,10 @@ export async function computeUnifiedValues(
         continue;
       }
 
-      if (finalValue <= 0) continue;
+      if (finalValue <= 0) {
+        skippedCount++;
+        continue;
+      }
 
       const lastSeason = lastSeasonResults.get(player.id);
 
@@ -758,6 +763,12 @@ export async function computeUnifiedValues(
     // --- Sort and assign ranks ---
     valuesList.sort((a, b) => b.value - a.value);
 
+    if (skippedCount > 0) {
+      console.log(
+        `[compute-unified] Skipped ${skippedCount} players with zero/negative value`,
+      );
+    }
+
     let rank = 1;
     for (const pv of valuesList) {
       (pv as any).rank = rank++;
@@ -776,54 +787,55 @@ export async function computeUnifiedValues(
       (pv as any).tier = Math.ceil((pv as any).rank / 12);
     }
 
-    // --- Write to DB ---
-    await db
-      .delete(playerValues)
-      .where(eq(playerValues.leagueId, leagueId));
+    // --- Write to DB (atomic delete + insert) ---
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(playerValues)
+        .where(eq(playerValues.leagueId, leagueId));
 
-    const BATCH_SIZE = 100;
-    for (let i = 0; i < valuesList.length; i += BATCH_SIZE) {
-      const batch = valuesList.slice(i, i + BATCH_SIZE);
-      await db.insert(playerValues).values(
-        batch.map((pv) => ({
-          leagueId,
-          canonicalPlayerId: pv.canonicalPlayerId,
-          value: pv.value,
-          rank: (pv as any).rank as number,
-          rankInPosition: pv.rankInPosition,
-          tier: (pv as any).tier as number,
-          projectedPoints: pv.projectedPoints,
-          replacementPoints: pv.replacementPoints,
-          vorp: pv.vorp,
-          normalizedVorp: pv.normalizedVorp,
-          scarcityMultiplier: pv.scarcityMultiplier,
-          ageCurveMultiplier: pv.ageCurveMultiplier,
-          dynastyPremium: pv.dynastyPremium,
-          riskDiscount: 0,
-          lastSeasonPoints: pv.lastSeasonPoints,
-          lastSeasonRankOverall: pv.lastSeasonRankOverall,
-          lastSeasonRankPosition: pv.lastSeasonRankPosition,
-          dataSource: "unified" as const,
-          positionGroup: pv.positionGroup,
-          projectionSource: "unified_blend" as const,
-          uncertainty: pv.lowConfidence
-            ? ("high" as const)
-            : ("medium" as const),
-          engineVersion: ENGINE_VERSION,
-          eligibilityPosition: pv.eligibilityPosition ?? null,
-          // Unified-specific columns
-          consensusValue: pv.consensusValue,
-          ktcValue: pv.ktcValue,
-          fcValue: pv.fcValue,
-          dpValue: pv.dpValue,
-          fpValue: pv.fpValue,
-          consensusComponent: pv.consensusComponent,
-          leagueSignalComponent: pv.leagueSignalComponent,
-          lowConfidence: pv.lowConfidence,
-          valueSource: pv.valueSource,
-        })),
-      );
-    }
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < valuesList.length; i += BATCH_SIZE) {
+        const batch = valuesList.slice(i, i + BATCH_SIZE);
+        await tx.insert(playerValues).values(
+          batch.map((pv) => ({
+            leagueId,
+            canonicalPlayerId: pv.canonicalPlayerId,
+            value: pv.value,
+            rank: (pv as any).rank as number,
+            rankInPosition: pv.rankInPosition,
+            tier: (pv as any).tier as number,
+            projectedPoints: pv.projectedPoints,
+            replacementPoints: pv.replacementPoints,
+            vorp: pv.vorp,
+            normalizedVorp: pv.normalizedVorp,
+            scarcityMultiplier: pv.scarcityMultiplier,
+            ageCurveMultiplier: pv.ageCurveMultiplier,
+            dynastyPremium: pv.dynastyPremium,
+            riskDiscount: 0,
+            lastSeasonPoints: pv.lastSeasonPoints,
+            lastSeasonRankOverall: pv.lastSeasonRankOverall,
+            lastSeasonRankPosition: pv.lastSeasonRankPosition,
+            dataSource: "unified" as const,
+            positionGroup: pv.positionGroup,
+            projectionSource: "unified_blend" as const,
+            uncertainty: pv.lowConfidence
+              ? ("high" as const)
+              : ("medium" as const),
+            engineVersion: ENGINE_VERSION,
+            eligibilityPosition: pv.eligibilityPosition ?? null,
+            consensusValue: pv.consensusValue,
+            ktcValue: pv.ktcValue,
+            fcValue: pv.fcValue,
+            dpValue: pv.dpValue,
+            fpValue: pv.fpValue,
+            consensusComponent: pv.consensusComponent,
+            leagueSignalComponent: pv.leagueSignalComponent,
+            lowConfidence: pv.lowConfidence,
+            valueSource: pv.valueSource,
+          })),
+        );
+      }
+    });
 
     // --- Log computation ---
     const inputsHash = await hashString(

@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { code } = body;
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 },
+    );
+  }
+
+  const code = typeof body?.code === "string" ? body.code : "";
 
   if (!code || code !== process.env.BETA_ACCESS_CODE) {
     return NextResponse.json(

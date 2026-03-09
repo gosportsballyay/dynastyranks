@@ -326,9 +326,20 @@ export class FleaflickerAdapter
       this.fetchTeamRoster(leagueId, team.externalTeamId)
     );
 
-    const rosters = await Promise.all(rosterPromises);
+    const results = await Promise.allSettled(rosterPromises);
 
-    // Flatten into single array
+    const rosters: AdapterPlayer[][] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        rosters.push(result.value);
+      } else {
+        console.warn(
+          "Fleaflicker roster fetch failed for a team:",
+          result.reason,
+        );
+      }
+    }
+
     return rosters.flat();
   }
 

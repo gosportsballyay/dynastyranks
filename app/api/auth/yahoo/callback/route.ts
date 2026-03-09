@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db/client";
 import { userTokens } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -30,6 +31,14 @@ export async function GET(request: NextRequest) {
   if (!code || !state) {
     return NextResponse.redirect(
       new URL("/dashboard/connect?error=missing_params", process.env.NEXTAUTH_URL)
+    );
+  }
+
+  // CSRF protection: verify the state param matches the authenticated user
+  const session = await auth();
+  if (!session?.user || session.user.id !== state) {
+    return NextResponse.redirect(
+      new URL("/dashboard/connect?error=unauthorized", process.env.NEXTAUTH_URL)
     );
   }
 
@@ -72,8 +81,8 @@ export async function GET(request: NextRequest) {
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-    // Upsert token in database
-    const userId = state;
+    // Use verified session user ID (not raw state param)
+    const userId = session.user.id;
 
     // Check if token already exists
     const [existingToken] = await db

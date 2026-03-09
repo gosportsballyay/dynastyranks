@@ -91,7 +91,8 @@ export async function getPlayersByProviderIds(
     const unmatchedIds = uniqueIds.filter((id) => !result.has(id));
 
     if (unmatchedIds.length > 0) {
-      // Fetch all players for name matching (done once, not per player)
+      // Full table scan (~3000 rows) is acceptable at MVP scale.
+      // Called once per sync, not per player lookup.
       const allCanonicalPlayers = await db.select().from(canonicalPlayers);
 
       for (const externalId of unmatchedIds) {

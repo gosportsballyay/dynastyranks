@@ -1,24 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db/client";
-import {
-  leagues,
-  leagueSettings,
-  teams,
-  rosters,
-  draftPicks,
-  playerValues,
-  rawPayloads,
-  userTokens,
-} from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import {
-  createSleeperAdapter,
-  createFleaflickerAdapter,
-  createESPNAdapter,
-  createYahooAdapter,
-} from "@/lib/adapters";
-import { getPlayersByProviderIds } from "@/lib/player-mapping";
+import { leagues, teams } from "@/lib/db/schema";
+import { eq, and, ne } from "drizzle-orm";
+import { syncLeagueData } from "@/lib/sync/sync-league-data";
 import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
 import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -55,29 +40,26 @@ export async function POST(
       return NextResponse.json({ error: "League not found" }, { status: 404 });
     }
 
-    // Mark as syncing
-    await db
+    // Atomically mark as syncing — rejects if already syncing
+    const [updated] = await db
       .update(leagues)
       .set({ syncStatus: "syncing", syncError: null })
-      .where(eq(leagues.id, leagueId));
+      .where(
+        and(
+          eq(leagues.id, leagueId),
+          ne(leagues.syncStatus, "syncing"),
+        ),
+      )
+      .returning({ id: leagues.id });
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Sync already in progress" },
+        { status: 409 },
+      );
+    }
 
     try {
-      // Clear existing data (except the league record itself)
-      await db.delete(playerValues).where(eq(playerValues.leagueId, leagueId));
-      await db.delete(draftPicks).where(eq(draftPicks.leagueId, leagueId));
-
-      const leagueTeams = await db
-        .select({ id: teams.id })
-        .from(teams)
-        .where(eq(teams.leagueId, leagueId));
-      for (const team of leagueTeams) {
-        await db.delete(rosters).where(eq(rosters.teamId, team.id));
-      }
-
-      await db.delete(teams).where(eq(teams.leagueId, leagueId));
-      await db.delete(leagueSettings).where(eq(leagueSettings.leagueId, leagueId));
-      await db.delete(rawPayloads).where(eq(rawPayloads.leagueId, leagueId));
-
       // Parse optional ESPN cookie override from body
       let espnS2: string | undefined;
       let swid: string | undefined;
@@ -89,17 +71,18 @@ export async function POST(
         // Empty body is fine — cookies are optional
       }
 
-      // Re-sync
-      await syncLeagueData(
+      // Re-sync (deletes old + inserts new in a transaction)
+      await syncLeagueData({
         leagueId,
-        league.provider as Provider,
-        league.externalLeagueId,
-        league.externalLeagueId,
-        session.user.id,
+        provider: league.provider as Provider,
+        externalLeagueId: league.externalLeagueId,
+        identifier: league.externalLeagueId,
+        userId: session.user.id,
         espnS2,
         swid,
-        league.season
-      );
+        season: league.season,
+        isResync: true,
+      });
 
       // Recompute values with unified engine
       await computeAggregatedValues(leagueId);
@@ -151,246 +134,3 @@ export async function POST(
   }
 }
 
-/**
- * Sync league data from provider.
- *
- * For ESPN, cookies are resolved in this order:
- * 1. Explicit espnS2/swid params (from POST body override)
- * 2. Stored cookies in userTokens table
- * If cookies provided, they're persisted for future syncs.
- */
-async function syncLeagueData(
-  leagueId: string,
-  provider: Provider,
-  externalLeagueId: string,
-  identifier: string,
-  userId: string,
-  espnS2?: string,
-  swid?: string,
-  season?: number
-): Promise<void> {
-  // Create adapter based on provider
-  let adapter;
-
-  if (provider === "sleeper") {
-    adapter = createSleeperAdapter(identifier);
-  } else if (provider === "fleaflicker") {
-    adapter = createFleaflickerAdapter();
-  } else if (provider === "espn") {
-    // Resolve ESPN cookies: body override > stored tokens
-    let s2 = espnS2;
-    let swidCookie = swid;
-
-    if (!s2 || !swidCookie) {
-      const [token] = await db
-        .select()
-        .from(userTokens)
-        .where(
-          and(
-            eq(userTokens.userId, userId),
-            eq(userTokens.provider, "espn")
-          )
-        )
-        .limit(1);
-
-      if (token) {
-        s2 = s2 || token.accessToken;
-        swidCookie = swidCookie || (token.refreshToken ?? undefined);
-      }
-    }
-
-    // Persist override cookies for future syncs
-    if (espnS2 && swid) {
-      await db
-        .insert(userTokens)
-        .values({
-          userId,
-          provider: "espn",
-          accessToken: espnS2,
-          refreshToken: swid,
-        })
-        .onConflictDoUpdate({
-          target: [userTokens.userId, userTokens.provider],
-          set: {
-            accessToken: espnS2,
-            refreshToken: swid,
-            updatedAt: new Date(),
-          },
-        });
-    }
-
-    adapter = createESPNAdapter({
-      espnS2: s2,
-      swid: swidCookie,
-      leagueId: externalLeagueId,
-      season,
-    });
-  } else if (provider === "yahoo") {
-    const [token] = await db
-      .select()
-      .from(userTokens)
-      .where(
-        and(
-          eq(userTokens.userId, userId),
-          eq(userTokens.provider, "yahoo")
-        )
-      )
-      .limit(1);
-
-    if (!token) {
-      throw new Error(
-        "Yahoo OAuth token not found. Re-authorize Yahoo."
-      );
-    }
-
-    adapter = createYahooAdapter({
-      accessToken: token.accessToken,
-      refreshToken: token.refreshToken || undefined,
-      expiresAt: token.expiresAt || undefined,
-      onTokenRefresh: async (tokens) => {
-        await db
-          .update(userTokens)
-          .set({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            expiresAt: tokens.expiresAt,
-            updatedAt: new Date(),
-          })
-          .where(eq(userTokens.id, token.id));
-      },
-    });
-  } else {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-
-  // Fetch settings
-  const settings = await adapter.getLeagueSettings(externalLeagueId);
-
-  // Validate settings
-  const validation = adapter.validateSettings(settings);
-  if (!validation.valid) {
-    console.warn("League settings validation errors:", validation.errors);
-  }
-  if (validation.warnings.length > 0) {
-    console.warn("League settings warnings:", validation.warnings);
-  }
-
-  // Extract structuredRules from metadata for dedicated DB column
-  const metadataObj = settings.metadata as Record<string, unknown> | undefined;
-  const structuredRules = metadataObj?.structuredRules ?? null;
-
-  // Store settings
-  await db.insert(leagueSettings).values({
-    leagueId,
-    scoringRules: settings.scoringRules,
-    positionScoringOverrides: settings.positionScoringOverrides,
-    rosterPositions: settings.rosterPositions,
-    flexRules: settings.flexRules,
-    positionMappings: settings.positionMappings,
-    idpStructure: settings.idpStructure,
-    benchSlots: settings.benchSlots,
-    taxiSlots: settings.taxiSlots,
-    irSlots: settings.irSlots,
-    metadata: settings.metadata,
-    structuredRules: structuredRules as typeof leagueSettings.$inferInsert.structuredRules,
-  });
-
-  // Fetch teams
-  const adapterTeams = await adapter.getTeams(externalLeagueId);
-
-  // Store teams
-  const insertedTeams = await db
-    .insert(teams)
-    .values(
-      adapterTeams.map((t) => ({
-        leagueId,
-        externalTeamId: t.externalTeamId,
-        ownerName: t.ownerName,
-        teamName: t.teamName,
-        standingRank: t.standingRank,
-        totalPoints: t.totalPoints,
-        wins: t.wins,
-        losses: t.losses,
-        ties: t.ties,
-      }))
-    )
-    .returning();
-
-  // Create team ID mapping
-  const teamIdMap = new Map<string, string>();
-  for (const team of insertedTeams) {
-    teamIdMap.set(team.externalTeamId, team.id);
-  }
-
-  // Fetch rosters
-  const adapterPlayers = await adapter.getRosters(externalLeagueId);
-
-  // Get player IDs for mapping
-  const externalPlayerIds = adapterPlayers.map((p) => p.externalPlayerId);
-  const playerInfoMap = new Map<string, { name: string; position: string }>();
-  for (const p of adapterPlayers) {
-    playerInfoMap.set(p.externalPlayerId, {
-      name: p.playerName || "",
-      position: p.playerPosition || "",
-    });
-  }
-  const playerMap = await getPlayersByProviderIds(provider, externalPlayerIds, playerInfoMap);
-
-  // Store rosters
-  if (adapterPlayers.length > 0) {
-    await db.insert(rosters).values(
-      adapterPlayers.map((p) => {
-        const teamId = teamIdMap.get(p.teamExternalId);
-        const canonicalPlayer = playerMap.get(p.externalPlayerId);
-
-        return {
-          teamId: teamId!,
-          canonicalPlayerId: canonicalPlayer?.id || null,
-          externalPlayerId: p.externalPlayerId,
-          slotPosition: p.slotPosition,
-          playerName: p.playerName,
-          playerPosition: p.playerPosition,
-        };
-      })
-    );
-  }
-
-  // Fetch draft picks
-  const adapterPicks = await adapter.getDraftPicks(externalLeagueId);
-
-  // Store draft picks
-  if (adapterPicks.length > 0) {
-    await db.insert(draftPicks).values(
-      adapterPicks.map((p) => ({
-        leagueId,
-        ownerTeamId: teamIdMap.get(p.ownerTeamExternalId)!,
-        originalTeamId: p.originalTeamExternalId
-          ? teamIdMap.get(p.originalTeamExternalId)
-          : null,
-        season: p.season,
-        round: p.round,
-        pickNumber: p.pickNumber,
-        projectedPickNumber: p.projectedPickNumber,
-      }))
-    );
-  }
-
-  // Store raw payloads for audit
-  const payloads = adapter.getRawPayloads();
-  if (payloads.length > 0) {
-    await db.insert(rawPayloads).values(
-      payloads.map((p) => ({
-        leagueId,
-        provider,
-        endpoint: p.endpoint,
-        requestParams: p.requestParams,
-        payload: p.payload,
-        status: p.status,
-        errorMessage: p.errorMessage,
-        fetchedAt: p.fetchedAt,
-      }))
-    );
-  }
-
-  adapter.clearRawPayloads();
-}

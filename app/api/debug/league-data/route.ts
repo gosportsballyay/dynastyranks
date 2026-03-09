@@ -7,14 +7,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
+import { isAdmin } from "@/lib/auth/admin";
 import { createFleaflickerAdapter } from "@/lib/adapters/fleaflicker";
 import { SleeperAdapter } from "@/lib/adapters/sleeper";
 import type { AdapterSettings, RawPayload } from "@/types";
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
 
 interface DebugResponse {
   platform: string;
@@ -40,12 +36,7 @@ export async function GET(request: NextRequest) {
       { status: 401 },
     );
   }
-  if (
-    ADMIN_EMAILS.length > 0 &&
-    !ADMIN_EMAILS.includes(
-      (session.user.email ?? "").toLowerCase(),
-    )
-  ) {
+  if (!isAdmin(session.user.email)) {
     return NextResponse.json(
       { error: "Not found" },
       { status: 404 },

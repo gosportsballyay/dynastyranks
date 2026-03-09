@@ -27,19 +27,25 @@ export async function DELETE(
       return NextResponse.json({ error: "League not found" }, { status: 404 });
     }
 
-    // Delete in order (foreign key constraints)
-    await db.delete(playerValues).where(eq(playerValues.leagueId, leagueId));
-    await db.delete(draftPicks).where(eq(draftPicks.leagueId, leagueId));
+    // Delete all league data in a single transaction
+    await db.transaction(async (tx) => {
+      await tx.delete(playerValues).where(eq(playerValues.leagueId, leagueId));
+      await tx.delete(draftPicks).where(eq(draftPicks.leagueId, leagueId));
 
-    // Get team IDs first
-    const leagueTeams = await db.select({ id: teams.id }).from(teams).where(eq(teams.leagueId, leagueId));
-    for (const team of leagueTeams) {
-      await db.delete(rosters).where(eq(rosters.teamId, team.id));
-    }
+      const leagueTeams = await tx
+        .select({ id: teams.id })
+        .from(teams)
+        .where(eq(teams.leagueId, leagueId));
+      for (const team of leagueTeams) {
+        await tx.delete(rosters).where(eq(rosters.teamId, team.id));
+      }
 
-    await db.delete(teams).where(eq(teams.leagueId, leagueId));
-    await db.delete(leagueSettings).where(eq(leagueSettings.leagueId, leagueId));
-    await db.delete(leagues).where(eq(leagues.id, leagueId));
+      await tx.delete(teams).where(eq(teams.leagueId, leagueId));
+      await tx
+        .delete(leagueSettings)
+        .where(eq(leagueSettings.leagueId, leagueId));
+      await tx.delete(leagues).where(eq(leagues.id, leagueId));
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -304,11 +304,28 @@ interface YahooDraftResult {
   player_key?: string;
 }
 
+interface YahooTransaction {
+  transaction_key: string;
+  type: string;
+  players?: {
+    count: number;
+    [key: string]: unknown;
+  };
+  picks?: YahooDraftPickTrade[];
+}
+
+interface YahooDraftPickTrade {
+  round: number;
+  source_team_key: string;
+  destination_team_key: string;
+  original_team_key: string;
+}
+
 export interface YahooAdapterConfig extends AdapterConfig {
   accessToken: string;
   refreshToken?: string;
   expiresAt?: Date;
-  onTokenRefresh?: (tokens: { accessToken: string; refreshToken: string; expiresAt: Date }) => void;
+  onTokenRefresh?: (tokens: { accessToken: string; refreshToken: string; expiresAt: Date }) => void | Promise<void>;
 }
 
 export class YahooAdapter extends BaseAdapter implements LeagueProviderAdapter {
@@ -371,9 +388,9 @@ export class YahooAdapter extends BaseAdapter implements LeagueProviderAdapter {
     this.refreshToken = tokens.refresh_token || this.refreshToken;
     this.expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-    // Notify caller to save new tokens
+    // Persist refreshed tokens via caller-provided callback
     if (this.onTokenRefresh) {
-      this.onTokenRefresh({
+      await this.onTokenRefresh({
         accessToken: this.accessToken,
         refreshToken: this.refreshToken!,
         expiresAt: this.expiresAt,
@@ -672,26 +689,180 @@ export class YahooAdapter extends BaseAdapter implements LeagueProviderAdapter {
   }
 
   /**
-   * Fetch draft picks.
+   * Fetch draft picks — generates 3-year inventory and applies
+   * traded pick ownership from Yahoo transactions.
    */
   async getDraftPicks(leagueId: string): Promise<AdapterDraftPick[]> {
     try {
       const gameKey = "nfl";
       const leagueKey = `${gameKey}.l.${leagueId}`;
-      const url = `${YAHOO_API_BASE}/league/${leagueKey}/draftresults?format=json`;
       const headers = await this.getHeaders();
+
+      // Fetch teams (standings) + draft results concurrently
+      const [teamsData, draftData] = await Promise.all([
+        this.fetch<YahooFantasyContent>(
+          `${YAHOO_API_BASE}/league/${leagueKey}/standings?format=json`,
+          { headers },
+          "GetTeamsForPicks",
+        ),
+        this.fetch<YahooFantasyContent>(
+          `${YAHOO_API_BASE}/league/${leagueKey}/draftresults?format=json`,
+          { headers },
+          "GetDraftResults",
+        ),
+      ]);
+
+      // Parse teams from standings
+      const leagueArray = teamsData.fantasy_content.league;
+      if (!leagueArray || leagueArray.length < 2) return [];
+
+      const standings = leagueArray[1].standings?.[0];
+      if (!standings?.teams) return [];
+
+      const teamList: { teamId: string; wins: number; points: number }[] = [];
+      for (const key of Object.keys(standings.teams)) {
+        if (key === "count") continue;
+        const tw = standings.teams[key] as YahooTeamWrapper;
+        const ta = tw?.team;
+        if (!ta || ta.length < 2) continue;
+
+        const info = ta[0] as unknown as YahooTeam;
+        const st = (ta[1] as unknown as {
+          team_standings: YahooTeam["team_standings"];
+        })?.team_standings;
+
+        teamList.push({
+          teamId: info.team_id,
+          wins: parseInt(st?.outcome_totals?.wins || "0"),
+          points: parseFloat(st?.points_for || "0"),
+        });
+      }
+
+      if (teamList.length === 0) return [];
+
+      // Determine draft rounds from draft results
+      let draftRounds = 4; // default
+      const draftLeague = draftData.fantasy_content.league;
+      if (draftLeague && draftLeague.length >= 2) {
+        const draftResults = (
+          draftLeague[1] as unknown as {
+            draft_results?: { draft_result: YahooDraftResult[] };
+          }
+        )?.draft_results?.draft_result;
+
+        if (draftResults && draftResults.length > 0) {
+          draftRounds = Math.max(
+            ...draftResults.map((r) => r.round),
+          );
+        }
+      }
+
+      // Project pick positions: worst record = pick 1
+      const sorted = [...teamList].sort(
+        (a, b) => a.wins - b.wins || a.points - b.points,
+      );
+      const projectedPick = new Map<string, number>();
+      sorted.forEach((t, i) => projectedPick.set(t.teamId, i + 1));
+
+      // Determine current season from league data
+      const currentSeason = parseInt(
+        leagueArray[0].season || String(new Date().getFullYear()),
+      );
+      const futureSeasons = [
+        currentSeason,
+        currentSeason + 1,
+        currentSeason + 2,
+      ];
+
+      // Generate default inventory: each team owns their own picks
+      const picks: AdapterDraftPick[] = [];
+      for (const season of futureSeasons) {
+        for (let round = 1; round <= draftRounds; round++) {
+          for (const team of teamList) {
+            picks.push({
+              season,
+              round,
+              projectedPickNumber: projectedPick.get(team.teamId),
+              ownerTeamExternalId: team.teamId,
+              originalTeamExternalId: team.teamId,
+            });
+          }
+        }
+      }
+
+      // Fetch traded picks from transactions
+      await this.applyTradedPicks(
+        leagueKey, headers, picks, projectedPick, draftRounds,
+      );
+
+      return picks;
+    } catch (error) {
+      console.warn("Yahoo getDraftPicks failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch trade transactions and apply pick ownership changes.
+   */
+  private async applyTradedPicks(
+    leagueKey: string,
+    headers: Record<string, string>,
+    picks: AdapterDraftPick[],
+    projectedPick: Map<string, number>,
+    draftRounds: number,
+  ): Promise<void> {
+    try {
+      const url =
+        `${YAHOO_API_BASE}/league/${leagueKey}` +
+        `/transactions;type=trade?format=json`;
 
       const response = await this.fetch<YahooFantasyContent>(
         url,
         { headers },
-        "GetDraftPicks"
+        "GetTradedPicks",
       );
 
-      // Yahoo's draft results format is complex, and future picks are not easily available
-      // For now, return empty - this would need more work to support traded picks
-      return [];
+      const leagueArray = response.fantasy_content.league;
+      if (!leagueArray || leagueArray.length < 2) return;
+
+      const txns = (
+        leagueArray[1] as unknown as {
+          transactions?: {
+            count: number;
+            [key: string]: unknown;
+          };
+        }
+      )?.transactions;
+      if (!txns) return;
+
+      for (const key of Object.keys(txns)) {
+        if (key === "count") continue;
+        const txnWrapper = txns[key] as {
+          transaction: YahooTransaction[];
+        };
+        const txn = txnWrapper?.transaction?.[0];
+        if (!txn?.picks) continue;
+
+        for (const pick of txn.picks) {
+          // Extract team IDs from team keys (format: nfl.l.XXXXX.t.Y)
+          const destId = pick.destination_team_key.split(".").pop();
+          const origId = pick.original_team_key.split(".").pop();
+          if (!destId || !origId) continue;
+
+          // Find and update matching pick in inventory
+          const match = picks.find(
+            (p) =>
+              p.round === pick.round &&
+              p.originalTeamExternalId === origId,
+          );
+          if (match) {
+            match.ownerTeamExternalId = destId;
+          }
+        }
+      }
     } catch {
-      return [];
+      // Trade data is optional — don't fail the whole sync
     }
   }
 

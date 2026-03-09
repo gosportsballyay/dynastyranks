@@ -102,6 +102,7 @@ export function FeedbackButton({
             ) : (
               <>
                 <textarea
+                  autoFocus
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="What's on your mind? (min 5 chars)"

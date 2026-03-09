@@ -47,6 +47,8 @@ export function computeEffectiveBaseline(
   // Bench depth ratio determines blend weights
   // benchDepthRatio ~ 0 → shallow bench → starterWeight high
   // benchDepthRatio ~ 1+ → deep bench → waiverWeight high
+  // totalTeams * 2 normalizes bench slots against a "typical" bench
+  // (2 per team). Shallow benches → starter baseline matters more.
   const benchDepthRatio = benchSlots / (totalTeams * 2);
   const starterWeight = 1 / (1 + benchDepthRatio);
   const waiverWeight = 1 - starterWeight;

@@ -2,14 +2,10 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth/config";
+import { isAdmin } from "@/lib/auth/admin";
 import { DiagnosticsView } from "./diagnostics-view";
 
 export const dynamic = "force-dynamic";
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
 
 interface AnchorEntry {
   name: string;
@@ -68,12 +64,7 @@ export default async function DiagnosticsPage() {
   if (!session?.user) {
     redirect("/login");
   }
-  if (
-    ADMIN_EMAILS.length > 0 &&
-    !ADMIN_EMAILS.includes(
-      (session.user.email ?? "").toLowerCase(),
-    )
-  ) {
+  if (!isAdmin(session.user.email)) {
     notFound();
   }
 

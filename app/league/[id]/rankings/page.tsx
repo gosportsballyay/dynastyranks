@@ -292,7 +292,12 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
   ].sort();
 
   // Determine sort mode (default: value for overall, projected for position-specific)
-  const sortMode = searchParams.sort || (searchParams.position ? "projected" : "value");
+  const VALID_SORTS = ["value", "projected", "last_season"] as const;
+  const rawSort = searchParams.sort;
+  const validSort = VALID_SORTS.includes(rawSort as typeof VALID_SORTS[number])
+    ? rawSort as typeof VALID_SORTS[number]
+    : undefined;
+  const sortMode = validSort || (searchParams.position ? "projected" : "value");
 
   // Sort filtered values based on mode
   const sortedValues = [...filteredValues].sort((a, b) => {

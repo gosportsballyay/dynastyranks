@@ -54,6 +54,7 @@ export function TradeCalculator({
   const [rosterImpact, setRosterImpact] =
     useState<RosterImpactResult | null>(null);
   const [impactLoading, setImpactLoading] = useState(false);
+  const [impactError, setImpactError] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -122,6 +123,7 @@ export function TradeCalculator({
     }
 
     setImpactLoading(true);
+    setImpactError(null);
     analyzeRosterImpactAction(
       leagueId,
       userTeamId,
@@ -129,6 +131,10 @@ export function TradeCalculator({
       userAssetsIn,
     ).then((result) => {
       setRosterImpact(result);
+      setImpactLoading(false);
+    }).catch((err) => {
+      console.error("Roster impact analysis failed:", err);
+      setImpactError("Failed to analyze roster impact.");
       setImpactLoading(false);
     });
   }, [
@@ -298,7 +304,14 @@ export function TradeCalculator({
             />
           )}
 
+          {userTeamInvolved && impactError && (
+            <div className="rounded-lg border border-red-800/50 bg-red-900/20 p-4 text-sm text-red-300">
+              {impactError}
+            </div>
+          )}
+
           {userTeamInvolved &&
+            !impactError &&
             (rosterImpact || impactLoading) && (
               <RosterImpactPanel
                 impact={

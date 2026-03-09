@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db/client";
-import {
-  leagues,
-  leagueSettings,
-  teams,
-  rosters,
-  draftPicks,
-  rawPayloads,
-  userTokens,
-} from "@/lib/db/schema";
+import { leagues, teams, userTokens } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import {
   createSleeperAdapter,
@@ -17,7 +9,7 @@ import {
   createESPNAdapter,
   createYahooAdapter,
 } from "@/lib/adapters";
-import { getPlayersByProviderIds } from "@/lib/player-mapping";
+import { syncLeagueData } from "@/lib/sync/sync-league-data";
 import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
 import { computeUnifiedValues } from "@/lib/value-engine/compute-unified";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -53,10 +45,16 @@ export async function POST(request: NextRequest) {
     const { provider, identifier, season, leagueId } = body;
 
     // Validate input
-    if (!provider || !identifier || !season) {
+    if (
+      !provider ||
+      !identifier ||
+      typeof identifier !== "string" ||
+      identifier.trim().length === 0 ||
+      !season
+    ) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -285,16 +283,16 @@ export async function POST(request: NextRequest) {
 
     // Start sync in background (for MVP, we'll do it synchronously)
     try {
-      await syncLeagueData(
-        newLeague.id,
+      await syncLeagueData({
+        leagueId: newLeague.id,
         provider,
         externalLeagueId,
         identifier,
-        session.user.id,
-        body.espnS2,
-        body.swid,
-        season
-      );
+        userId: session.user.id,
+        espnS2: body.espnS2,
+        swid: body.swid,
+        season,
+      });
 
       // Compute values immediately so rankings are ready
       await computeAggregatedValues(newLeague.id);
@@ -345,198 +343,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Sync league data from provider
- */
-async function syncLeagueData(
-  leagueId: string,
-  provider: Provider,
-  externalLeagueId: string,
-  identifier: string,
-  userId: string,
-  espnS2?: string,
-  swid?: string,
-  season?: number
-): Promise<void> {
-  // Create adapter based on provider
-  let adapter;
-
-  if (provider === "sleeper") {
-    adapter = createSleeperAdapter(identifier);
-  } else if (provider === "fleaflicker") {
-    adapter = createFleaflickerAdapter();
-  } else if (provider === "espn") {
-    adapter = createESPNAdapter({
-      espnS2,
-      swid,
-      leagueId: externalLeagueId,
-      season,
-    });
-  } else if (provider === "yahoo") {
-    // Fetch Yahoo token from database
-    const [token] = await db
-      .select()
-      .from(userTokens)
-      .where(
-        and(
-          eq(userTokens.userId, userId),
-          eq(userTokens.provider, "yahoo")
-        )
-      )
-      .limit(1);
-
-    if (!token) {
-      throw new Error("Yahoo OAuth token not found");
-    }
-
-    adapter = createYahooAdapter({
-      accessToken: token.accessToken,
-      refreshToken: token.refreshToken || undefined,
-      expiresAt: token.expiresAt || undefined,
-      onTokenRefresh: async (tokens) => {
-        await db
-          .update(userTokens)
-          .set({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            expiresAt: tokens.expiresAt,
-            updatedAt: new Date(),
-          })
-          .where(eq(userTokens.id, token.id));
-      },
-    });
-  } else {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-
-  // Fetch settings
-  const settings = await adapter.getLeagueSettings(externalLeagueId);
-
-  // Validate settings
-  const validation = adapter.validateSettings(settings);
-  if (!validation.valid) {
-    console.warn("League settings validation errors:", validation.errors);
-  }
-  if (validation.warnings.length > 0) {
-    console.warn("League settings warnings:", validation.warnings);
-  }
-
-  // Extract structuredRules from metadata for dedicated DB column
-  const metadataObj = settings.metadata as Record<string, unknown> | undefined;
-  const structuredRules = metadataObj?.structuredRules ?? null;
-
-  // Store settings
-  await db.insert(leagueSettings).values({
-    leagueId,
-    scoringRules: settings.scoringRules,
-    positionScoringOverrides: settings.positionScoringOverrides,
-    rosterPositions: settings.rosterPositions,
-    flexRules: settings.flexRules,
-    positionMappings: settings.positionMappings,
-    idpStructure: settings.idpStructure,
-    benchSlots: settings.benchSlots,
-    taxiSlots: settings.taxiSlots,
-    irSlots: settings.irSlots,
-    metadata: settings.metadata,
-    structuredRules: structuredRules as typeof leagueSettings.$inferInsert.structuredRules,
-  });
-
-  // Fetch teams
-  const adapterTeams = await adapter.getTeams(externalLeagueId);
-
-  // Store teams
-  const insertedTeams = await db
-    .insert(teams)
-    .values(
-      adapterTeams.map((t) => ({
-        leagueId,
-        externalTeamId: t.externalTeamId,
-        ownerName: t.ownerName,
-        teamName: t.teamName,
-        standingRank: t.standingRank,
-        totalPoints: t.totalPoints,
-        wins: t.wins,
-        losses: t.losses,
-        ties: t.ties,
-      }))
-    )
-    .returning();
-
-  // Create team ID mapping
-  const teamIdMap = new Map<string, string>();
-  for (const team of insertedTeams) {
-    teamIdMap.set(team.externalTeamId, team.id);
-  }
-
-  // Fetch rosters
-  const adapterPlayers = await adapter.getRosters(externalLeagueId);
-
-  // Get player IDs for mapping - build info map for name fallback
-  const externalPlayerIds = adapterPlayers.map((p) => p.externalPlayerId);
-  const playerInfoMap = new Map<string, { name: string; position: string }>();
-  for (const p of adapterPlayers) {
-    playerInfoMap.set(p.externalPlayerId, {
-      name: p.playerName || "",
-      position: p.playerPosition || "",
-    });
-  }
-  const playerMap = await getPlayersByProviderIds(provider, externalPlayerIds, playerInfoMap);
-
-  // Store rosters
-  if (adapterPlayers.length > 0) {
-    await db.insert(rosters).values(
-      adapterPlayers.map((p) => {
-        const teamId = teamIdMap.get(p.teamExternalId);
-        const canonicalPlayer = playerMap.get(p.externalPlayerId);
-
-        return {
-          teamId: teamId!,
-          canonicalPlayerId: canonicalPlayer?.id || null,
-          externalPlayerId: p.externalPlayerId,
-          slotPosition: p.slotPosition,
-          playerName: p.playerName,
-          playerPosition: p.playerPosition,
-        };
-      })
-    );
-  }
-
-  // Fetch draft picks
-  const adapterPicks = await adapter.getDraftPicks(externalLeagueId);
-
-  // Store draft picks
-  if (adapterPicks.length > 0) {
-    await db.insert(draftPicks).values(
-      adapterPicks.map((p) => ({
-        leagueId,
-        ownerTeamId: teamIdMap.get(p.ownerTeamExternalId)!,
-        originalTeamId: p.originalTeamExternalId
-          ? teamIdMap.get(p.originalTeamExternalId)
-          : null,
-        season: p.season,
-        round: p.round,
-        pickNumber: p.pickNumber,
-        projectedPickNumber: p.projectedPickNumber,
-      }))
-    );
-  }
-
-  // Store raw payloads for audit
-  const payloads = adapter.getRawPayloads();
-  if (payloads.length > 0) {
-    await db.insert(rawPayloads).values(
-      payloads.map((p) => ({
-        leagueId,
-        provider,
-        endpoint: p.endpoint,
-        requestParams: p.requestParams,
-        payload: p.payload,
-        status: p.status,
-        errorMessage: p.errorMessage,
-        fetchedAt: p.fetchedAt,
-      }))
-    );
-  }
-
-  adapter.clearRawPayloads();
-}
