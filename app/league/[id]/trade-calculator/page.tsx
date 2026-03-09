@@ -84,7 +84,7 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
         .where(
           and(
             eq(draftPicks.leagueId, league.id),
-            gte(draftPicks.season, new Date().getFullYear()),
+            gte(draftPicks.season, league.season),
           ),
         ),
     ]);

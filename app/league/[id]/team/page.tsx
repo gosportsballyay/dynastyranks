@@ -244,7 +244,7 @@ export default async function MyTeamPage({
           and(
             eq(draftPicks.ownerTeamId, viewedTeam.id),
             eq(draftPicks.leagueId, league.id),
-            gte(draftPicks.season, new Date().getFullYear()),
+            gte(draftPicks.season, league.season),
           ),
         )
         .orderBy(
