@@ -1,25 +1,25 @@
-import { neon, NeonQueryFunction } from "@neondatabase/serverless";
-import { drizzle, NeonHttpDatabase } from "drizzle-orm/neon-http";
+import { Pool } from "@neondatabase/serverless";
+import { drizzle, NeonDatabase } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
 
-let _db: NeonHttpDatabase<typeof schema> | null = null;
+let _db: NeonDatabase<typeof schema> | null = null;
 
-function getDb(): NeonHttpDatabase<typeof schema> {
+function getDb(): NeonDatabase<typeof schema> {
   if (_db) return _db;
 
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
-  const sql: NeonQueryFunction<false, false> = neon(process.env.DATABASE_URL);
-  _db = drizzle(sql, { schema });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  _db = drizzle(pool, { schema });
   return _db;
 }
 
-export const db = new Proxy({} as NeonHttpDatabase<typeof schema>, {
+export const db = new Proxy({} as NeonDatabase<typeof schema>, {
   get(_, prop) {
     return Reflect.get(getDb(), prop);
   },
 });
 
-export type Database = NeonHttpDatabase<typeof schema>;
+export type Database = NeonDatabase<typeof schema>;
