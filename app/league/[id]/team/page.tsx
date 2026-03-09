@@ -14,7 +14,7 @@ import {
   aggregatedValues,
   draftPicks,
 } from "@/lib/db/schema";
-import { eq, and, desc, inArray, asc } from "drizzle-orm";
+import { eq, and, desc, inArray, asc, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 import { computeAllPickValues } from "@/lib/trade-engine/draft-pick-values";
@@ -244,6 +244,7 @@ export default async function MyTeamPage({
           and(
             eq(draftPicks.ownerTeamId, viewedTeam.id),
             eq(draftPicks.leagueId, league.id),
+            gte(draftPicks.season, new Date().getFullYear()),
           ),
         )
         .orderBy(
@@ -377,7 +378,6 @@ export default async function MyTeamPage({
 
   // Compute optimal starters from league settings so display is
   // correct even when owners haven't set their lineup
-  const NON_STARTER_SLOTS = new Set(["BN", "IR", "TAXI"]);
   if (settings) {
     const optimalStarterIds = computeOptimalStarters(
       roster.map((p) => ({

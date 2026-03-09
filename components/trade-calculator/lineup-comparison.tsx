@@ -2,6 +2,17 @@
 
 import type { LineupResult } from "@/lib/trade-engine";
 
+const SLOT_DISPLAY: Record<string, string> = {
+  SUPER_FLEX: "SF",
+  IDP_FLEX: "IDP F",
+  FLEX: "Flex",
+  REC_FLEX: "RF",
+};
+
+export function displaySlot(slot: string): string {
+  return SLOT_DISPLAY[slot] ?? slot;
+}
+
 interface LineupComparisonProps {
   before: LineupResult;
   after: LineupResult;
@@ -29,15 +40,15 @@ export function LineupComparison({ before, after }: LineupComparisonProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full max-w-xl mx-auto text-sm">
         <thead>
           <tr className="text-xs text-slate-500 uppercase">
-            <th className="text-left px-2 py-1 w-16">Slot</th>
-            <th className="text-left px-2 py-1">Before</th>
-            <th className="text-right px-2 py-1 w-16">Pts</th>
-            <th className="text-left px-2 py-1">After</th>
-            <th className="text-right px-2 py-1 w-16">Pts</th>
-            <th className="text-right px-2 py-1 w-16">Delta</th>
+            <th className="text-left px-1.5 py-1 w-14">Slot</th>
+            <th className="text-left px-1.5 py-1">Before</th>
+            <th className="text-right px-1.5 py-1 w-12">Pts</th>
+            <th className="text-left px-1.5 py-1">After</th>
+            <th className="text-right px-1.5 py-1 w-12">Pts</th>
+            <th className="text-right px-1.5 py-1 w-12">+/-</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-800">
@@ -57,27 +68,27 @@ export function LineupComparison({ before, after }: LineupComparisonProps) {
                   key={`${slot}-${i}`}
                   className={changed ? "bg-blue-900/10" : ""}
                 >
-                  <td className="px-2 py-1 text-slate-500 font-medium">
-                    {i === 0 ? slot : ""}
+                  <td className="px-1.5 py-1 text-slate-500 font-medium">
+                    {i === 0 ? displaySlot(slot) : ""}
                   </td>
-                  <td className="px-2 py-1 text-slate-300 truncate max-w-[120px]">
+                  <td className="px-1.5 py-1 text-slate-300 truncate max-w-[100px]">
                     {bp?.name ?? "-"}
                   </td>
-                  <td className="px-2 py-1 text-right font-mono text-slate-400">
+                  <td className="px-1.5 py-1 text-right font-mono text-slate-400">
                     {bp ? bp.pts.toFixed(0) : "-"}
                   </td>
                   <td
-                    className={`px-2 py-1 truncate max-w-[120px] ${
+                    className={`px-1.5 py-1 truncate max-w-[100px] ${
                       changed ? "text-white font-medium" : "text-slate-300"
                     }`}
                   >
                     {ap?.name ?? "-"}
                   </td>
-                  <td className="px-2 py-1 text-right font-mono text-slate-400">
+                  <td className="px-1.5 py-1 text-right font-mono text-slate-400">
                     {ap ? ap.pts.toFixed(0) : "-"}
                   </td>
                   <td
-                    className={`px-2 py-1 text-right font-mono text-xs ${
+                    className={`px-1.5 py-1 text-right font-mono text-xs ${
                       delta > 0
                         ? "text-green-400"
                         : delta < 0
@@ -96,17 +107,17 @@ export function LineupComparison({ before, after }: LineupComparisonProps) {
         </tbody>
         <tfoot>
           <tr className="border-t border-slate-700">
-            <td className="px-2 py-2 text-slate-400 font-medium">Total</td>
+            <td className="px-1.5 py-2 text-slate-400 font-medium">Total</td>
             <td />
-            <td className="px-2 py-2 text-right font-mono text-slate-300">
+            <td className="px-1.5 py-2 text-right font-mono text-slate-300">
               {before.totalStarterPoints.toFixed(0)}
             </td>
             <td />
-            <td className="px-2 py-2 text-right font-mono text-slate-300">
+            <td className="px-1.5 py-2 text-right font-mono text-slate-300">
               {after.totalStarterPoints.toFixed(0)}
             </td>
             <td
-              className={`px-2 py-2 text-right font-mono font-bold ${
+              className={`px-1.5 py-2 text-right font-mono font-bold ${
                 after.totalStarterPoints > before.totalStarterPoints
                   ? "text-green-400"
                   : after.totalStarterPoints < before.totalStarterPoints

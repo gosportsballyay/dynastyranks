@@ -266,6 +266,8 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
       if (roster.starters) {
         for (let i = 0; i < roster.starters.length; i++) {
           const playerId = roster.starters[i];
+          // "0" = empty slot; skipping it still increments i,
+          // keeping starterSlots[i] aligned with the league's roster_positions
           if (playerId && playerId !== "0") {
             starterSet.add(playerId);
             players.push({

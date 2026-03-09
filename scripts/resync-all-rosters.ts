@@ -73,12 +73,8 @@ async function main() {
         teamIdMap.set(t.externalTeamId, t.id);
       }
 
-      // Delete existing rosters for all teams in this league
-      for (const t of leagueTeams) {
-        await db.delete(rosters).where(eq(rosters.teamId, t.id));
-      }
-
-      // Re-fetch rosters via updated adapter
+      // Re-fetch rosters via updated adapter (before deleting, so
+      // a fetch failure doesn't leave the league with no roster data)
       const adapterPlayers = await adapter.getRosters(
         league.externalLeagueId,
       );
@@ -103,25 +99,46 @@ async function main() {
         playerInfoMap,
       );
 
-      // Insert fresh roster rows
-      if (adapterPlayers.length > 0) {
-        await db.insert(rosters).values(
-          adapterPlayers.map((p) => {
-            const teamId = teamIdMap.get(p.teamExternalId);
-            const canonicalPlayer = playerMap.get(
-              p.externalPlayerId,
-            );
-            return {
-              teamId: teamId!,
-              canonicalPlayerId: canonicalPlayer?.id || null,
-              externalPlayerId: p.externalPlayerId,
-              slotPosition: p.slotPosition,
-              playerName: p.playerName,
-              playerPosition: p.playerPosition,
-            };
-          }),
-        );
-      }
+      // Filter out players whose teamExternalId doesn't map to a
+      // known team (e.g. free agents or unknown external IDs)
+      const mappedPlayers = adapterPlayers.filter((p) => {
+        if (!teamIdMap.has(p.teamExternalId)) {
+          console.warn(
+            `    WARN: player ${p.externalPlayerId} ` +
+              `(${p.playerName}) has unmapped team ` +
+              `"${p.teamExternalId}" — skipping`,
+          );
+          return false;
+        }
+        return true;
+      });
+
+      // Delete + insert in a transaction so roster data is never
+      // in a half-deleted state
+      await db.transaction(async (tx) => {
+        for (const t of leagueTeams) {
+          await tx.delete(rosters).where(eq(rosters.teamId, t.id));
+        }
+
+        if (mappedPlayers.length > 0) {
+          await tx.insert(rosters).values(
+            mappedPlayers.map((p) => {
+              const teamId = teamIdMap.get(p.teamExternalId)!;
+              const canonicalPlayer = playerMap.get(
+                p.externalPlayerId,
+              );
+              return {
+                teamId,
+                canonicalPlayerId: canonicalPlayer?.id || null,
+                externalPlayerId: p.externalPlayerId,
+                slotPosition: p.slotPosition,
+                playerName: p.playerName,
+                playerPosition: p.playerPosition,
+              };
+            }),
+          );
+        }
+      });
 
       console.log(
         `  OK  ${label} — ${adapterPlayers.length} players`,

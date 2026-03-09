@@ -12,7 +12,7 @@ import {
   canonicalPlayers,
   draftPicks,
 } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import {
   computeAllPickValues,
   computePickValue,
@@ -81,7 +81,12 @@ export default async function TradeCalculatorPage({ params }: PageProps) {
       db
         .select()
         .from(draftPicks)
-        .where(eq(draftPicks.leagueId, league.id)),
+        .where(
+          and(
+            eq(draftPicks.leagueId, league.id),
+            gte(draftPicks.season, new Date().getFullYear()),
+          ),
+        ),
     ]);
 
   const [settings] = settingsResult;

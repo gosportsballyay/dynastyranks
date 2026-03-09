@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { RosterImpactResult } from "@/lib/trade-engine";
 import { HelpTooltip } from "@/components/ui/help-tooltip";
-import { LineupComparison } from "./lineup-comparison";
+import { LineupComparison, displaySlot } from "./lineup-comparison";
 
 interface RosterImpactPanelProps {
   impact: RosterImpactResult;
@@ -75,7 +75,7 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
                 key={pos}
                 className="px-2 py-0.5 rounded text-xs bg-amber-900/70 text-amber-300"
               >
-                {pos}
+                {displaySlot(pos)}
               </span>
             ))}
           </div>
