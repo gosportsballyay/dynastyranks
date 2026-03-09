@@ -91,7 +91,9 @@ export function TeamRosterView({
   const router = useRouter();
 
   const starters = useMemo(
-    () => roster.filter((p) => p.slot === "START"),
+    () => roster.filter(
+      (p) => p.slot !== "BN" && p.slot !== "IR" && p.slot !== "TAXI",
+    ),
     [roster]
   );
   const bench = useMemo(

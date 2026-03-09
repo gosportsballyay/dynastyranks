@@ -23,6 +23,7 @@ import {
   type RosterPlayer,
   type TeamDraftPick,
 } from "@/components/team/team-roster-view";
+import { computeOptimalStarters } from "@/lib/utils/compute-optimal-lineup";
 
 interface PageProps {
   params: { id: string };
@@ -373,6 +374,35 @@ export default async function MyTeamPage({
       ),
     };
   });
+
+  // Compute optimal starters from league settings so display is
+  // correct even when owners haven't set their lineup
+  const NON_STARTER_SLOTS = new Set(["BN", "IR", "TAXI"]);
+  if (settings) {
+    const optimalStarterIds = computeOptimalStarters(
+      roster.map((p) => ({
+        id: p.playerId,
+        position: p.position,
+        positionGroup: ["QB", "RB", "WR", "TE", "K"].includes(
+          p.position,
+        )
+          ? "offense"
+          : "defense",
+        value: p.value,
+        slot: p.slot,
+      })),
+      settings.rosterPositions,
+      settings.flexRules,
+      settings.positionMappings,
+    );
+
+    for (const player of roster) {
+      if (player.slot === "IR" || player.slot === "TAXI") continue;
+      player.slot = optimalStarterIds.has(player.playerId)
+        ? "START"
+        : "BN";
+    }
+  }
 
   return (
     <TeamRosterView

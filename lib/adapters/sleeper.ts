@@ -238,49 +238,61 @@ export class SleeperAdapter extends BaseAdapter implements LeagueProviderAdapter
    * Fetch all rostered players
    */
   async getRosters(leagueId: string): Promise<AdapterPlayer[]> {
-    const rosters = await this.fetch<SleeperRoster[]>(
-      `${SLEEPER_API_BASE}/league/${leagueId}/rosters`,
-      undefined,
-      "GetRostersForPlayers"
+    const [league, rosterData] = await Promise.all([
+      this.fetch<SleeperLeague>(
+        `${SLEEPER_API_BASE}/league/${leagueId}`,
+        undefined,
+        "GetLeagueForSlots"
+      ),
+      this.fetch<SleeperRoster[]>(
+        `${SLEEPER_API_BASE}/league/${leagueId}/rosters`,
+        undefined,
+        "GetRostersForPlayers"
+      ),
+    ]);
+
+    // Starter slot labels from league config (excludes BN)
+    const starterSlots = league.roster_positions.filter(
+      (pos) => pos !== "BN",
     );
 
     const players: AdapterPlayer[] = [];
 
-    for (const roster of rosters) {
+    for (const roster of rosterData) {
       const teamId = roster.roster_id.toString();
+      const starterSet = new Set<string>();
 
-      // Add starters
+      // Assign starters with specific slot labels
       if (roster.starters) {
-        roster.starters.forEach((playerId, index) => {
+        for (let i = 0; i < roster.starters.length; i++) {
+          const playerId = roster.starters[i];
           if (playerId && playerId !== "0") {
+            starterSet.add(playerId);
             players.push({
               externalPlayerId: playerId,
               teamExternalId: teamId,
-              slotPosition: "START",
+              slotPosition: starterSlots[i] ?? "START",
             });
           }
-        });
+        }
       }
 
-      // Add bench players
+      // Non-starter players
       if (roster.players) {
-        const starterSet = new Set(roster.starters || []);
         const reserveSet = new Set(roster.reserve || []);
         const taxiSet = new Set(roster.taxi || []);
 
-        roster.players.forEach((playerId) => {
-          if (!starterSet.has(playerId)) {
-            let slot = "BN";
-            if (reserveSet.has(playerId)) slot = "IR";
-            if (taxiSet.has(playerId)) slot = "TAXI";
-
-            players.push({
-              externalPlayerId: playerId,
-              teamExternalId: teamId,
-              slotPosition: slot,
-            });
-          }
-        });
+        for (const playerId of roster.players) {
+          if (starterSet.has(playerId)) continue;
+          let slot = "BN";
+          if (reserveSet.has(playerId)) slot = "IR";
+          if (taxiSet.has(playerId)) slot = "TAXI";
+          players.push({
+            externalPlayerId: playerId,
+            teamExternalId: teamId,
+            slotPosition: slot,
+          });
+        }
       }
     }
 

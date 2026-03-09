@@ -241,17 +241,29 @@ deploy. If a code change affects stored data (values, picks, rosters),
 the deploy process must include a server-side script to update that
 data. Users seeing stale/broken data after a deploy will lose trust.
 
+**MANDATORY: Claude MUST run the appropriate resync/recompute scripts
+automatically after making changes to these directories. Do not ask
+the user — just run them. The only exception is if you need the user
+to provide secrets or credentials.**
+
 **After any value engine change** (`lib/value-engine/`):
 ```bash
 export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/recompute-all-leagues.ts
 ```
 
-**After any adapter change** (`lib/adapters/`) that affects synced data
-(draft picks, rosters, scoring rules):
+**After any adapter change** (`lib/adapters/`) that affects roster data
+or slot positions:
+```bash
+export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/resync-all-rosters.ts [--provider sleeper]
+```
+
+**After any adapter change** (`lib/adapters/`) that affects draft pick
+data:
 ```bash
 export $(grep -v '^#' .env.local | xargs) && npx tsx scripts/resync-draft-picks.ts [--provider sleeper]
 ```
 
 **Rule:** Every PR that changes adapter or value engine code MUST
 include the post-deploy resync/recompute command in the PR description.
-Do not merge without running it.
+Claude must run these scripts as part of the implementation, not just
+mention them.

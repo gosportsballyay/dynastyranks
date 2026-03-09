@@ -237,7 +237,10 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
         )
       : new Set(
           teamRoster
-            .filter((r) => r.roster.slotPosition === "START")
+            .filter((r) => {
+              const s = r.roster.slotPosition || "BN";
+              return s !== "BN" && s !== "IR" && s !== "TAXI";
+            })
             .map((r) => r.player.id),
         );
     const offenseRoster = teamRoster.filter(
