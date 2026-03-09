@@ -45,6 +45,7 @@ next-env.d.ts
 *.xlsx
 *.rtf
 *.csv
+data/idp-research-raw.json
 .worktrees/
 
 # Claude Code
