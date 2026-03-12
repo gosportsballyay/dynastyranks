@@ -426,6 +426,10 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
             leagueId={league.id}
             currentSearch={searchParams.search}
             currentParams={searchParams}
+            players={values.map((v) => ({
+              name: v.player.name,
+              nflTeam: v.player.nflTeam,
+            }))}
           />
           <ExportCsvButton values={valuesWithOwnership} leagueName={league.name} />
           <span className="text-sm text-slate-400">
