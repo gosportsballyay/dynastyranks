@@ -264,75 +264,86 @@ export function TradeSide({
                 </div>
               </div>
             ))}
-            {selectedPicks.map((pick) => (
-              <div
-                key={pick.pickId}
-                className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-900/70 text-amber-300">
-                    PICK
-                  </span>
-                  <span className="text-white text-sm">
-                    {pick.season} {formatPickLabel(pick)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Tier toggle for picks with E/M/L values */}
-                  {hasEml(pick) && (
-                    <div className="flex gap-0.5">
-                      {pick.projectedValue !== undefined && (
-                        <button
-                          onClick={() =>
-                            handlePickTierChange(pick, "projected")
-                          }
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                            (pickTiers[pick.pickId] ?? "projected") ===
-                            "projected"
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-700 text-slate-400 hover:text-white"
-                          }`}
-                          title="Use projected pick position from standings"
-                        >
-                          Proj
-                        </button>
+            {selectedPicks.map((pick) => {
+              const origin = formatPickOrigin(pick);
+              const showTierToggle = hasEml(pick) && !hasExactSlot(pick);
+              return (
+                <div
+                  key={pick.pickId}
+                  className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-900/70 text-amber-300">
+                      PICK
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-white text-sm">
+                        {pick.season} {formatPickLabel(pick)}
+                      </span>
+                      {origin && (
+                        <div className="text-xs text-slate-500 truncate">
+                          {origin}
+                        </div>
                       )}
-                      {(
-                        [
-                          ["early", "Early"],
-                          ["mid", "Mid"],
-                          ["late", "Late"],
-                        ] as const
-                      ).map(([tier, label]) => (
-                        <button
-                          key={tier}
-                          onClick={() => handlePickTierChange(pick, tier)}
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                            (pickTiers[pick.pickId] ??
-                              (pick.projectedValue !== undefined
-                                ? "projected"
-                                : "mid")) === tier
-                              ? "bg-blue-600 text-white"
-                              : "bg-slate-700 text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
                     </div>
-                  )}
-                  <span className="text-xs font-mono text-green-400">
-                    {pick.value.toLocaleString()}
-                  </span>
-                  <button
-                    onClick={() => onRemovePick(pick.pickId)}
-                    className="text-slate-400 hover:text-red-400 transition-colors p-0.5"
-                  >
-                    <XIcon />
-                  </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Tier toggle only for picks without exact slot */}
+                    {showTierToggle && (
+                      <div className="flex gap-0.5">
+                        {pick.projectedValue !== undefined && (
+                          <button
+                            onClick={() =>
+                              handlePickTierChange(pick, "projected")
+                            }
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                              (pickTiers[pick.pickId] ?? "projected") ===
+                              "projected"
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-700 text-slate-400 hover:text-white"
+                            }`}
+                            title="Use projected pick position from standings"
+                          >
+                            Proj
+                          </button>
+                        )}
+                        {(
+                          [
+                            ["early", "Early"],
+                            ["mid", "Mid"],
+                            ["late", "Late"],
+                          ] as const
+                        ).map(([tier, label]) => (
+                          <button
+                            key={tier}
+                            onClick={() => handlePickTierChange(pick, tier)}
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                              (pickTiers[pick.pickId] ??
+                                (pick.projectedValue !== undefined
+                                  ? "projected"
+                                  : "mid")) === tier
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-700 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <span className="text-xs font-mono text-green-400">
+                      {pick.value.toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => onRemovePick(pick.pickId)}
+                      className="text-slate-400 hover:text-red-400 transition-colors p-0.5"
+                    >
+                      <XIcon />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {valueAdjustment > 0 && (
               <div className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 min-w-0">
@@ -537,10 +548,17 @@ export function TradeSide({
                             }}
                             className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-slate-700/50 transition-colors text-left"
                           >
-                            <span className="text-slate-300 text-sm">
-                              {formatPickLabel(pick)}
-                            </span>
-                            <span className="text-xs font-mono text-slate-400">
+                            <div className="min-w-0">
+                              <span className="text-slate-300 text-sm">
+                                {formatPickLabel(pick)}
+                              </span>
+                              {formatPickOrigin(pick) && (
+                                <div className="text-xs text-slate-500 truncate">
+                                  {formatPickOrigin(pick)}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs font-mono text-slate-400 flex-shrink-0 ml-2">
                               {pick.value.toLocaleString()}
                             </span>
                           </button>
@@ -565,7 +583,6 @@ const ROUND_ORDINALS: Record<number, string> = {
 /** Format a pick label — generic picks show "Early 1st", team picks show "Rd 1.03". */
 function formatPickLabel(pick: DraftPickAsset): string {
   if (pick.pickId.startsWith("generic-")) {
-    // pickId format: generic-{season}-{round}-{tier} or generic-{season}-{round}-{tier}-{counter}
     const parts = pick.pickId.split("-");
     const tier = parts[3] ?? "mid";
     const tierLabel =
@@ -578,13 +595,23 @@ function formatPickLabel(pick: DraftPickAsset): string {
   if (slot) {
     label += `.${String(slot).padStart(2, "0")}`;
   }
+  return label;
+}
+
+/** Returns the "via Team Name" string if the pick was traded, or null. */
+function formatPickOrigin(pick: DraftPickAsset): string | null {
   if (
     pick.originalTeamName &&
     pick.originalTeamId !== pick.ownerTeamId
   ) {
-    label += ` (via ${pick.originalTeamName})`;
+    return `via ${pick.originalTeamName}`;
   }
-  return label;
+  return null;
+}
+
+/** Whether a pick has a known exact slot (not just a round). */
+function hasExactSlot(pick: DraftPickAsset): boolean {
+  return pick.pickNumber !== null || pick.projectedPickNumber !== null;
 }
 
 function XIcon() {
