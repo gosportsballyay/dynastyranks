@@ -39,6 +39,7 @@ const MIN_PRODUCTION_CAPS: Record<string, number> = {
   QB: 16, RB: 32, WR: 40, TE: 16,
   DL: 24, LB: 32, DB: 28,
   EDR: 20, IL: 16, CB: 20, S: 20,
+  DE: 20, DT: 16,
 };
 
 /**
@@ -46,10 +47,11 @@ const MIN_PRODUCTION_CAPS: Record<string, number> = {
  * Based on realistic NFL production supply.
  * K excluded — not tracked in pointsByPosition consistently.
  */
-const MAX_PRODUCTION_CAPS: Record<string, number> = {
+export const MAX_PRODUCTION_CAPS: Record<string, number> = {
   QB: 36, RB: 72, WR: 100, TE: 40,
   DL: 60, LB: 90, DB: 80,
   EDR: 48, IL: 36, CB: 50, S: 45,
+  DE: 48, DT: 36,
 };
 
 /**
@@ -70,6 +72,8 @@ const BASE_DEPTH_FACTORS: Record<string, number> = {
   IL: 0.85,
   CB: 0.9,
   S: 0.9,
+  DE: 1.0,
+  DT: 0.85,
 };
 
 /**
@@ -115,6 +119,7 @@ const LIQUIDITY_COEFFICIENTS: Record<string, number> = {
   QB: 0.05, RB: 0.15, WR: 0.08, TE: 0.12,
   DL: 0.06, LB: 0.05, DB: 0.05,
   EDR: 0.08, IL: 0.06, CB: 0.05, S: 0.05,
+  DE: 0.08, DT: 0.06,
 };
 
 /**

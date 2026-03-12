@@ -20,7 +20,11 @@ import {
 } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { calculateFantasyPoints, type ScoringRule } from "./vorp";
-import { calculateStarterDemand, getDepthFactor } from "./replacement-level";
+import {
+  calculateStarterDemand,
+  getDepthFactor,
+  MAX_PRODUCTION_CAPS,
+} from "./replacement-level";
 import {
   getAgeCurveMultiplier,
   getDampenedDynastyMod,
@@ -41,7 +45,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.4.0";
+export const ENGINE_VERSION = "3.5.0";
 export const PROJECTION_VERSION = "1.0.0";
 
 /**
@@ -560,6 +564,22 @@ export async function computeUnifiedValues(
             )
           : 1.0;
 
+        // Dampen dynasty premium in saturated IDP positions.
+        // When nearly all viable producers are starters (32-team
+        // leagues), production reliability matters more than youth.
+        if (IDP_POSITIONS.has(pos)) {
+          const cap = MAX_PRODUCTION_CAPS[pos] ?? 50;
+          const saturation = Math.min(
+            1.0,
+            (starterDemands[pos] ?? 0) / cap,
+          );
+          if (saturation > 0.5) {
+            const dampFactor =
+              1 - ((saturation - 0.5) / 0.5) * 0.5;
+            dampenedMod = 1 + (dampenedMod - 1) * dampFactor;
+          }
+        }
+
         const signalResult = computeLeagueSignal(
           projectedPts,
           pos,
@@ -1025,27 +1045,24 @@ export function computeIdpSignalDiscount(
 /**
  * Percentile-based tiered discount for IDP signal_primary values.
  *
- * Elite IDPs (top 5%) get a higher multiplier (~0.62) while bulk
+ * Elite IDPs (top 5%) get a higher multiplier (~0.55) while bulk
  * IDPs get a lower one (~0.42). Linear interpolation within each
  * band prevents cliff effects at tier boundaries.
  *
  * @param percentile - Player percentile in [0, 1] where 1.0 = best
- * @returns Discount factor in [0.42, 0.62]
+ * @returns Discount factor in [0.42, 0.55]
  */
 export function computeIdpTieredDiscount(
   percentile: number,
 ): number {
-  if (percentile >= 0.95) return 0.62;
+  if (percentile >= 0.95) return 0.55;
   if (percentile >= 0.85) {
-    const t = (percentile - 0.85) / 0.10;
-    return 0.55 + t * (0.62 - 0.55);
+    return 0.50 + ((percentile - 0.85) / 0.10) * 0.05;
   }
   if (percentile >= 0.50) {
-    const t = (percentile - 0.50) / 0.35;
-    return 0.48 + t * (0.55 - 0.48);
+    return 0.46 + ((percentile - 0.50) / 0.35) * 0.04;
   }
-  const t = percentile / 0.50;
-  return 0.42 + t * (0.48 - 0.42);
+  return 0.42 + (percentile / 0.50) * 0.04;
 }
 
 /**

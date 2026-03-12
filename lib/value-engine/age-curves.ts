@@ -164,9 +164,15 @@ export function getDynastyPremium(
     // High draft capital = more certain future, but ONLY if the
     // player is still below peak age. A 26-year-old rookie LB is
     // already in peak range — no development upside to price in.
+    // IDP draft capital is less predictive than offense — use a
+    // larger divisor to reduce the bonus magnitude.
     if (draftRound !== undefined && age < peak.start) {
-      const capitalBonus = Math.max(0, (8 - draftRound) / 20);
-      premium += capitalBonus; // 1st rd: +0.35, 7th: +0.05
+      const IDP_CAPITAL_POSITIONS = new Set([
+        "LB", "DL", "DB", "EDR", "IL", "CB", "S", "DE", "DT",
+      ]);
+      const divisor = IDP_CAPITAL_POSITIONS.has(position) ? 30 : 20;
+      const capitalBonus = Math.max(0, (8 - draftRound) / divisor);
+      premium += capitalBonus;
     }
 
     // Position-specific rookie premiums based on research

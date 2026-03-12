@@ -596,6 +596,34 @@ export async function matchExternalRankingsToPlayers(): Promise<void> {
       }
     }
 
+    // Strategy 5: IDP position group matching
+    // FantasyPros may tag a player as "IL" while canonical uses "EDR"
+    // Both belong to the "dl" group — try all positions in same group
+    if (!player) {
+      const posLower = ranking.position.toLowerCase();
+      const group = IDP_POSITION_GROUPS[posLower];
+      if (group) {
+        const siblings = Object.entries(IDP_POSITION_GROUPS)
+          .filter(([, g]) => g === group)
+          .map(([pos]) => pos.toUpperCase());
+
+        for (const siblingPos of siblings) {
+          if (siblingPos === ranking.position) continue;
+
+          const candidates =
+            await db.query.canonicalPlayers.findMany({
+              where: and(
+                eq(canonicalPlayers.name, ranking.playerName),
+                eq(canonicalPlayers.position, siblingPos),
+              ),
+            });
+
+          player = pickBestCandidate(candidates);
+          if (player) break;
+        }
+      }
+    }
+
     if (player) {
       await db
         .update(externalRankings)

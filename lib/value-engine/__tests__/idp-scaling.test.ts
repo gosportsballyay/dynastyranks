@@ -114,25 +114,25 @@ describe("computeIdpSignalDiscount", () => {
 });
 
 describe("computeIdpTieredDiscount", () => {
-  it("returns 0.62 at p=1.0 (best IDP)", () => {
-    expect(computeIdpTieredDiscount(1.0)).toBeCloseTo(0.62, 10);
+  it("returns 0.55 at p=1.0 (best IDP)", () => {
+    expect(computeIdpTieredDiscount(1.0)).toBeCloseTo(0.55, 10);
   });
 
-  it("returns 0.62 at p=0.95 (elite threshold)", () => {
-    expect(computeIdpTieredDiscount(0.95)).toBeCloseTo(0.62, 10);
+  it("returns 0.55 at p=0.95 (elite threshold)", () => {
+    expect(computeIdpTieredDiscount(0.95)).toBeCloseTo(0.55, 10);
   });
 
-  it("returns ~0.585 at p=0.90 (high tier midpoint)", () => {
-    // lerp(0.55, 0.62, (0.90-0.85)/0.10) = 0.55 + 0.5*0.07 = 0.585
-    expect(computeIdpTieredDiscount(0.90)).toBeCloseTo(0.585, 2);
+  it("returns ~0.525 at p=0.90 (high tier midpoint)", () => {
+    // lerp(0.50, 0.55, (0.90-0.85)/0.10) = 0.50 + 0.5*0.05 = 0.525
+    expect(computeIdpTieredDiscount(0.90)).toBeCloseTo(0.525, 2);
   });
 
-  it("returns 0.55 at p=0.85 (high/mid boundary)", () => {
-    expect(computeIdpTieredDiscount(0.85)).toBeCloseTo(0.55, 10);
+  it("returns 0.50 at p=0.85 (high/mid boundary)", () => {
+    expect(computeIdpTieredDiscount(0.85)).toBeCloseTo(0.50, 10);
   });
 
-  it("returns 0.48 at p=0.50 (mid/low boundary)", () => {
-    expect(computeIdpTieredDiscount(0.50)).toBeCloseTo(0.48, 10);
+  it("returns 0.46 at p=0.50 (mid/low boundary)", () => {
+    expect(computeIdpTieredDiscount(0.50)).toBeCloseTo(0.46, 10);
   });
 
   it("returns 0.42 at p=0.0 (worst IDP)", () => {
@@ -151,11 +151,11 @@ describe("computeIdpTieredDiscount", () => {
     }
   });
 
-  it("stays within [0.42, 0.62] bounds for all inputs", () => {
+  it("stays within [0.42, 0.55] bounds for all inputs", () => {
     for (let p = 0; p <= 1; p += 0.01) {
       const d = computeIdpTieredDiscount(p);
       expect(d).toBeGreaterThanOrEqual(0.42 - 1e-10);
-      expect(d).toBeLessThanOrEqual(0.62 + 1e-10);
+      expect(d).toBeLessThanOrEqual(0.55 + 1e-10);
     }
   });
 });
