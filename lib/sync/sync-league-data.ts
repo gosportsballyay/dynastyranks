@@ -22,6 +22,7 @@ import {
   createFleaflickerAdapter,
   createESPNAdapter,
   createYahooAdapter,
+  createMFLAdapter,
 } from "@/lib/adapters";
 import { getPlayersByProviderIds } from "@/lib/player-mapping";
 import type { Provider } from "@/types";
@@ -34,6 +35,7 @@ interface SyncLeagueDataOptions {
   userId: string;
   espnS2?: string;
   swid?: string;
+  mflApiKey?: string;
   season?: number;
   /** Whether to delete existing data first (re-sync vs initial) */
   isResync?: boolean;
@@ -56,13 +58,14 @@ export async function syncLeagueData(
     userId,
     espnS2,
     swid,
+    mflApiKey,
     season,
     isResync = false,
   } = opts;
 
-  const adapter = await createAdapter(
+  const adapter = await createAdapterForSync(
     provider, identifier, externalLeagueId,
-    userId, espnS2, swid, season,
+    userId, espnS2, swid, mflApiKey, season,
   );
 
   // ── Fetch all data from adapter BEFORE touching DB ──
@@ -255,13 +258,14 @@ export async function syncLeagueData(
  * Throws a descriptive error if ESPN private league cookies are
  * missing.
  */
-async function createAdapter(
+async function createAdapterForSync(
   provider: Provider,
   identifier: string,
   externalLeagueId: string,
   userId: string,
   espnS2?: string,
   swid?: string,
+  mflApiKey?: string,
   season?: number,
 ) {
   if (provider === "sleeper") {
@@ -355,6 +359,52 @@ async function createAdapter(
           })
           .where(eq(userTokens.id, token.id));
       },
+    });
+  }
+
+  if (provider === "mfl") {
+    let apiKey = mflApiKey;
+
+    if (!apiKey) {
+      const [token] = await db
+        .select()
+        .from(userTokens)
+        .where(
+          and(
+            eq(userTokens.userId, userId),
+            eq(userTokens.provider, "mfl"),
+          ),
+        )
+        .limit(1);
+
+      if (token) {
+        apiKey = token.accessToken;
+      }
+    }
+
+    // Persist API key for future syncs
+    if (mflApiKey) {
+      await db
+        .insert(userTokens)
+        .values({
+          userId,
+          provider: "mfl",
+          accessToken: mflApiKey,
+          refreshToken: null,
+        })
+        .onConflictDoUpdate({
+          target: [userTokens.userId, userTokens.provider],
+          set: {
+            accessToken: mflApiKey,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    return createMFLAdapter({
+      apiKey,
+      leagueId: externalLeagueId,
+      season,
     });
   }
 

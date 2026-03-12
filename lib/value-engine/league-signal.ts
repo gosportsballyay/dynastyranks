@@ -8,24 +8,7 @@
 
 import { sigmoidScale } from "./sigmoid";
 
-/**
- * Position depth factors — thin positions get a scarcity boost.
- * Mirrors the factors from vorp.ts calculateScarcityMultiplier.
- */
-const DEPTH_FACTORS: Record<string, number> = {
-  QB: 0.8,
-  RB: 1.1,
-  WR: 0.9,
-  TE: 1.15, // Scarcity boost for elite TEs (McBride ~top 15-20)
-  K: 0.5,
-  LB: 0.9,
-  DL: 1.0,
-  DB: 0.9,
-  EDR: 1.1,
-  IL: 0.85,
-  CB: 0.9,
-  S: 0.9,
-};
+import { getDepthFactor } from "./replacement-level";
 
 /** Result from league signal computation. */
 export interface LeagueSignalResult {
@@ -52,8 +35,9 @@ export function calculateScarcity(
   rankInPosition: number,
   starterDemand: number,
   position: string,
+  depthFactorOverride?: number,
 ): number {
-  const depthFactor = DEPTH_FACTORS[position] ?? 1.0;
+  const depthFactor = depthFactorOverride ?? getDepthFactor(position);
 
   const eliteThreshold = Math.max(1, starterDemand * 0.25);
   const starterThreshold = Math.max(1, starterDemand);
@@ -91,6 +75,7 @@ export function computeLeagueSignal(
   starterDemand: number,
   dampenedDynastyMod: number,
   positionPoints: number[],
+  depthFactorOverride?: number,
 ): LeagueSignalResult {
   const delta = playerPoints - effectiveBaseline;
   const sigmoidValue = sigmoidScale(delta);
@@ -104,6 +89,7 @@ export function computeLeagueSignal(
     rankInPosition,
     starterDemand,
     position,
+    depthFactorOverride,
   );
 
   // Apply scarcity and dynasty modifier, then rescale to 0-10000

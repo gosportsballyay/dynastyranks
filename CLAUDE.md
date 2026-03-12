@@ -12,24 +12,38 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 
 ---
 
-## Current State (as of 2026-02-26)
+## Current State (as of 2026-03-11)
+
+### Quick Start
+```bash
+pnpm dev          # Start dev server (Next.js)
+pnpm build        # Production build
+pnpm lint         # ESLint
+pnpm test         # Vitest (run once)
+pnpm test:watch   # Vitest (watch mode)
+pnpm db:studio    # Drizzle Studio (DB browser)
+pnpm db:push      # Push schema changes to DB
+```
 
 ### Working Features
 | Feature | Route | Notes |
 |---------|-------|-------|
 | Auth (email/password) | `/login`, `/signup` | NextAuth.js v5, JWT |
+| Forgot/reset password | `/forgot-password`, `/reset-password` | Email-based reset flow |
 | Dashboard | `/dashboard` | Lists connected leagues |
-| League connect | `/dashboard/connect` | Sleeper, Fleaflicker, ESPN; Yahoo "Coming Soon" |
+| League connect | `/dashboard/connect` | Sleeper, Fleaflicker, ESPN, Yahoo, MFL |
 | Player rankings | `/league/[id]/rankings` | Full filters, CSV export, valuation emphasis modes |
 | Power rankings | `/league/[id]/summary` | Team-level value breakdown with needs/surplus analysis |
 | My Team | `/league/[id]/team` | Roster by slot (START/BN/IR/TAXI), team switcher |
 | Trade calculator | `/league/[id]/trade-calculator` | Draft picks, fairness verdict, market divergence, roster impact |
 | League settings | `/league/[id]/settings` | Team selection, sync, valuation mode |
+| IDP Trends | `/idp-trends` | Sleeper ecosystem IDP data explorer |
 | Beta gate | `/beta` | Middleware-based access code (env `BETA_ACCESS_CODE`) |
 | Feedback | Floating button | `FeedbackButton` component, `/api/feedback` endpoint |
 | Admin diagnostics | `/admin/diagnostics` | Debug tooling |
 | Admin dashboard | `/admin` | User listing, feedback overview, signup stats |
 | How It Works | `/how-it-works` | Value pipeline explanation + methodology |
+| Legal pages | `/terms`, `/privacy` | Accessible without beta cookie |
 | Consensus pipeline | `scripts/run-rankings-pipeline.sh` | KTC + FantasyCalc + DynastyProcess scrapers |
 
 ### Tech Stack
@@ -91,32 +105,17 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 7. **Trade Finder** - suggest trades between league teams
 8. **Projected Points Charts** - visualize player arcs
 
-### Done (previously listed as gaps)
-
-- ~~Draft pick trading~~ — picks fully integrated in trade calculator
-- ~~Trade calc "who wins" indicator~~ — `FairnessPanel` with verdict
-- ~~Roster impact analysis~~ — `RosterImpactPanel` with before/after lineups
-- ~~ESPN + Yahoo adapters~~ — both fully implemented (643 and 877 lines)
-- ~~Mobile responsive audit~~ — responsive padding, hidden columns, scroll wrappers
-- ~~Admin Dashboard~~ — User listing, feedback table, stats cards at `/admin`
-
-### Beta Launch Infrastructure
-- Terms of Service (`/terms`) and Privacy Policy (`/privacy`) pages
-- OpenGraph + Twitter meta tags on root layout
-- `robots.txt` (disallows dashboard/league/admin/api) + `sitemap.xml`
-- Middleware updated: `/terms` and `/privacy` accessible without beta cookie
-- Sentry error tracking (`@sentry/nextjs`) with client/server/edge configs
-- Security headers (X-Frame-Options, HSTS, nosniff, referrer-policy)
-- Error boundaries wired to `Sentry.captureException`
-- Vercel Analytics (`@vercel/analytics`) + Speed Insights (`@vercel/speed-insights`)
-- Beta disclaimer banner (dismissible, league pages only)
-- Help tooltips on valuation emphasis, trade calculator, power rankings
+### Infrastructure (shipped)
+- Sentry error tracking, Vercel Analytics + Speed Insights
+- Security headers, OpenGraph/Twitter meta, `robots.txt` + `sitemap.xml`
+- Beta disclaimer banner, help tooltips on key features
 
 ---
 
 ## Architecture Notes
 
 ### Value Engine (`lib/value-engine/`)
+- `index.ts` - Barrel exports
 - `compute-values.ts` - Main pipeline: projections -> fantasy pts -> VORP -> dynasty adj -> final value
 - `compute-unified.ts` - Unified value computation (consensus + league signal blend)
 - `blend.ts` - Consensus blending logic
@@ -144,10 +143,13 @@ reports a concrete bug. Focus exclusively on the MVP feature gaps below.
 - `market-divergence.ts` - League-consensus divergence detection
 
 ### Adapters (`lib/adapters/`)
+- `base.ts` - Base adapter interface/types
+- `index.ts` - Adapter factory/registry
 - `sleeper.ts` - Full implementation
 - `fleaflicker.ts` - Full implementation
 - `espn.ts` - Full implementation (public + cookie-based private leagues)
 - `yahoo.ts` - Full implementation (OAuth-based)
+- `mfl.ts` - Full implementation (API key for private, public access)
 
 ### Key Schema Tables (`lib/db/schema.ts`)
 - `leagues` + `leagueSettings` - League config + structured rules
@@ -174,6 +176,7 @@ Each platform uses different position taxonomies:
 | Fleaflicker | EDR, IL, LB, CB, S (granular) | Yes (`applyTo`) |
 | ESPN | DE, DT, LB, CB, S / DL, DB | Yes (`pointsOverrides`) |
 | Yahoo | DE, DT, LB, CB, S / DL, DB | No |
+| MFL | DE, DT, LB, CB, S (granular natively) | Yes (per-position rules) |
 
 `resolveDefensivePosition()` in `position-normalization.ts` resolves
 each player's position based on the league's actual roster slots:
@@ -185,6 +188,14 @@ each player's position based on the league's actual roster slots:
 The `IDP_POSITION_GROUPS` mapping in `aggregate.ts` (cb/s→db,
 edr/il/de/dt→dl) is ONLY for cross-source consensus matching.
 It does NOT affect per-league value calculations.
+
+Cross-taxonomy sibling resolution in `position-normalization.ts`:
+EDR↔DE, IL↔DT. MFL uses DE/DT natively; canonical DB stores EDR/IL
+(from DynastyProcess). The resolver maps between taxonomies per league.
+
+Position resolution MUST happen before scoring override lookup in
+`compute-unified.ts`. Overrides keyed to "DE" won't match canonical
+"EDR" unless the player's position is resolved first.
 
 Do NOT assume all leagues use 3 IDP groups. Do NOT force-consolidate
 positions at data ingestion time. Always preserve the most granular
@@ -233,6 +244,13 @@ All fantasy point calculations MUST be deterministic:
 - Parallel Promise.all for independent DB queries
 - Value engine is league-specific: every value considers scoring, roster, league size
 - If an approach hits 2+ unexpected blockers, stop and re-plan rather than pushing through
+
+### Pre-Commit Verification
+**MANDATORY: Before offering to commit, verify the dev site loads correctly.**
+Next.js `.next` cache frequently corrupts during code editing (HMR chunk
+errors, white/unstyled pages, 500 on CSS/JS assets). Fix: kill dev server,
+`rm -rf .next`, restart `pnpm dev`. Always confirm the site renders with
+the correct dark theme before committing.
 
 ### Deployment: Data Must Be Seamless for Users
 

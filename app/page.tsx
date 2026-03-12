@@ -90,7 +90,7 @@ export default function Home() {
         </dl>
 
         <p className="mt-12 text-sm text-slate-500">
-          Works with Sleeper, Fleaflicker, ESPN, and Yahoo.{" "}
+          Works with Sleeper, Fleaflicker, ESPN, MFL, and Yahoo.{" "}
           <Link
             href="/how-it-works"
             className="text-slate-400 hover:text-white transition-colors"

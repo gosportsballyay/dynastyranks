@@ -16,6 +16,7 @@ import * as schema from "../lib/db/schema";
 import {
   createSleeperAdapter,
   createFleaflickerAdapter,
+  createMFLAdapter,
 } from "../lib/adapters";
 import { getPlayersByProviderIds } from "../lib/player-mapping";
 import type { Provider } from "../types";
@@ -74,7 +75,9 @@ async function main() {
     const adapter =
       league.provider === "sleeper"
         ? createSleeperAdapter(league.externalLeagueId)
-        : createFleaflickerAdapter();
+        : league.provider === "mfl"
+          ? createMFLAdapter({ leagueId: league.externalLeagueId, season: league.season })
+          : createFleaflickerAdapter();
 
     // Fetch settings
     console.log("Fetching league settings from provider...");

@@ -4,7 +4,7 @@
 
 import type { CanonicalStatKey } from "@/lib/stats/canonical-keys";
 
-export type Provider = "sleeper" | "fleaflicker" | "espn" | "yahoo";
+export type Provider = "sleeper" | "fleaflicker" | "espn" | "yahoo" | "mfl";
 
 export type IDPStructure = "none" | "consolidated" | "granular" | "mixed";
 
@@ -177,4 +177,10 @@ export interface AdapterConfig {
   username?: string; // For Sleeper (uses username, not OAuth)
   rateLimitMs?: number; // Delay between requests
   maxRetries?: number;
+}
+
+export interface MFLAdapterConfig extends AdapterConfig {
+  apiKey?: string;
+  leagueId?: string;
+  season?: number;
 }

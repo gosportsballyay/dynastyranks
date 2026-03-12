@@ -26,6 +26,7 @@ export interface CanonicalPlayer {
   fleaflickerId?: string;
   espnId?: string;
   yahooId?: string;
+  mflId?: string;
 }
 
 /**

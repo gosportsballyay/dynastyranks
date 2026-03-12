@@ -142,6 +142,8 @@ function getProviderIdFieldName(provider: Provider): string | null {
       return "espnId";
     case "yahoo":
       return "yahooId";
+    case "mfl":
+      return "mflId";
     default:
       return null;
   }
@@ -235,6 +237,8 @@ function getProviderIdColumn(provider: Provider) {
       return canonicalPlayers.espnId;
     case "yahoo":
       return canonicalPlayers.yahooId;
+    case "mfl":
+      return canonicalPlayers.mflId;
     default:
       throw new Error(`Unknown provider: ${provider}`);
   }
@@ -256,6 +260,8 @@ function getProviderIdFromPlayer(
       return player.espnId;
     case "yahoo":
       return player.yahooId;
+    case "mfl":
+      return player.mflId;
     default:
       return null;
   }

@@ -72,11 +72,12 @@ const DEPTH_WEIGHT = 0.25;
 /** Max positions returned in each list. */
 const MAX_RESULTS = 3;
 
+import { getDepthFactor } from "./replacement-level";
+
 /**
- * Position depth factors — thin positions amplify need/surplus.
- *
- * Mirrors the depthFactors inside vorp.ts calculateScarcityMultiplier
- * so that scarcity stays consistent across the engine.
+ * Default depth factors — used when no scarcityFactors override
+ * is provided. Uses the dynamic `getDepthFactor()` which accounts
+ * for league size when starterDemand/productionCap are available.
  */
 const DEPTH_FACTORS: Record<string, number> = {
   QB: 0.8,

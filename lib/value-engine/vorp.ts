@@ -6,7 +6,7 @@
  * value system.
  */
 
-import { calculateReplacementLevel, calculateStarterDemand } from "./replacement-level";
+import { calculateReplacementLevel, calculateStarterDemand, getDepthFactor } from "./replacement-level";
 import type { FlexRule } from "@/types";
 import {
   VALID_STAT_KEYS,
@@ -118,26 +118,10 @@ function calculateScarcityMultiplier(
   rankInPosition: number,
   starterDemand: number,
   position: string,
-  totalPlayersAtPosition: number
+  totalPlayersAtPosition: number,
+  depthFactorOverride?: number,
 ): number {
-  // Position depth factors - thin positions are more scarce
-  const depthFactors: Record<string, number> = {
-    QB: 0.8, // Deep position
-    RB: 1.1, // Medium scarcity, high attrition
-    WR: 0.9, // Deepest skill position
-    TE: 1.15, // Scarcity boost for elite TEs (McBride ~top 15-20)
-    K: 0.5, // Replaceable
-    // IDP
-    LB: 0.9, // Deep
-    DL: 1.0, // Medium
-    DB: 0.9, // Deep
-    EDR: 1.1, // Thin elite tier
-    IL: 0.85,
-    CB: 0.9,
-    S: 0.9,
-  };
-
-  const depthFactor = depthFactors[position] || 1.0;
+  const depthFactor = depthFactorOverride ?? getDepthFactor(position);
 
   // Tier factor: how close to the top of the position
   // Elite players (top 25% of starters) get full boost

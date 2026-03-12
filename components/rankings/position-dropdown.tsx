@@ -20,7 +20,7 @@ interface PositionDropdownProps {
 // Group positions into categories
 const OFFENSE_POSITIONS = ["QB", "RB", "WR", "TE", "K"];
 const IDP_CONSOLIDATED = ["DL", "LB", "DB"];
-const IDP_GRANULAR = ["EDR", "IL", "LB", "CB", "S"];
+const IDP_GRANULAR = ["EDR", "IL", "DE", "DT", "LB", "CB", "S"];
 
 /** Human-readable labels for flex slot names. */
 const FLEX_LABELS: Record<string, string> = {

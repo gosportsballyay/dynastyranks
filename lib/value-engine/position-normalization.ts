@@ -22,6 +22,19 @@ const CONSOLIDATED_GROUPS: Record<
   DL: { parent: "DL", children: new Set(["EDR", "IL", "DE", "DT"]) },
 };
 
+/**
+ * Preferred sibling mappings for cross-taxonomy resolution.
+ * When a player's canonical position doesn't exist in the
+ * league's roster config, map to the semantically closest
+ * sibling position: EDR↔DE (edge rushers), IL↔DT (interior).
+ */
+const PREFERRED_SIBLING: Record<string, string> = {
+  EDR: "DE",
+  DE: "EDR",
+  IL: "DT",
+  DT: "IL",
+};
+
 /** Reverse map: child position → consolidated parent. */
 const CHILD_TO_PARENT = new Map<string, string>();
 for (const group of Object.values(CONSOLIDATED_GROUPS)) {
@@ -69,7 +82,33 @@ export function resolveDefensivePosition(
     return platformPosition;
   }
 
-  // 5. Fallback
+  // 5. Check sibling positions in the same group.
+  //    Example: player is EDR but league has DE slots (not EDR).
+  //    EDR and DE are siblings under DL — resolve to DE.
+  //    Prefer semantically close siblings (EDR↔DE, IL↔DT).
+  const preferred = PREFERRED_SIBLING[platformPosition];
+  if (
+    preferred &&
+    (leagueRosterConfig[preferred] ?? 0) > 0
+  ) {
+    return preferred;
+  }
+  // Fallback: any sibling with roster slots
+  const group = Object.values(CONSOLIDATED_GROUPS).find(
+    (g) => g.parent === parent,
+  );
+  if (group) {
+    for (const sibling of group.children) {
+      if (
+        sibling !== platformPosition &&
+        (leagueRosterConfig[sibling] ?? 0) > 0
+      ) {
+        return sibling;
+      }
+    }
+  }
+
+  // 6. Fallback
   return platformPosition;
 }
 

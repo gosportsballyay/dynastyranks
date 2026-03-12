@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-type Provider = "sleeper" | "fleaflicker" | "espn" | "yahoo";
+type Provider = "sleeper" | "fleaflicker" | "espn" | "yahoo" | "mfl";
 
 interface Team {
   id: string;
@@ -34,6 +34,10 @@ function ConnectLeagueContent() {
   const [showCookieInputs, setShowCookieInputs] = useState(false);
   const [espnS2, setEspnS2] = useState("");
   const [swid, setSwid] = useState("");
+
+  // MFL API key input
+  const [showMflApiKey, setShowMflApiKey] = useState(false);
+  const [mflApiKey, setMflApiKey] = useState("");
 
   // League selection state (for Sleeper/Yahoo multi-league)
   const [availableLeagues, setAvailableLeagues] = useState<League[]>([]);
@@ -79,6 +83,8 @@ function ConnectLeagueContent() {
           // ESPN-specific cookies
           ...(provider === "espn" && espnS2 && { espnS2 }),
           ...(provider === "espn" && swid && { swid }),
+          // MFL API key
+          ...(provider === "mfl" && mflApiKey && { mflApiKey }),
         }),
       });
 
@@ -161,6 +167,7 @@ function ConnectLeagueContent() {
           leagueId: selectedLeagueId,
           ...(provider === "espn" && espnS2 && { espnS2 }),
           ...(provider === "espn" && swid && { swid }),
+          ...(provider === "mfl" && mflApiKey && { mflApiKey }),
         }),
       });
 
@@ -224,6 +231,7 @@ function ConnectLeagueContent() {
         return "Sleeper Username";
       case "fleaflicker":
       case "espn":
+      case "mfl":
         return "League ID";
       case "yahoo":
         return "League ID (optional)";
@@ -240,6 +248,8 @@ function ConnectLeagueContent() {
         return "e.g., 123456";
       case "espn":
         return "e.g., 12345678";
+      case "mfl":
+        return "e.g., 12345";
       case "yahoo":
         return "Leave empty to see all leagues";
       default:
@@ -440,6 +450,23 @@ function ConnectLeagueContent() {
                       {yahooEnabled ? "Connect with OAuth" : "Coming Soon"}
                     </div>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProvider("mfl");
+                      setError(null);
+                    }}
+                    className={`p-4 rounded-lg border-2 transition-all col-span-2 sm:col-span-1 ${
+                      provider === "mfl"
+                        ? "border-blue-500 bg-blue-500/10"
+                        : "border-slate-700 hover:border-slate-600"
+                    }`}
+                  >
+                    <div className="text-lg font-semibold text-white">MFL</div>
+                    <div className="text-sm text-slate-400 mt-1">
+                      Enter your league ID
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -509,6 +536,14 @@ function ConnectLeagueContent() {
                           <p className="mt-2 text-sm text-slate-400">
                             Find your league ID in the URL: fantasy.espn.com/football/league?leagueId=
                             <span className="text-blue-400">12345678</span>
+                          </p>
+                        )}
+                        {provider === "mfl" && (
+                          <p className="mt-2 text-sm text-slate-400">
+                            Find your league ID in the URL: mysite.myfantasyleague.com/
+                            <span className="text-blue-400">2026</span>
+                            /home/
+                            <span className="text-blue-400">12345</span>
                           </p>
                         )}
                         {provider === "yahoo" && (
@@ -585,6 +620,57 @@ function ConnectLeagueContent() {
                                   onChange={(e) => setSwid(e.target.value)}
                                   className="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                                   placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* MFL API Key (for private leagues) */}
+                      {provider === "mfl" && (
+                        <div className="border-t border-slate-700 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => setShowMflApiKey(!showMflApiKey)}
+                            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300"
+                          >
+                            <svg
+                              className={`w-4 h-4 transition-transform ${showMflApiKey ? "rotate-90" : ""}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                            Private league? Add API key
+                          </button>
+
+                          {showMflApiKey && (
+                            <div className="mt-4 space-y-4">
+                              <p className="text-sm text-slate-400">
+                                For private leagues, provide your MFL API key.
+                                Find it in Commissioner &rarr; API Client Settings.
+                              </p>
+                              <div>
+                                <label
+                                  htmlFor="mflApiKey"
+                                  className="block text-sm font-medium text-slate-300 mb-2"
+                                >
+                                  API Key
+                                </label>
+                                <input
+                                  id="mflApiKey"
+                                  type="text"
+                                  value={mflApiKey}
+                                  onChange={(e) => setMflApiKey(e.target.value)}
+                                  className="w-full rounded-lg bg-slate-900 border border-slate-700 px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                                  placeholder="Your MFL API key"
                                 />
                               </div>
                             </div>

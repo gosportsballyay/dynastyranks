@@ -17,6 +17,7 @@ import { TeamRankingsTable } from "@/components/summary/team-rankings-table";
 import {
   calculateAllReplacementLevels,
   calculateStarterDemand,
+  getDepthFactor,
 } from "@/lib/value-engine/replacement-level";
 import {
   computeTeamNeeds,
@@ -458,7 +459,15 @@ export default async function LeagueSummaryPage({ params }: PageProps) {
         };
       }
 
-      const result = computeTeamNeeds(posInputs);
+      // Dynamic depth factors for league-size-aware scarcity
+      const dynamicDepths: Record<string, number> = {};
+      for (const pos of Object.keys(posInputs)) {
+        dynamicDepths[pos] = getDepthFactor(
+          pos,
+          starterDemands[pos],
+        );
+      }
+      const result = computeTeamNeeds(posInputs, dynamicDepths);
       team.needs = result.needs;
       team.surplus = result.surplus;
       allResults.push(result);

@@ -32,6 +32,7 @@ export async function getPlayersByProviderIds(
     fleaflicker: "fleaflickerId",
     espn: "espnId",
     yahoo: "yahooId",
+    mfl: "mflId",
   };
 
   const column = columnMap[provider];

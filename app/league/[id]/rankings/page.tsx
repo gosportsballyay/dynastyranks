@@ -285,9 +285,11 @@ export default async function RankingsPage({ params, searchParams }: PageProps) 
       : {};
   const positions = [
     ...new Set(
-      positionPool.map(
-        (v) => reverseMapping[v.player.position] ?? v.player.position,
-      ),
+      positionPool.map((v) => {
+        const resolved =
+          v.value.eligibilityPosition ?? v.player.position;
+        return reverseMapping[resolved] ?? resolved;
+      }),
     ),
   ].sort();
 

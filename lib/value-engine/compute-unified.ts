@@ -20,7 +20,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { calculateFantasyPoints, type ScoringRule } from "./vorp";
-import { calculateStarterDemand } from "./replacement-level";
+import { calculateStarterDemand, getDepthFactor } from "./replacement-level";
 import {
   getAgeCurveMultiplier,
   getDampenedDynastyMod,
@@ -41,7 +41,7 @@ import { computeFormatComplexity } from "./format-complexity";
 import { computeBlendWeights, type BlendMode } from "./blend";
 import { normalizeStatKeys } from "@/lib/stats/canonical-keys";
 
-export const ENGINE_VERSION = "3.3.0";
+export const ENGINE_VERSION = "3.4.0";
 export const PROJECTION_VERSION = "1.0.0";
 
 /**
@@ -272,6 +272,18 @@ export async function computeUnifiedValues(
       historicalByPlayer.set(stat.canonicalPlayerId, existing);
     }
 
+    // --- Resolve positions for IDP normalization ---
+    // Build early so scoring uses resolved positions for
+    // position-specific override lookups (e.g., EDR→DE when
+    // a league uses DE slots and has DE-specific scoring).
+    const resolvedPositions = new Map<string, string>();
+    for (const player of players) {
+      resolvedPositions.set(
+        player.id,
+        resolvePosition(player.id, player.position),
+      );
+    }
+
     // --- Compute per-season fantasy points for each player ---
     // Compute raw (non-prorated) fantasy points per historical
     // season so the smoothing function can prorate at the points
@@ -285,6 +297,9 @@ export async function computeUnifiedValues(
       const history = historicalByPlayer.get(player.id);
       if (!history || history.length === 0) continue;
 
+      const resolvedPos =
+        resolvedPositions.get(player.id) ?? player.position;
+
       const seasonPts: Array<{
         season: number;
         points: number;
@@ -296,12 +311,12 @@ export async function computeUnifiedValues(
         const pts = calculateFantasyPoints(
           stats,
           normalizedScoringRules,
-          settings.positionScoringOverrides?.[player.position],
+          settings.positionScoringOverrides?.[resolvedPos],
           bonusThresholds,
           h.gamesPlayed,
           h.gameLogs,
           structuredRules,
-          player.position,
+          resolvedPos,
         );
         seasonPts.push({
           season: h.season,
@@ -403,17 +418,6 @@ export async function computeUnifiedValues(
       `Computed fantasy points for ${playerPoints.size} players`,
     );
 
-    // --- Resolve positions for IDP normalization ---
-    // Resolve all players (not just those with stats) so the
-    // rookie/consensus-only path also uses resolved positions.
-    const resolvedPositions = new Map<string, string>();
-    for (const player of players) {
-      resolvedPositions.set(
-        player.id,
-        resolvePosition(player.id, player.position),
-      );
-    }
-
     // --- Build position points arrays (sorted desc) ---
     const pointsByPosition: Record<string, number[]> = {};
     for (const { points, player } of playerPoints.values()) {
@@ -447,6 +451,12 @@ export async function computeUnifiedValues(
         settings.benchSlots,
         league.totalTeams,
       );
+    }
+
+    // --- Compute league-size-aware depth factors ---
+    const depthFactors: Record<string, number> = {};
+    for (const pos of allPositions) {
+      depthFactors[pos] = getDepthFactor(pos, starterDemands[pos]);
     }
 
     // --- Compute IDP positional demand scalars ---
@@ -557,6 +567,7 @@ export async function computeUnifiedValues(
           starterDemands[pos] ?? 1,
           dampenedMod,
           pointsByPosition[pos] ?? [],
+          depthFactors[pos],
         );
 
         leagueSignalVal = signalResult.leagueSignal;

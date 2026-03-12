@@ -8,6 +8,7 @@ import {
   createFleaflickerAdapter,
   createESPNAdapter,
   createYahooAdapter,
+  createMFLAdapter,
 } from "@/lib/adapters";
 import { syncLeagueData } from "@/lib/sync/sync-league-data";
 import { computeAggregatedValues } from "@/lib/value-engine/aggregate";
@@ -23,6 +24,8 @@ interface ConnectRequest {
   // ESPN-specific
   espnS2?: string;   // espn_s2 cookie for private leagues
   swid?: string;     // SWID cookie for private leagues
+  // MFL-specific
+  mflApiKey?: string; // API key for private leagues
 }
 
 export async function POST(request: NextRequest) {
@@ -226,6 +229,43 @@ export async function POST(request: NextRequest) {
       }
 
       externalLeagueId = targetLeague.externalLeagueId;
+    } else if (provider === "mfl") {
+      // MFL: identifier is the league ID, optionally with API key for private leagues
+      const adapter = createMFLAdapter({
+        apiKey: body.mflApiKey,
+        leagueId: identifier,
+        season,
+      });
+
+      targetLeague = await adapter.getLeagueById(identifier, season);
+
+      if (!targetLeague) {
+        return NextResponse.json(
+          { error: `League ${identifier} not found on MFL. For private leagues, provide your API key.` },
+          { status: 404 }
+        );
+      }
+
+      externalLeagueId = identifier;
+
+      // Persist MFL API key for re-sync
+      if (body.mflApiKey) {
+        await db
+          .insert(userTokens)
+          .values({
+            userId: session.user.id,
+            provider: "mfl",
+            accessToken: body.mflApiKey,
+            refreshToken: null,
+          })
+          .onConflictDoUpdate({
+            target: [userTokens.userId, userTokens.provider],
+            set: {
+              accessToken: body.mflApiKey,
+              updatedAt: new Date(),
+            },
+          });
+      }
     } else {
       return NextResponse.json(
         { error: `Provider "${provider}" not supported` },
@@ -291,6 +331,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         espnS2: body.espnS2,
         swid: body.swid,
+        mflApiKey: body.mflApiKey,
         season,
       });
 

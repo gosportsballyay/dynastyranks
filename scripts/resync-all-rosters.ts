@@ -19,6 +19,7 @@ import {
   createSleeperAdapter,
   createFleaflickerAdapter,
   createESPNAdapter,
+  createMFLAdapter,
 } from "../lib/adapters";
 import { getPlayersByProviderIds } from "../lib/player-mapping";
 import type { Provider, LeagueProviderAdapter } from "../types";
@@ -172,6 +173,9 @@ function createAdapter(
     case "yahoo":
       // Yahoo needs OAuth — skip in batch script
       return null;
+    case "mfl":
+      // MFL public leagues work without API key
+      return createMFLAdapter({});
     default:
       return null;
   }

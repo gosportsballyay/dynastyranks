@@ -17,6 +17,7 @@ import {
   createSleeperAdapter,
   createFleaflickerAdapter,
   createESPNAdapter,
+  createMFLAdapter,
 } from "../lib/adapters";
 import { computeUnifiedValues } from "../lib/value-engine/compute-unified";
 import type { Provider, LeagueProviderAdapter } from "../types";
@@ -181,6 +182,8 @@ function createAdapter(
     case "yahoo":
       // Yahoo needs OAuth — skip in batch script
       return null;
+    case "mfl":
+      return createMFLAdapter({ season });
     default:
       return null;
   }

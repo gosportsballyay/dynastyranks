@@ -52,6 +52,64 @@ const MAX_PRODUCTION_CAPS: Record<string, number> = {
   EDR: 48, IL: 36, CB: 50, S: 45,
 };
 
+/**
+ * Base depth factors per position — used when league size is unknown.
+ * In small leagues (10-12 teams) these are accurate. In large leagues
+ * (24-32 teams), `getDepthFactor()` adjusts dynamically.
+ */
+const BASE_DEPTH_FACTORS: Record<string, number> = {
+  QB: 0.8,
+  RB: 1.1,
+  WR: 0.9,
+  TE: 1.15,
+  K: 0.5,
+  LB: 0.9,
+  DL: 1.0,
+  DB: 0.9,
+  EDR: 1.1,
+  IL: 0.85,
+  CB: 0.9,
+  S: 0.9,
+};
+
+/**
+ * Compute a league-size-aware depth factor for a position.
+ *
+ * Uses `starterDemand / productionCap` to measure how saturated the
+ * position is. When nearly all viable producers are starters (ratio
+ * near 1.0, e.g. QB in 32-team), the depth factor increases because
+ * there is no positional depth. When the ratio is low (QB in 12-team),
+ * the base factor is used unchanged.
+ *
+ * When no productionCap is provided, falls back to MAX_PRODUCTION_CAPS
+ * which represent realistic NFL production supply per position.
+ *
+ * @param position - Position string
+ * @param starterDemand - League-wide starter demand at position
+ * @returns Depth factor (higher = scarcer position in this league)
+ */
+export function getDepthFactor(
+  position: string,
+  starterDemand?: number,
+): number {
+  const base = BASE_DEPTH_FACTORS[position] ?? 1.0;
+
+  if (!starterDemand || starterDemand <= 0) return base;
+
+  const cap = MAX_PRODUCTION_CAPS[position] ?? 50;
+
+  // Saturation: what fraction of viable producers are starters?
+  const saturation = Math.min(1.0, starterDemand / cap);
+
+  // Below 50% saturation, use base factor (small league, deep pool).
+  // Above 50%, linearly scale up toward 1.3 at full saturation.
+  if (saturation <= 0.5) return base;
+
+  const scaleFactor = (saturation - 0.5) / 0.5; // 0 at 50%, 1 at 100%
+  const boost = scaleFactor * (1.3 - base);
+  return base + Math.max(0, boost);
+}
+
 /** Liquidity scaling coefficients per position. K excluded. */
 const LIQUIDITY_COEFFICIENTS: Record<string, number> = {
   QB: 0.05, RB: 0.15, WR: 0.08, TE: 0.12,

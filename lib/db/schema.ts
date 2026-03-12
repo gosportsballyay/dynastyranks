@@ -24,6 +24,7 @@ export const providerEnum = pgEnum("provider", [
   "fleaflicker",
   "espn",
   "yahoo",
+  "mfl",
 ]);
 
 export const idpStructureEnum = pgEnum("idp_structure", [
@@ -261,6 +262,7 @@ export const canonicalPlayers = pgTable(
     fleaflickerIdx: index("fleaflicker_idx").on(table.fleaflickerId),
     espnIdx: index("espn_idx").on(table.espnId),
     yahooIdx: index("yahoo_idx").on(table.yahooId),
+    mflIdx: index("mfl_idx").on(table.mflId),
     positionIdx: index("position_idx").on(table.position),
     namePositionIdx: index("name_position_idx").on(table.name, table.position),
   })

@@ -63,12 +63,14 @@ export async function POST(
       // Parse optional ESPN cookie override from body
       let espnS2: string | undefined;
       let swid: string | undefined;
+      let mflApiKey: string | undefined;
       try {
         const body = await request.json();
         espnS2 = body.espnS2;
         swid = body.swid;
+        mflApiKey = body.mflApiKey;
       } catch {
-        // Empty body is fine — cookies are optional
+        // Empty body is fine — credentials are optional
       }
 
       // Re-sync (deletes old + inserts new in a transaction)
@@ -80,6 +82,7 @@ export async function POST(
         userId: session.user.id,
         espnS2,
         swid,
+        mflApiKey,
         season: league.season,
         isResync: true,
       });

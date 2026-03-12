@@ -159,8 +159,12 @@ export function getDynastyPremium(
 
   // Rookie/sophomore boost - this is where most breakouts happen
   if (yearsExperience !== undefined && yearsExperience <= 2) {
-    // High draft capital = more certain future
-    if (draftRound !== undefined) {
+    const peak = PEAK_AGES[position] || { start: 26, end: 30 };
+
+    // High draft capital = more certain future, but ONLY if the
+    // player is still below peak age. A 26-year-old rookie LB is
+    // already in peak range — no development upside to price in.
+    if (draftRound !== undefined && age < peak.start) {
       const capitalBonus = Math.max(0, (8 - draftRound) / 20);
       premium += capitalBonus; // 1st rd: +0.35, 7th: +0.05
     }
