@@ -74,10 +74,10 @@ export function FairnessPanel({
 
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-5">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1">
+      <h3 className="text-sm font-medium text-slate-400 tracking-wider mb-4 flex items-center gap-1">
         Structural Fairness
         <HelpTooltip
-          text="Compares total dynasty value of each side. Adjusts for roster cost and consolidation premium."
+          text="Evaluates whether the total dynasty value exchanged is balanced, accounting for roster slot cost and the premium of consolidating value into fewer players."
           learnMoreHref="/how-it-works#trade-analysis"
         />
       </h3>

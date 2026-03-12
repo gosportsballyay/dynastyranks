@@ -50,6 +50,8 @@ interface TradeSideProps {
   totalValue: number;
   /** Value adjustment added to the fewer-asset side (0 = none). */
   valueAdjustment?: number;
+  /** 0-based side index for labeling (0 = Team 1, 1 = Team 2). */
+  sideIndex: number;
 }
 
 export function TradeSide({
@@ -68,6 +70,7 @@ export function TradeSide({
   otherTeamId,
   totalValue,
   valueAdjustment = 0,
+  sideIndex,
 }: TradeSideProps) {
   const [search, setSearch] = useState("");
   const [pickSearch, setPickSearch] = useState("");
@@ -131,12 +134,12 @@ export function TradeSide({
 
   // Draft picks: team-specific or generic for no-team mode
   const currentTeam = allTeamsData.find((t) => t.id === teamId);
-  const rawPicks = isNoTeam
+  const rawPicks = (isNoTeam || !teamId)
     ? genericPicks
     : (currentTeam?.picks ?? []);
   // Generic picks are never filtered out (user can add multiples).
   // Team picks are filtered by what's already selected.
-  const availablePicksUnfiltered = isNoTeam
+  const availablePicksUnfiltered = (isNoTeam || !teamId)
     ? rawPicks
     : rawPicks.filter((p) => !selectedPickIds.has(p.pickId));
 
@@ -191,12 +194,16 @@ export function TradeSide({
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-4">
       {/* Team selector */}
       <div className="mb-4">
+        <label
+          className="block text-xs font-medium text-slate-400 mb-1"
+        >
+          Select Team {sideIndex + 1}
+        </label>
         <select
-          value={teamId}
+          value={teamId || "__no_team__"}
           onChange={(e) => onSelectTeam(e.target.value)}
           className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Select a team...</option>
           <option value="__no_team__">No Team (all players)</option>
           {allTeams.map((t) => (
             <option key={t.id} value={t.id}>
@@ -209,7 +216,7 @@ export function TradeSide({
       {/* Header with team name and value */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-white text-sm">
-          {isNoTeam ? "Side" : (teamName || "Select team")} sends
+          {teamName || `Team ${sideIndex + 1}`} sends
         </h3>
         {(totalValue > 0 || valueAdjustment > 0) && (
           <span className="text-sm font-mono text-green-400">
@@ -494,65 +501,56 @@ export function TradeSide({
           </div>
         ) : (
           <div>
-            {!teamId && !isNoTeam ? (
-              <div className="text-sm text-slate-400 py-2 text-center">
-                Add a player first to select a team
-              </div>
-            ) : (
-              <>
-                <input
-                  type="text"
-                  value={pickSearch}
-                  onChange={(e) => setPickSearch(e.target.value)}
-                  placeholder="Search picks (e.g. Early 1st)..."
-                  className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 mb-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="max-h-48 overflow-y-auto space-y-2">
-                  {availablePicks.length === 0 ? (
-                    <div className="text-sm text-slate-400 py-2 text-center">
-                      No draft picks found
-                    </div>
-                  ) : (
-                    Array.from(picksBySeason.entries()).map(
-                      ([season, seasonPicks]) => (
-                        <div key={season}>
-                          <div className="text-xs text-slate-500 font-medium mb-1">
-                            {season}
-                          </div>
-                          <div className="space-y-0.5">
-                            {seasonPicks.map((pick) => (
-                              <button
-                                key={pick.pickId}
-                                onClick={() => {
-                                  if (isNoTeam) {
-                                    // Assign unique ID so multiples can coexist
-                                    genericCounterRef.current += 1;
-                                    onAddPick({
-                                      ...pick,
-                                      pickId: `${pick.pickId}-${genericCounterRef.current}`,
-                                    });
-                                  } else {
-                                    onAddPick(pick);
-                                  }
-                                }}
-                                className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-slate-700/50 transition-colors text-left"
-                              >
-                                <span className="text-slate-300 text-sm">
-                                  {formatPickLabel(pick)}
-                                </span>
-                                <span className="text-xs font-mono text-slate-400">
-                                  {pick.value.toLocaleString()}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ),
-                    )
-                  )}
+            <input
+              type="text"
+              value={pickSearch}
+              onChange={(e) => setPickSearch(e.target.value)}
+              placeholder="Search picks (e.g. Early 1st)..."
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 mb-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="max-h-48 overflow-y-auto space-y-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-800 [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-slate-500">
+              {availablePicks.length === 0 ? (
+                <div className="text-sm text-slate-400 py-2 text-center">
+                  No draft picks found
                 </div>
-              </>
-            )}
+              ) : (
+                Array.from(picksBySeason.entries()).map(
+                  ([season, seasonPicks]) => (
+                    <div key={season}>
+                      <div className="text-xs text-slate-500 font-medium mb-1">
+                        {season}
+                      </div>
+                      <div className="space-y-0.5">
+                        {seasonPicks.map((pick) => (
+                          <button
+                            key={pick.pickId}
+                            onClick={() => {
+                              if (isNoTeam || (!teamId)) {
+                                genericCounterRef.current += 1;
+                                onAddPick({
+                                  ...pick,
+                                  pickId: `${pick.pickId}-${genericCounterRef.current}`,
+                                });
+                              } else {
+                                onAddPick(pick);
+                              }
+                            }}
+                            className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-slate-700/50 transition-colors text-left"
+                          >
+                            <span className="text-slate-300 text-sm">
+                              {formatPickLabel(pick)}
+                            </span>
+                            <span className="text-xs font-mono text-slate-400">
+                              {pick.value.toLocaleString()}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                )
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -576,8 +574,9 @@ function formatPickLabel(pick: DraftPickAsset): string {
     return `${tierLabel} ${rd}`;
   }
   let label = `Rd ${pick.round}`;
-  if (pick.projectedPickNumber) {
-    label += `.${String(pick.projectedPickNumber).padStart(2, "0")}`;
+  const slot = pick.projectedPickNumber ?? pick.pickNumber;
+  if (slot) {
+    label += `.${String(slot).padStart(2, "0")}`;
   }
   if (
     pick.originalTeamName &&

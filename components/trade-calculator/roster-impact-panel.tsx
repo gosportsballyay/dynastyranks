@@ -16,9 +16,9 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
   if (loading) {
     return (
       <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-5">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1">
+        <h3 className="text-sm font-medium text-slate-400 tracking-wider mb-4 flex items-center gap-1">
           Roster Impact (Your Team)
-          <HelpTooltip text="Projects how this trade changes your optimal lineup. 1-Year and 3-Year show dynasty value trajectory." />
+          <HelpTooltip text="Projects how this trade changes your optimal lineup. 1-Year and 3-Year show projected dynasty value change over time based on age curves." />
         </h3>
         <div className="flex items-center justify-center py-6">
           <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
@@ -32,7 +32,7 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
 
   return (
     <div className="bg-slate-800/50 rounded-xl ring-1 ring-slate-700 p-5">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+      <h3 className="text-sm font-medium text-slate-400 tracking-wider mb-4">
         Roster Impact (Your Team)
       </h3>
 
@@ -41,19 +41,19 @@ export function RosterImpactPanel({ impact, loading }: RosterImpactPanelProps) {
         <MetricCard
           label="Lineup"
           value={lineupDelta}
-          suffix="pts/wk"
+          suffix="proj. season pts"
           format="decimal"
         />
         <MetricCard
-          label="1-Year"
+          label="1-Year Value"
           value={oneYearDelta}
-          suffix=""
+          suffix="dynasty value"
           format="integer"
         />
         <MetricCard
-          label="3-Year"
+          label="3-Year Value"
           value={threeYearDelta}
-          suffix=""
+          suffix="dynasty value"
           format="integer"
         />
         <MetricCard

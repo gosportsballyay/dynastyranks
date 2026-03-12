@@ -242,6 +242,7 @@ export function TradeCalculator({
             team1Picks.reduce((s, p) => s + p.value, 0)
           }
           valueAdjustment={side1Adjustment}
+          sideIndex={0}
         />
 
         <TradeSide
@@ -275,6 +276,7 @@ export function TradeCalculator({
             team2Picks.reduce((s, p) => s + p.value, 0)
           }
           valueAdjustment={side2Adjustment}
+          sideIndex={1}
         />
       </div>
 
@@ -316,6 +318,12 @@ export function TradeCalculator({
           {userTeamInvolved && impactError && (
             <div className="rounded-lg border border-red-800/50 bg-red-900/20 p-4 text-sm text-red-300">
               {impactError}
+            </div>
+          )}
+
+          {!userTeamInvolved && userTeamId && (
+            <div className="text-center text-sm text-slate-500 py-2">
+              Select your team in a trade to see lineup impact analysis
             </div>
           )}
 

@@ -45,9 +45,9 @@ export function LineupComparison({ before, after }: LineupComparisonProps) {
           <tr className="text-xs text-slate-500 uppercase">
             <th className="text-left px-1.5 py-1 w-14">Slot</th>
             <th className="text-left px-1.5 py-1">Before</th>
-            <th className="text-right px-1.5 py-1 w-12">Pts</th>
+            <th className="text-right px-1.5 py-1 w-16">Proj Pts</th>
             <th className="text-left px-1.5 py-1">After</th>
-            <th className="text-right px-1.5 py-1 w-12">Pts</th>
+            <th className="text-right px-1.5 py-1 w-16">Proj Pts</th>
             <th className="text-right px-1.5 py-1 w-12">+/-</th>
           </tr>
         </thead>
