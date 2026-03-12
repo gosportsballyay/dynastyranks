@@ -249,22 +249,22 @@ export function RankingsTable({
           </button>
         ))}
       </div>
-      <div className="overflow-x-auto sm:overflow-x-visible">
-        <table className="w-full text-xs sm:text-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs sm:text-sm table-fixed">
           <caption className="sr-only">
             Player dynasty rankings sorted by {sortColumn} {sortDirection === "asc" ? "ascending" : "descending"}
           </caption>
           <thead className="sm:sticky sm:top-16 sm:z-20">
             <tr className="border-b border-slate-700 text-left">
-              <SortableHeader column="rank">Rank</SortableHeader>
-              <SortableHeader column="name">Player</SortableHeader>
-              <SortableHeader column="position">Pos</SortableHeader>
-              <SortableHeader column="team">Team</SortableHeader>
-              <SortableHeader column="age">Age</SortableHeader>
-              <SortableHeader column="lastSeason" className="text-right">
+              <SortableHeader column="rank" className="w-[7%]">Rank</SortableHeader>
+              <SortableHeader column="name" className="w-[18%]">Player</SortableHeader>
+              <SortableHeader column="position" className="w-[8%]">Pos</SortableHeader>
+              <SortableHeader column="team" className="w-[7%]">Team</SortableHeader>
+              <SortableHeader column="age" className="w-[6%]">Age</SortableHeader>
+              <SortableHeader column="lastSeason" className="text-right w-[9%]">
                 Last Szn
               </SortableHeader>
-              <SortableHeader column="value" className="text-right">
+              <SortableHeader column="value" className="text-right w-[11%]">
                 <span className="inline-flex items-center gap-1">
                   Value
                   <HelpTooltip
@@ -273,7 +273,7 @@ export function RankingsTable({
                   />
                 </span>
               </SortableHeader>
-              <SortableHeader column="vorp" className="text-right">
+              <SortableHeader column="vorp" className="text-right w-[10%]">
                 <span className="inline-flex items-center gap-1">
                   VORP
                   <HelpTooltip
@@ -282,13 +282,13 @@ export function RankingsTable({
                   />
                 </span>
               </SortableHeader>
-              <SortableHeader column="tier">
+              <SortableHeader column="tier" className="w-[7%]">
                 <span className="inline-flex items-center gap-1">
                   Tier
                   <HelpTooltip text="Players grouped into value tiers. Tier 1 = elite. Helps identify fair trade partners." />
                 </span>
               </SortableHeader>
-              <SortableHeader column="owner">Owner</SortableHeader>
+              <SortableHeader column="owner" className="w-[17%]">Owner</SortableHeader>
             </tr>
           </thead>
           <tbody>
@@ -333,7 +333,7 @@ export function RankingsTable({
                     )}
                   </td>
                   <td className="py-3 px-2 sm:px-4">
-                    <div className="font-medium text-white">{v.player.name}</div>
+                    <div className="font-medium text-white truncate">{v.player.name}</div>
                   </td>
                   <td className="py-3 px-2 sm:px-4">
                     <span
@@ -364,11 +364,11 @@ export function RankingsTable({
                       {v.tier}
                     </span>
                   </td>
-                  <td className="py-3 px-2 sm:px-4 whitespace-nowrap">
+                  <td className="py-3 px-2 sm:px-4">
                     {v.owner ? (
                       <span
-                        className="text-slate-300"
-                        title={v.ownerName || undefined}
+                        className="text-slate-300 block truncate"
+                        title={v.ownerName || v.owner}
                       >
                         {v.owner}
                       </span>
@@ -379,7 +379,7 @@ export function RankingsTable({
                 </tr>
                 {expandedRow === v.id && (
                   <tr className="bg-slate-900/50">
-                    <td colSpan={10} className="py-4 px-2 sm:px-4">
+                    <td colSpan={10} className="py-4 px-2 sm:px-4 overflow-hidden">
                       <PlayerDetailDropdown
                         injuryStatus={v.player.injuryStatus}
                         draftRound={v.player.draftRound}

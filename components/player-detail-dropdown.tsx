@@ -127,7 +127,7 @@ export function PlayerDetailDropdown({
   const projYear = new Date().getFullYear();
 
   return (
-    <div className="space-y-3 max-w-[85vw] sm:max-w-none">
+    <div className="space-y-3 min-w-0 overflow-hidden">
       {/* Bio band */}
       <div className="flex flex-wrap items-center gap-y-1 text-sm text-slate-300">
         {injuryStatus && (
