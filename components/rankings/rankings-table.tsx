@@ -249,7 +249,6 @@ export function RankingsTable({
           </button>
         ))}
       </div>
-      <div className="overflow-x-auto">
         <table className="w-full text-xs sm:text-sm table-fixed">
           <caption className="sr-only">
             Player dynasty rankings sorted by {sortColumn} {sortDirection === "asc" ? "ascending" : "descending"}
@@ -408,7 +407,6 @@ export function RankingsTable({
             ))}
           </tbody>
         </table>
-      </div>
     </div>
   );
 }
